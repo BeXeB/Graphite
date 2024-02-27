@@ -1,6 +1,3 @@
 ﻿namespace Graphite;
 
-public class LexingExeption
-{
-    
-}
+public class InvalidTokenException(string message) : Exception(message);

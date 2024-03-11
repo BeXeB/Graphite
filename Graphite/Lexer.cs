@@ -29,7 +29,8 @@ public class Lexer
         {"this", TokenType.THIS},
         {"super", TokenType.SUPER},
         {"returns", TokenType.RETURNS},
-        {"struct", TokenType.STRUCT}
+        //{"struct", TokenType.STRUCT},
+        {"extends",TokenType.EXTENDS}
     };
     
     private int line = 1;
@@ -87,10 +88,10 @@ public class Lexer
                 {
                     AddToken(TokenType.EQUAL_EQUAL);
                 }
-                else if (Match('>'))
-                {
-                    AddToken(TokenType.ARROW);
-                }
+                // else if (Match('>'))
+                // {
+                //     AddToken(TokenType.ARROW);
+                // }
                 else
                 {
                     AddToken(TokenType.EQUAL);

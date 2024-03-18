@@ -10,9 +10,10 @@ var code = """
            str string = "Hello World";
            int x = 5;
            char c = 'c';
-           || && == != <= >=
+           and or == != <= >=
            [] {} () ; , . + - * / ! = < >
            if else while break continue return class public private str char int dec bool void true false null new this super returns
+           Func<int,bool>
            """;
 var lexer = new Lexer();
 

@@ -30,7 +30,11 @@ public class Lexer
         {"super", TokenType.SUPER},
         {"returns", TokenType.RETURNS},
         //{"struct", TokenType.STRUCT},
-        {"extends",TokenType.EXTENDS}
+        {"extends",TokenType.EXTENDS},
+        {"Func", TokenType.FUNC_TYPE},
+        {"V", TokenType.V},
+        {"and", TokenType.AND},
+        {"or", TokenType.OR}
     };
     
     private int line = 1;
@@ -88,20 +92,46 @@ public class Lexer
                 {
                     AddToken(TokenType.EQUAL_EQUAL);
                 }
-                // else if (Match('>'))
-                // {
-                //     AddToken(TokenType.ARROW);
-                // }
+                else if (Match('>'))
+                {
+                    AddToken(TokenType.ARROW);
+                }
+                else if (Match('/'))
+                {
+                    if (Match('='))
+                    {
+                        AddToken(TokenType.SLASHED_EQUAL);
+                    }
+                    else
+                    {
+                        throw new InvalidTokenException(line + " : Expected: =");
+                    
+                    }
+                }
                 else
                 {
                     AddToken(TokenType.EQUAL);
                 }
                 break;
             case '+':
-                AddToken(TokenType.PLUS);
+                if (Match('+'))
+                {
+                    AddToken(TokenType.PLUS_PLUS);
+                }
+                else
+                {
+                    AddToken(TokenType.PLUS);
+                }
                 break;
             case '-':
-                AddToken(TokenType.MINUS);
+                if (Match('-'))
+                {
+                    AddToken(TokenType.MINUS_MINUS);
+                }
+                else
+                {
+                    AddToken(TokenType.MINUS);
+                }
                 break;
             case '*':
                 AddToken(TokenType.STAR);
@@ -131,7 +161,18 @@ public class Lexer
             case '<':
                 if (Match('='))
                 {
-                    AddToken(TokenType.LESS_EQUAL);
+                    if (Match('>'))
+                    {
+                        AddToken(TokenType.DOUBLE_ARROW);
+                    }
+                    else
+                    {
+                        AddToken(TokenType.LESS_EQUAL);
+                    }
+                }
+                else if (Match('<'))
+                {
+                    AddToken(TokenType.LEFT_LEFT);
                 }
                 else
                 {
@@ -146,26 +187,6 @@ public class Lexer
                 else
                 {
                     AddToken(TokenType.GREATER);
-                }
-                break;
-            case '&':
-                if (Match('&'))
-                {
-                    AddToken(TokenType.AND);
-                }
-                else
-                {
-                    throw new InvalidTokenException(line + " : Expected: " + c);
-                }
-                break;
-            case '|':
-                if (Match('|'))
-                {
-                    AddToken(TokenType.OR);
-                }
-                else
-                {
-                    throw new InvalidTokenException(line + " : Expected: " + c);
                 }
                 break;
             case '\'':

@@ -2,6 +2,8 @@
 //args[1] name of the output file
 
 using Graphite;
+using Graphite.Lexer;
+using Graphite.Parser;
 
 var code = """
            111.111
@@ -16,5 +18,8 @@ var code = """
            Func<int,bool>
            """;
 var lexer = new Lexer();
+var parser = new Parser();
 
 var tokens = lexer.ScanCode(code);
+
+Console.ReadKey();

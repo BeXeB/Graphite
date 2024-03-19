@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices.JavaScript;
-
-namespace Graphite;
+﻿namespace Graphite.Lexer;
 
 public class Lexer
 {

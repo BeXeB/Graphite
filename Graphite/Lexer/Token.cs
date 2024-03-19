@@ -1,4 +1,4 @@
-﻿namespace Graphite;
+﻿namespace Graphite.Lexer;
 
 public struct Token
 {

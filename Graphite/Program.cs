@@ -1,6 +1,7 @@
 ﻿//args[0] name of the input file
 //args[1] name of the output file
 
+using Domain;
 using Graphite;
 
 var code = """
@@ -18,3 +19,9 @@ var code = """
 var lexer = new Lexer();
 
 var tokens = lexer.ScanCode(code);
+
+var graph = new DGraph();
+graph.AddVertex(["a","b"]);
+graph.AddVertex(["c","d"]);
+graph.Retag("a","e");
+graph.Connect(v => v.Contains("e"), v => v.Contains("c"));

@@ -2,13 +2,6 @@
 {
     public class DGraph : Graph<bool>
     {
-        public DGraph()
-        {
-            NoOfVertices = 0;
-            Tags = [];
-            AdjMatrix = [];
-        }
-
         public override void AddVertex(string[] vertexTags)
         {
             NoOfVertices++;

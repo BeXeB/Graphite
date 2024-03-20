@@ -2,9 +2,9 @@
 {
     public abstract class Graph<T> : IGraph
     {
-        protected int NoOfVertices;
-        protected List<List<string>> Tags; //tags[n] is an array of the tags of the n-th vertex
-        protected List<List<T>> AdjMatrix;
+        protected int NoOfVertices = 0;
+        protected List<List<string>> Tags = []; //tags[n] is an array of the tags of the n-th vertex
+        protected List<List<T>> AdjMatrix = [];
 
         public abstract void AddVertex(string[] vertexTags);
         public abstract void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);

@@ -39,8 +39,8 @@ breakStmt		→ "break"";"
 block			→ "{"declaration*"}"  
 exprStmt		→ expression";"  
 graphStmt		→ IDENTIFIER "{" graphOperation* "}"";"  
-graphOperation		→ predicate predOp
-			| "V" vertexOp
+graphOperation		→ predicate predOperation
+			| "V" vertexOperation
 			| STRING "<<" (STRING | "null");
 			| exprStmt
 			| graphWhile
@@ -48,7 +48,7 @@ graphOperation		→ predicate predOp
 predOperation		→ ("=>" | "<=>") predicate (INTEGER | DECIMAL | "") ";"
 			| "=/=" predicate";"
 			| ("++"|"--") set";"  
-vertexOperator 		→ "-" predicate ";"
+vertexOperation 	→ "-" predicate ";"
 			| "+" set (INTEGER | "") ";"  
 graphWhile		→ "while" "("expression")" graphBlock  
 graphIf			→ "if" "("expression")" graphBlock "else" graphBlock   

@@ -249,11 +249,11 @@ public abstract class GraphExpression
     
     public class PredicateLiteralExpression : GraphExpression
     {
-        public readonly Token value;
+        public readonly Expression expression;
         
-        public PredicateLiteralExpression (Token value)
+        public PredicateLiteralExpression (Expression expression)
         {
-            this.value = value;
+            this.expression = expression;
         }
         
         public override T Accept<T> (IGraphExpressionVisitor<T> visitor)

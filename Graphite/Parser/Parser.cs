@@ -164,18 +164,14 @@ public class Parser
     
     private GraphExpression PredicateLiteral()
     {
-        var token = Peek();
-        if (Match(TokenType.STRING_LITERAL))
-        {
-            return new GraphExpression.PredicateLiteralExpression(token);
-        }
         if (Match(TokenType.LEFT_PAREN))
         {
             var expression = PredicateOr();
             Consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
             return new GraphExpression.PredicateGroupingExpression(expression);
         }
-        throw new ParseException("Expect predicate.");
+        var stringExpression = Additive();
+        return new GraphExpression.PredicateLiteralExpression(stringExpression);
     }
     
     private GraphExpression.GraphReTagExpression RetagOperation()
@@ -183,16 +179,11 @@ public class Parser
         var oldTag = Consume(TokenType.STRING_LITERAL, "Expect string literal.");
         Consume(TokenType.LEFT_LEFT, "Expect '<<' after string literal.");
         var token = Peek();
-        switch (token.type)
-        {
-            case TokenType.STRING_LITERAL:
-            case TokenType.NULL:
-                Advance();
-                Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
-                return new GraphExpression.GraphReTagExpression(oldTag, token);
-            default:
-                throw new ParseException("Expect string literal or 'null' after '<<'.");
-        }
+        if (token.type is not (TokenType.STRING_LITERAL or TokenType.NULL))
+            throw new ParseException("Expect string literal or 'null' after '<<'.");
+        Advance();
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
+        return new GraphExpression.GraphReTagExpression(oldTag, token);
     }
     
     private GraphExpression.GraphWhileStmt GraphWhileStmt()
@@ -257,6 +248,12 @@ public class Parser
         return null;
     }
 
+    private Expression Additive()
+    {
+        Consume(TokenType.STRING_LITERAL, "Expect string literal.");
+        return null;
+    }
+    
     private Expression Or()
     {
         var expression = And();

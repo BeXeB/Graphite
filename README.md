@@ -55,10 +55,10 @@ graphIf			→ "if" "("expression")" graphBlock "else" graphBlock
 graphBlock		→ "{" (graphOperation | exprStmt)*  "}"  
 predicate		→ "[" predOr "]"  
 predOr			→ predAnd ("or" predAnd)*  
-predAnd			→ predPrimary ("and" predPrimary)*  
+predAnd			→ predPrimary ("and" predPrimary)*
+predUnary		→ ("!" | "") predPrimary
 predPrimary		→ "(" predOr ")"
 			| STRING
-			| "!"STRING  
 expression		→ assignment 
 			| nonAssignment  	
 assignment		→ IDENTIFIER "=" nonAssignment 

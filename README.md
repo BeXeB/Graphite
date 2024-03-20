@@ -58,7 +58,7 @@ predOr			→ predAnd ("or" predAnd)*
 predAnd			→ predPrimary ("and" predPrimary)*
 predUnary		→ ("!" | "") predPrimary
 predPrimary		→ "(" predOr ")"
-			| STRING
+			| additive
 expression		→ assignment 
 			| nonAssignment  	
 assignment		→ IDENTIFIER "=" nonAssignment 

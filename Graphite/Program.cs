@@ -23,5 +23,6 @@ var tokens = lexer.ScanCode(code);
 var graph = new DGraph();
 graph.AddVertex(["a","b"]);
 graph.AddVertex(["c","d"]);
+graph.AddVertices([["f", "g"], ["h","i"]]);
 graph.Retag("a","e");
 graph.Connect(v => v.Contains("e"), v => v.Contains("c"));

@@ -28,23 +28,23 @@ public class Parser
         var expressions = new List<GraphExpression>();
         while (!Match(TokenType.RIGHT_BRACE))
         {
-            expressions.Add(GraphExpr());
+            expressions.Add(GraphOperation());
         }
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
         return new Statement.GraphStatement(identifier, expressions);
     }
     
-    private GraphExpression GraphExpr()
+    private GraphExpression GraphOperation()
     {
         var token = Peek();
         switch (token.type)
         {
             case TokenType.V:
-                return GraphVertexExpr();
+                return VertexOperation();
             case TokenType.LEFT_BRACKET:
-                return GraphPredicateExpr();
+                return PredOperation();
             case TokenType.STRING_LITERAL:
-                return GraphReTagExpr();
+                return RetagOperation();
             case TokenType.WHILE:
                 return GraphWhileStmt();
             case TokenType.IF:
@@ -54,7 +54,7 @@ public class Parser
         }
     }
     
-    private GraphExpression GraphVertexExpr()
+    private GraphExpression VertexOperation()
     {
         Consume(TokenType.V, "Expect 'V' at the beginning of the expression.");
         var token = Peek();
@@ -91,7 +91,7 @@ public class Parser
         return expression;
     }
 
-    private GraphExpression GraphPredicateExpr()
+    private GraphExpression PredOperation()
     {
         var predicate = Predicate();
         var token = Peek();
@@ -178,9 +178,9 @@ public class Parser
         throw new ParseException("Expect predicate.");
     }
     
-    private GraphExpression.GraphReTagExpression GraphReTagExpr()
+    private GraphExpression.GraphReTagExpression RetagOperation()
     {
-        var tagToChange = Consume(TokenType.STRING_LITERAL, "Expect string literal.");
+        var oldTag = Consume(TokenType.STRING_LITERAL, "Expect string literal.");
         Consume(TokenType.LEFT_LEFT, "Expect '<<' after string literal.");
         var token = Peek();
         switch (token.type)
@@ -189,7 +189,7 @@ public class Parser
             case TokenType.NULL:
                 Advance();
                 Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
-                return new GraphExpression.GraphReTagExpression(tagToChange, token);
+                return new GraphExpression.GraphReTagExpression(oldTag, token);
             default:
                 throw new ParseException("Expect string literal or 'null' after '<<'.");
         }
@@ -226,7 +226,7 @@ public class Parser
         var statements = new List<GraphExpression>();
         while (!Match(TokenType.RIGHT_BRACE))
         {
-            statements.Add(GraphExpr());
+            statements.Add(GraphOperation());
         }
         return new GraphExpression.GraphBlockStmt(statements);
     }

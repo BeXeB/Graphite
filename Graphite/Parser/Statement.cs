@@ -1,4 +1,5 @@
-﻿using Graphite.Parser;
+﻿using Graphite.Lexer;
+using Graphite.Parser;
 
 namespace Graphite;
 
@@ -79,11 +80,13 @@ public abstract class Statement
     }
     public class GraphStatement : Statement
     {
-        List<GraphExpression> expressions;
+        public readonly Token identifier;
+        public readonly List<GraphExpression> expressions;
         
-        public GraphStatement (List<GraphExpression> expressions)
+        public GraphStatement (Token identifier ,List<GraphExpression> expressions)
         {
             this.expressions = expressions;
+            this.identifier = identifier;
         }
         
         public override T Accept<T>(IStatementVisitor<T> visitor)

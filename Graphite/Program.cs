@@ -25,4 +25,6 @@ graph.AddVertex(["a","b"]);
 graph.AddVertex(["c","d"]);
 graph.AddVertices([["f", "g"], ["h","i"]]);
 graph.Retag("a","e");
+graph.AddTags(v => v.Contains("e") || v.Contains("h"), ["j","i"]);
+graph.RemoveTags(v => v.Contains("j") || v.Contains("e"), ["j", "b"]);
 graph.Connect(v => v.Contains("e"), v => v.Contains("c"));

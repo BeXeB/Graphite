@@ -1,4 +1,4 @@
-﻿namespace Domain
+namespace Domain
 {
     public class DGraph : Graph<bool>
     {
@@ -43,28 +43,54 @@
             }
         }
 
+        public override void AddTags(Predicate<List<string>> pred, List<string> tags)
+        {
+            var indexes = GetVertices(pred);
+
+            foreach (var index in indexes)
+            {
+                foreach (var tag in tags)
+                {
+                    if (!Tags[index].Contains(tag))
+                    {
+                        Tags[index].Add(tag);
+                    }
+                }
+            }
+        }
+
+        public override void RemoveTags(Predicate<List<string>> pred, List<string> tags)
+        {
+            var indexes = GetVertices(pred);
+
+            foreach (var index in indexes)
+            {
+                foreach (var tag in tags)
+                {
+                    Tags[index].RemoveAll(t => t == tag);
+                }
+            }
+        }
+
         public override void Retag(string from, string to)
         {
             var newTags = new List<List<string>>();
-            var j = 0;
 
             foreach (var vertex in Tags)
             {
-                newTags.Add([]);
-                var i = 0;
+                var newVertex = new List<string>();
                 foreach (var tag in vertex)
                 {
                     if (tag == from)
                     {
-                        newTags[j].Add(to);
+                        newVertex.Add(to);
                     }
                     else
                     {
-                        newTags[j].Add(Tags[j][i]);
+                        newVertex.Add(tag);
                     }
-                    i++;
                 }
-                j++;
+                newTags.Add(newVertex);
             }
             Tags = newTags;
         }

@@ -9,6 +9,8 @@
         public abstract void AddVertex(string[] vertexTags);
         public abstract void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
         public abstract void Disconnect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
+        public abstract void AddTags(Predicate<List<string>> pred, List<string> tags);
+        public abstract void RemoveTags(Predicate<List<string>> pred, List<string> tags);
         public abstract void Retag(string from, string to);
 
         public void AddVertices(List<string[]> vertexTags) => vertexTags.ForEach(AddVertex);
@@ -23,6 +25,8 @@
         public int[] GetVertices(Predicate<List<string>> pred);
         public void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
         public void Disconnect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
+        public void AddTags(Predicate<List<string>> pred, List<string> tags);
+        public void RemoveTags(Predicate<List<string>> pred, List<string> tags);
         public void Retag(string from, string to);
     }
 }

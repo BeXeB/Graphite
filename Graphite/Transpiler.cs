@@ -1,4 +1,5 @@
-﻿using Graphite.Parser;
+﻿using Graphite.Lexer;
+using Graphite.Parser;
 
 namespace Graphite;
 
@@ -57,7 +58,40 @@ public class Transpiler : Statement.IStatementVisitor<string>, Expression.IExpre
 
     public string VisitClassDeclarationStatement(Statement.ClassDeclarationStatement statement)
     {
-        throw new NotImplementedException();
+        string accessModifier;
+
+        switch (statement.accessModifier.lexeme)
+        {
+            case "public":
+                accessModifier = "public";
+                break;
+            case "private":
+                accessModifier = "private";
+                break;
+            default:
+                throw new InvalidTokenException("Invalid or missing accessmodifier");
+        }
+
+        string identifier = statement.identifier.lexeme;
+
+        string extends = statement.extends?.lexeme ?? "";
+        string extendsIdentifier = statement.extends?.lexeme ?? "";
+
+        string variableDeclarations = "";
+
+        foreach(var currVarDeclaration in statement.variableDeclarationStatements)
+        {
+            variableDeclarations += VisitVariableDeclarationStatement(currVarDeclaration);
+        }
+
+        string functionDeclarations = "";
+
+        foreach(var currFuncDeclaration in statement.functionDeclarationStatements)
+        {
+            functionDeclarations += VisitFunctionDeclarationStatement(currFuncDeclaration);
+        }
+
+        return $"{accessModifier} {identifier} {extends} {extendsIdentifier} {{ {variableDeclarations} {functionDeclarations} }}";
     }
 
     public string VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)

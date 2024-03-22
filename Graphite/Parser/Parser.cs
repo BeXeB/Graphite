@@ -1,4 +1,5 @@
 ﻿using Graphite.Lexer;
+using static Graphite.Statement;
 
 namespace Graphite.Parser;
 
@@ -17,6 +18,116 @@ public class Parser
             statements.Add(GraphStmt());
         }
         return statements;
+    }
+
+    private Statement.ClassDeclarationStatement ClassDeclarationStatement()
+    {
+        Token accessModifier;
+        Token classIdentifier;
+        Token? extends = null;
+        Token? extendsIdentifier = null;
+        List<VariableDeclarationStatement> variableDeclarationStatements = new List<VariableDeclarationStatement>();
+        List<FunctionDeclarationStatement> functionDeclarationStatements = new List<FunctionDeclarationStatement>();
+
+        accessModifier = Peek();
+
+        if (accessModifier.type != TokenType.PUBLIC && accessModifier.type != TokenType.PRIVATE)
+        {
+            throw new InvalidTokenException("Invalid or missing access modifier");
+        }
+
+        Advance();
+
+        classIdentifier = Consume(TokenType.IDENTIFIER, "Invalid class identifier");
+
+        if (Peek().type == TokenType.EXTENDS)
+        {
+            extends = Consume(TokenType.EXTENDS, "Unexpected internal error in parser");
+            extendsIdentifier = Consume(TokenType.IDENTIFIER, "Extending invalid identifier");
+        }
+
+        Consume(TokenType.LEFT_BRACE, "Expecting '{' after identifier at class decleration");
+
+        while (Peek().type != TokenType.RIGHT_BRACE)
+        {
+            accessModifier = Peek();
+
+            if (accessModifier.type != TokenType.PUBLIC && accessModifier.type != TokenType.PRIVATE)
+            {
+                throw new InvalidTokenException("Invalid or missing access modifier");
+            }
+
+            Advance();
+
+            // TODO: discuss if we really want óur current syntax or the variable/function syntax like c#/java/c/..
+            switch(Peek(1).type)
+            {
+                case TokenType.LEFT_PAREN: // Meaning its a function decleration
+                    functionDeclarationStatements.Add(FunctionDeclarationStatement());
+                    break;
+                case TokenType.IDENTIFIER: // Meaning its a variable decleration
+                    variableDeclarationStatements.Add(VariableDeclarationStatement());
+                    break;
+                default:
+                    throw new InvalidTokenException("Unexpected token inside class decleration. Expected class- or function decleration");
+            }   
+        }
+
+        return new ClassDeclarationStatement(
+            accessModifier,
+            classIdentifier,
+            extends,
+            extendsIdentifier,
+            variableDeclarationStatements,
+            functionDeclarationStatements
+            );
+    }
+
+    private Statement.VariableDeclarationStatement VariableDeclarationStatement()
+    {
+        Token type = Peek();
+        //Token? functionTypeReturnType;
+        //List<Token> functionTypeArguments;
+        Token identifier;
+        Expression? initializingExpression = null;
+
+        switch (type.type)
+        {
+            case TokenType.STR:
+            case TokenType.CHAR:
+            case TokenType.INT:
+            case TokenType.DEC:
+            case TokenType.BOOL:
+            case TokenType.IDENTIFIER:
+                Advance();
+                break;
+            case TokenType.FUNC_TYPE:
+                Consume(TokenType.LESS, "expected '<' after Func type to declare return- and argument types");
+                //functionTypeReturnType = 
+                //TODO we need to figure out how to solve this problem with types that can be of tokentype.type, but als of type
+                // Func, that has to contain other types.
+                throw new NotImplementedException("We need to figure out how to solve this problem");
+            default:
+                throw new InvalidTokenException("Invalid or missing type for variable declaration");
+        }
+
+        identifier = Consume(TokenType.IDENTIFIER, "missing identifier after variable type declaration");
+        
+        if (Peek().type == TokenType.EQUAL)
+        {
+            Advance();
+            initializingExpression = Expression();
+        }
+
+        Consume(TokenType.SEMICOLON, "missing semicolon");
+
+        return new VariableDeclarationStatement(type, identifier, initializingExpression );
+    }
+
+    private Statement.FunctionDeclarationStatement FunctionDeclarationStatement()
+    {
+        Token identifier = Consume(TokenType.IDENTIFIER, "expecting function identifier");
+        throw new NotImplementedException("Malthe in progress here lel"); //TODO finnish
     }
 
     #region GraphStmt
@@ -190,7 +301,7 @@ public class Parser
     {
         Consume(TokenType.WHILE, "Expect 'while' at the beginning of the statement.");
         Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
-        var condition = Expr();
+        var condition = Expression();
         Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
         var body = GraphBlockStmt();
         return new GraphExpression.GraphWhileStmt(condition, body);
@@ -200,7 +311,7 @@ public class Parser
     {
         Consume(TokenType.IF, "Expect 'if' at the beginning of the statement.");
         Consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
-        var condition = Expr();
+        var condition = Expression();
         Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
         var thenBranch = GraphBlockStmt();
         if (Match(TokenType.ELSE))
@@ -239,7 +350,7 @@ public class Parser
         return null;
     }
 
-    private Expression Expr()
+    private Expression Expression()
     {
         while(Peek().type != TokenType.RIGHT_PAREN)
         {
@@ -287,10 +398,10 @@ public class Parser
         return tokens[current - 1];
     }
     
-    private Token Consume(TokenType type, string message)
+    private Token Consume(TokenType type, string errorMessage)
     {
         if (Check(type)) return Advance();
-        throw new ParseException(message);
+        throw new ParseException(errorMessage);
     }
     
     private bool Match(TokenType type)
@@ -317,8 +428,8 @@ public class Parser
         return Peek().type == TokenType.EOF;
     }
     
-    private Token Peek()
+    private Token Peek(int steps = 0)
     {
-        return tokens[current];
+        return tokens[current + steps];
     }
 }

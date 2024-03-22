@@ -18,7 +18,7 @@ type			→ "str"
 			| "bool" 
 			| IDENTIFIER
 			| "Func""<"type("," type)*">"  
-initializer		→ "=" expression 
+initializer		→ "=" nonAssignment 
 			| ""  
 funcDecl		→ IDENTIFIER "("parameters")" "returns" (type | "void") block  
 parameters		→ type IDENTIFIER ("," type IDENTIFIER)*
@@ -59,13 +59,13 @@ predAnd			→ predPrimary ("and" predPrimary)*
 predUnary		→ ("!" | "") predPrimary
 predPrimary		→ "(" predOr ")"
 			| additive
-expression		→ assignment 
-			| nonAssignment  	
+expression		→ assignment
+			| nonAssignment
 assignment		→ IDENTIFIER "=" nonAssignment 
-			| call "." IDENTIFIER "=" expression 
-			| "new" IDENTIFIER "("arguments")"  
+			| call "." IDENTIFIER "=" nonAssignment   
 nonAssignment 		→ or 
-			| anonFunc  
+			| anonFunc
+			| "new" IDENTIFIER "("arguments")"
 anonFunc		→ "("parameters")" "=>" block  
 or			→ and ("or" and)*  
 and			→ equality ("and" equality)*  

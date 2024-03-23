@@ -56,7 +56,8 @@ graphBlock		→ "{" (graphOperation | exprStmt)*  "}"
 predicate		→ "[" predOr "]"  
 predOr			→ predAnd ("or" predAnd)*  
 predAnd			→ predPrimary ("and" predPrimary)*
-predUnary		→ ("!" | "") predPrimary
+predUnary		→ "!"predUnary
+			| predPrimary
 predPrimary		→ "(" predOr ")"
 			| additive
 expression		→ assignment

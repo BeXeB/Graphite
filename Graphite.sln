@@ -5,7 +5,9 @@ VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Graphite", "Graphite\Graphite.csproj", "{3147C7E1-4D97-4A09-ACE8-BAF2800F95DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{BCD4939B-C5B9-43D4-982F-59D96B206844}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csproj", "{BCD4939B-C5B9-43D4-982F-59D96B206844}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuikGraphVisualizer", "QuickGraph\QuikGraphVisualizer.csproj", "{483A33EA-5F4E-429E-AF07-2BFFAF739A82}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{BCD4939B-C5B9-43D4-982F-59D96B206844}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCD4939B-C5B9-43D4-982F-59D96B206844}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCD4939B-C5B9-43D4-982F-59D96B206844}.Release|Any CPU.Build.0 = Release|Any CPU
+		{483A33EA-5F4E-429E-AF07-2BFFAF739A82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{483A33EA-5F4E-429E-AF07-2BFFAF739A82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{483A33EA-5F4E-429E-AF07-2BFFAF739A82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{483A33EA-5F4E-429E-AF07-2BFFAF739A82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

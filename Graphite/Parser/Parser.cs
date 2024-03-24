@@ -1,4 +1,5 @@
-﻿using Graphite.Lexer;
+﻿using System.Linq.Expressions;
+using Graphite.Lexer;
 
 namespace Graphite.Parser;
 
@@ -247,12 +248,6 @@ public class Parser
         }
         return null;
     }
-
-    private Expression Additive()
-    {
-        Consume(TokenType.STRING_LITERAL, "Expect string literal.");
-        return null;
-    }
     
     private Expression Or()
     {
@@ -270,9 +265,91 @@ public class Parser
     
     private Expression And()
     {
+        var expression = Equality();
+
+        while (Match(TokenType.AND))
+        {
+            var @operator = Previous();
+            var right = Equality();
+            expression = new Expression.LogicalExpression(expression, @operator, right);
+        }
+
+        return expression;
+    }
+
+    private Expression Equality()
+    {
+        var expression = Comparison();
+
+        while (Match(TokenType.EQUAL_EQUAL) || Match(TokenType.BANG_EQUAL)) 
+        {
+            var @operator = Previous();
+            var right = Comparison();
+            expression = new Expression.BinaryExpression(expression, @operator, right);
+        }
+
+        return expression;
+    }
+
+    private Expression Comparison()
+    {
+        var expression = Additive();
+
+        while(Match(TokenType.LESS) || Match(TokenType.LESS_EQUAL) || Match(TokenType.GREATER_EQUAL) || Match(TokenType.GREATER))
+        {
+            var @operator = Previous();
+            var right = Additive();
+            expression = new Expression.BinaryExpression(expression, @operator, right);
+        }
+        return expression;
+    }
+
+    private Expression Additive()
+    {
+        var expression = Multiplicative();
+
+        while (Match(TokenType.PLUS) || Match(TokenType.MINUS))
+        {
+            var @operator = Previous();
+            var right = Multiplicative();
+            expression = new Expression.BinaryExpression(expression, @operator, right);
+        }
+        return expression;
+    }
+
+    private Expression Multiplicative()
+    {
+        var expression = Unary();
+
+        while (Match(TokenType.STAR) || Match(TokenType.SLASH) || Match(TokenType.MOD))
+        {
+            var @operator = Previous();
+            var right = Unary();
+            expression = new Expression.BinaryExpression(expression, @operator, right);
+        }
+        return expression;
+    }
+
+    private Expression Unary()
+    {
         return null;
     }
-    
+
+    private Expression Call()
+    {
+        return null;
+    }
+
+    private Expression Arguments()
+    {
+        return null;
+    }
+
+    private Expression Primary()
+    {
+        return null;
+    }
+
     private Expression Set()
     {
         while (!Match(TokenType.RIGHT_BRACE))
@@ -281,7 +358,22 @@ public class Parser
         }
         return null;
     }
-    
+
+    private Expression List()
+    {
+        return null;
+    }
+
+    private Expression ElementAccess()
+    {
+        return null;
+    }
+
+    private Expression Elements()
+    {
+        return null;
+    }
+
     private Token Previous()
     {
         return tokens[current - 1];

@@ -64,6 +64,15 @@ public abstract class Expression
     
     public class UnaryExpression : Expression
     {
+        public readonly Token @operator;
+        public readonly Expression right;
+
+        public UnaryExpression(Token @operator, Expression right)
+        {
+            this.@operator = @operator;
+            this.right = right;
+        }
+
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitUnaryExpression(this);
@@ -123,6 +132,15 @@ public abstract class Expression
     
     public class CallExpression : Expression
     {
+        public readonly Expression callee;
+        public readonly List<Expression> arguments;
+        
+        public CallExpression (Expression callee, List<Expression> arguments)
+        {
+            this.callee = callee;
+            this.arguments = arguments;
+        }
+        
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitCallExpression(this);

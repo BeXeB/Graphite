@@ -405,17 +405,41 @@ public class Parser
 
     private Expression Unary()
     {
-        return null;
+        if(Match(TokenType.MINUS) || Match(TokenType.BANG))
+        {
+            var @operator = Previous();
+            var right = Unary();
+            var expression = new Expression.UnaryExpression(@operator, right);
+            return expression;
+        }
+        return Call();
     }
 
     private Expression Call()
     {
-        return null;
-    }
+        var expression = Primary();
 
-    private Expression Arguments()
-    {
-        return null;
+        if (expression is not Expression.VariableExpression) return expression;
+
+        while (true)
+        {
+            if (Match(TokenType.LEFT_PAREN))
+            {
+                var arguments = Arguments();
+                expression = new Expression.CallExpression(expression, arguments);
+            }
+            if (Match(TokenType.DOT))
+            {
+                var field = Consume(TokenType.IDENTIFIER, "Expect field name after '.'.");
+                expression = new Expression.GetFieldExpression(expression, field);
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        return expression;
     }
 
     private Expression Primary()
@@ -425,10 +449,6 @@ public class Parser
 
     private Expression Set()
     {
-        while (!Match(TokenType.RIGHT_BRACE))
-        {
-            Advance();
-        }
         return null;
     }
 
@@ -441,12 +461,6 @@ public class Parser
     {
         return null;
     }
-
-    private Expression Elements()
-    {
-        return null;
-    }
-
     
     #endregion
 

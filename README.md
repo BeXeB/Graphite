@@ -84,14 +84,13 @@ primary 		→ "(" expression ")"
 			| DECIMAL
 			| "true" 
 			| "false" 
-			| IDENTIFIER 
+			| elementAccess
 			| set 
 			| list
-			| elementAccess
 			| "null"  
 set			→ "{" arguments "}"  
 list			→ "[" arguments "]"  
-elementAccess		→ primary "[" arguments "]"  
+elementAccess		→ IDENTIFIER ("[" nonAssignment "]" | "")
 ```
 
 

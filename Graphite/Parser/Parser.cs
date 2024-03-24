@@ -7,7 +7,7 @@ namespace Graphite.Parser;
 
 public class Parser
 {
-    private int current = 0;
+    private int current;
     private List<Token> tokens = new();
     
     public List<Statement> Parse(List<Token> tokens)
@@ -248,7 +248,7 @@ public class Parser
             case TokenType.LEFT_BRACKET:
                 return PredOperation();
             case TokenType.STRING_LITERAL:
-                return RetagOperation();
+                return ReTagOperation();
             case TokenType.WHILE:
                 return GraphWhileStatement();
             case TokenType.IF:
@@ -275,11 +275,10 @@ public class Parser
 
     private GraphExpression.GraphAddVertexExpression GraphAddVertexExpression()
     {
-        GraphExpression.GraphAddVertexExpression expression;
         Consume(TokenType.PLUS, "Expect '+' after 'V'.");
         var tags = Set();
-        expression = Peek().type == TokenType.INT_LITERAL
-            ? new GraphExpression.GraphAddVertexExpression(tags, Advance())
+        var expression = Peek().type == TokenType.INT_LITERAL
+            ? new GraphExpression.GraphAddVertexExpression(tags, Advance()) 
             : new GraphExpression.GraphAddVertexExpression(tags, new Token { type = TokenType.INT_LITERAL, lexeme = "", literal = 1 });
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
         return expression;
@@ -287,10 +286,9 @@ public class Parser
 
     private GraphExpression.GraphRemoveVertexExpression GraphRemoveVertexExpression()
     {
-        GraphExpression.GraphRemoveVertexExpression expression;
         Consume(TokenType.MINUS, "Expect '-' after 'V'.");
         var predicate = Predicate();
-        expression = new GraphExpression.GraphRemoveVertexExpression(predicate);
+        var expression = new GraphExpression.GraphRemoveVertexExpression(predicate);
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
         return expression;
     }
@@ -445,7 +443,6 @@ public class Parser
     {
         var expression = NonAssignment();
         if (!Match(TokenType.EQUAL)) return expression;
-        var equals = Previous();
         var value = NonAssignment();
         return expression switch
         {

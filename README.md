@@ -61,8 +61,7 @@ predUnary		→ "!"predUnary
 predPrimary		→ "(" predOr ")"
 			| additive
 expression		→ assignment
-			| nonAssignment
-assignment		→ nonAssignment "=" nonAssignment 
+assignment		→ nonAssignment ("=" nonAssignment | "") 
 nonAssignment 		→ or 
 			| anonFunc
 			| "new" IDENTIFIER "("arguments")"

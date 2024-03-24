@@ -62,8 +62,7 @@ predPrimary		→ "(" predOr ")"
 			| additive
 expression		→ assignment
 			| nonAssignment
-assignment		→ IDENTIFIER "=" nonAssignment 
-			| call "." IDENTIFIER "=" nonAssignment   
+assignment		→ nonAssignment "=" nonAssignment 
 nonAssignment 		→ or 
 			| anonFunc
 			| "new" IDENTIFIER "("arguments")"
@@ -78,7 +77,7 @@ unary			→ ("-" | "!") unary
 			| call 
 			| primary  
 call 			→ IDENTIFIER ("(" arguments ")" | "") ("." call)*  
-arguments		→ expression ("," expression)* 
+arguments		→ nonAssignment ("," nonAssignment)* 
 			| ""  
 primary 		→ "(" expression ")" 
 			| STRING 
@@ -95,7 +94,7 @@ primary 		→ "(" expression ")"
 set			→ "{" elements "}"  
 list			→ "[" elements "]"  
 elementAccess		→ primary "[" arguments "]"  
-elements		→ expression ("," expression)* 
+elements		→ nonAssignment ("," nonAssignment)* 
 			| ""  
 ```
 

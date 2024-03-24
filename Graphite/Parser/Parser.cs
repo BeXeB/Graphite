@@ -8,8 +8,8 @@ namespace Graphite.Parser;
 public class Parser
 {
     private int current = 0;
-    private List<Token> tokens;
-
+    private List<Token> tokens = new();
+    
     public List<Statement> Parse(List<Token> tokens)
     {
         this.tokens = tokens;
@@ -201,7 +201,15 @@ public class Parser
         var statements = new List<Statement>();
         while (!Match(TokenType.RIGHT_BRACE))
         {
-            statements.Add(Declaration());
+            try
+            {
+                statements.Add(Declaration());
+            }
+            catch (ParseException e)
+            {
+                Console.WriteLine(e);
+                Synchronize();
+            }
         }
         return new Statement.BlockStatement(statements);
     }
@@ -478,7 +486,7 @@ public class Parser
     private List<Expression> Arguments()
     {
         var arguments = new List<Expression>();
-        while (!Match(TokenType.RIGHT_PAREN))
+        while (true)
         {
             arguments.Add(NonAssignment());
             if (!Match(TokenType.COMMA)) break;
@@ -583,18 +591,17 @@ public class Parser
     {
         var expression = Primary();
 
-        if (expression is not Graphite.Parser.Expression.VariableExpression) return expression;
-
         while (true)
         {
             if (Match(TokenType.LEFT_PAREN))
             {
                 var arguments = Arguments();
+                Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
                 expression = new Expression.CallExpression(expression, arguments);
             }
             if (Match(TokenType.DOT))
             {
-                var field = Consume(TokenType.IDENTIFIER, "Expect field name after '.'.");
+                var field = Call();
                 expression = new Expression.GetFieldExpression(expression, field);
             }
             else
@@ -613,21 +620,29 @@ public class Parser
 
     private Expression List()
     {
-        return null;
+        var elements = Arguments();
+        Consume(TokenType.RIGHT_BRACE, "Expect '}' at the end of the set.");
+        return new Expression.SetExpression(elements);
     }
 
     private Expression ElementAccess()
     {
-        return null;
+        var elements = Arguments();
+        Consume(TokenType.RIGHT_BRACKET, "Expect ']' at the end of the list.");
+        return new Expression.ListExpression(elements);
     }
 
     private Expression Set()
     {
-        while (!Match(TokenType.RIGHT_BRACE))
+        var token = Consume(TokenType.IDENTIFIER, "Expect identifier.");
+        Expression expression = new Expression.VariableExpression(token);
+        while (Match(TokenType.LEFT_BRACKET))
         {
-            Advance();
+            var index = NonAssignment();
+            Consume(TokenType.RIGHT_BRACKET, "Expect ']' after index.");
+            expression = new Expression.ElementAccessExpression(expression, index);
         }
-        return null;
+        return expression;
     }
 
     
@@ -674,6 +689,34 @@ public class Parser
     {
         return tokens[current + steps];
     }
-    
+
+    private void Synchronize()
+    {
+        Advance();
+        while (!IsAtEnd())
+        {
+            if (Previous().type == TokenType.SEMICOLON) return;
+            switch (Peek().type)
+            {
+                case TokenType.INT:
+                case TokenType.DEC:
+                case TokenType.BOOL:
+                case TokenType.FUNC_TYPE:
+                case TokenType.STR:
+                case TokenType.CHAR:
+                case TokenType.BREAK:
+                case TokenType.CONTINUE:
+                case TokenType.PRIVATE:
+                case TokenType.PUBLIC:
+                case TokenType.IF:
+                case TokenType.WHILE:
+                case TokenType.RETURN:
+                case TokenType.IDENTIFIER:
+                    return;
+            }
+            Advance();
+        }
+    }
+
     #endregion
 }

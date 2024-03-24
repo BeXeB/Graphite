@@ -20,7 +20,7 @@ public abstract class Expression
         T VisitSuperExpression (SuperExpression expression);
         T VisitListExpression (ListExpression expression);
         T VisitSetExpression (SetExpression expression);
-        //expression of element access
+        T VisitElementAccessExpression (ElementAccessExpression expression);
         T VisitInstanceExpression (InstanceExpression expression);
         T VisitAnonFunctionExpression (AnonFunctionExpression expression);
     }
@@ -165,6 +165,13 @@ public abstract class Expression
     
     public class ListExpression : Expression
     {
+        public readonly List<Expression> elements;
+        
+        public ListExpression (List<Expression> elements)
+        {
+            this.elements = elements;
+        }
+        
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitListExpression(this);
@@ -173,6 +180,13 @@ public abstract class Expression
     
     public class SetExpression : Expression
     {
+        public readonly List<Expression> elements;
+        
+        public SetExpression (List<Expression> elements)
+        {
+            this.elements = elements;
+        }
+        
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitSetExpression(this);
@@ -182,9 +196,9 @@ public abstract class Expression
     public class GetFieldExpression : Expression
     {
         public readonly Expression obj;
-        public readonly Token field;
+        public readonly Expression field;
         
-        public GetFieldExpression (Expression obj, Token field)
+        public GetFieldExpression (Expression obj, Expression field)
         {
             this.obj = obj;
             this.field = field;
@@ -199,10 +213,10 @@ public abstract class Expression
     public class SetFieldExpression : Expression
     {
         public readonly Expression obj;
-        public readonly Token field;
+        public readonly Expression field;
         public readonly Expression value;
         
-        public SetFieldExpression (Expression obj, Token field, Expression value)
+        public SetFieldExpression (Expression obj, Expression field, Expression value)
         {
             this.obj = obj;
             this.field = field;
@@ -246,6 +260,23 @@ public abstract class Expression
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitInstanceExpression(this);
+        }
+    }
+    
+    public class ElementAccessExpression : Expression
+    {
+        public readonly Expression obj;
+        public readonly Expression index;
+        
+        public ElementAccessExpression (Expression obj, Expression index)
+        {
+            this.obj = obj;
+            this.index = index;
+        }
+        
+        public override T Accept<T> (IExpressionVisitor<T> visitor)
+        {
+            return visitor.VisitElementAccessExpression(this);
         }
     }
 }

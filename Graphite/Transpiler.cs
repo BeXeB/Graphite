@@ -184,6 +184,11 @@ public class Transpiler : Statement.IStatementVisitor<string>, Expression.IExpre
         throw new NotImplementedException();
     }
 
+    public string VisitElementAccessExpression(Expression.ElementAccessExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
     public string VisitInstanceExpression(Expression.InstanceExpression expression)
     {
         throw new NotImplementedException();

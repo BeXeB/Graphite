@@ -91,11 +91,9 @@ primary 		→ "(" expression ")"
 			| list
 			| elementAccess
 			| "null"  
-set			→ "{" elements "}"  
-list			→ "[" elements "]"  
+set			→ "{" arguments "}"  
+list			→ "[" arguments "]"  
 elementAccess		→ primary "[" arguments "]"  
-elements		→ nonAssignment ("," nonAssignment)* 
-			| ""  
 ```
 
 

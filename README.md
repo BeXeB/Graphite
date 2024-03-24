@@ -39,13 +39,13 @@ breakStmt		→ "break"";"
 block			→ "{"declaration*"}"  
 exprStmt		→ expression";"  
 graphStmt		→ IDENTIFIER "{" graphOperation* "}"";"  
-graphOperation		→ predicate predOperation
+graphOperation		→ predOperation
 			| "V" vertexOperation
 			| STRING "<<" (STRING | "null");
 			| exprStmt
 			| graphWhile
 			| graphIf  
-predOperation		→ ("=>" | "<=>") predicate (INTEGER | DECIMAL | "") ";"
+predOperation		→ predicate ("=>" | "<=>") predicate (INTEGER | DECIMAL | "") ";"
 			| "=/=" predicate";"
 			| ("++"|"--") set";"  
 vertexOperation 	→ "-" predicate ";"
@@ -73,9 +73,8 @@ comparison		→ additive (("<" | "<=" | ">=" | ">") additive)*
 additive		→ mult (("+" | "-") mult)*  
 mult			→ unary (("*"| "/" | "mod") unary)*  
 unary			→ ("-" | "!") unary
-			| call 
-			| primary  
-call 			→ IDENTIFIER ("(" arguments ")" | "") ("." call)*  
+			| call   
+call 			→ primary ("(" arguments ")" | "") ("." call)*  
 arguments		→ nonAssignment ("," nonAssignment)* 
 			| ""  
 primary 		→ "(" expression ")" 

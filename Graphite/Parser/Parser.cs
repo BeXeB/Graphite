@@ -201,7 +201,63 @@ public class Parser
 
         return new OtherNonTerminals.Type(type, typeArguments);
     }
+
+    private Statement Statement()
+    {
+        var token = Peek();
+        switch (token.type)
+        {
+            case TokenType.IF:
+                return IfStatement();
+            case TokenType.WHILE:
+                return WhileStatement();
+            case TokenType.RETURN:
+                return ReturnStatement();
+            case TokenType.BREAK:
+                return BreakStatement();
+            case TokenType.CONTINUE:
+                return ContinueStatement();
+            case TokenType.IDENTIFIER:
+                return GraphStatement();
+            case TokenType.LEFT_BRACE:
+                return BlockStatement();
+            default:
+                return ExpressionStatement();
+        }
+    }
     
+    private Statement.IfStatement IfStatement()
+    {
+        return null;
+    }
+    
+    private Statement.WhileStatement WhileStatement()
+    {
+        return null;
+    }
+    
+    private Statement.ReturnStatement ReturnStatement()
+    {
+        Consume(TokenType.RETURN, "Expect 'return' at the beginning of the statement.");
+        var value = Expression();
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
+        return new Statement.ReturnStatement(value);
+    }
+    
+    private Statement.BreakStatement BreakStatement()
+    {
+        Consume(TokenType.BREAK, "Expect 'break' at the beginning of the statement.");
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
+        return new Statement.BreakStatement();
+    }
+    
+    private Statement.ContinueStatement ContinueStatement()
+    {
+        Consume(TokenType.CONTINUE, "Expect 'continue' at the beginning of the statement.");
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
+        return new Statement.ContinueStatement();
+    }
+
     private Statement.BlockStatement BlockStatement()
     {
         var statements = new List<Statement>();

@@ -66,6 +66,13 @@ public abstract class Statement
     }
     public class ReturnStatement : Statement
     {
+        public readonly Expression expression;
+        
+        public ReturnStatement (Expression expression)
+        {
+            this.expression = expression;
+        }
+        
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitReturnStatement(this);

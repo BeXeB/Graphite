@@ -218,9 +218,9 @@ public abstract class Expression
     public class AnonFunctionExpression : Expression
     {
         public readonly Statement.BlockStatement body;
-        public readonly List<Token>? parameters;
+        public readonly OtherNonTerminals.Parameters parameters;
         
-        public AnonFunctionExpression (List<Token>? parameters, Statement.BlockStatement body)
+        public AnonFunctionExpression (OtherNonTerminals.Parameters parameters, Statement.BlockStatement body)
         {
             this.parameters = parameters;
             this.body = body;

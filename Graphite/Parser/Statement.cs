@@ -103,6 +103,30 @@ public abstract class Statement
     }
     public class ClassDeclarationStatement : Statement
     {
+        public readonly Token accessModifier;
+        public readonly Token identifier;
+        public readonly Token? extends;
+        public readonly Token? extendsIdentifier;
+
+        public readonly List<VariableDeclarationStatement> variableDeclarationStatements;
+        public readonly List <FunctionDeclarationStatement> functionDeclarationStatements;
+
+        public ClassDeclarationStatement(
+            Token accessModifier, 
+            Token identifier, 
+            Token? extends, 
+            Token? extendsIdentifier, 
+            List<VariableDeclarationStatement> variableDeclarationStatements, 
+            List<FunctionDeclarationStatement> functionDeclarationStatements)
+        {
+            this.accessModifier = accessModifier;
+            this.identifier = identifier;
+            this.extends = extends;
+            this.extendsIdentifier = extendsIdentifier;
+            this.variableDeclarationStatements = variableDeclarationStatements ?? new List<VariableDeclarationStatement>();
+            this.functionDeclarationStatements = functionDeclarationStatements ?? new List<FunctionDeclarationStatement>();
+        }
+
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitClassDeclarationStatement(this);
@@ -110,6 +134,17 @@ public abstract class Statement
     }
     public class FunctionDeclarationStatement : Statement
     {
+        private Token identifier;
+        readonly OtherNonTerminals.Parameters parameters;
+        readonly BlockStatement blockStatement;
+
+        public FunctionDeclarationStatement(Token identifier, OtherNonTerminals.Parameters parameters, BlockStatement blockStatement)
+        {
+            this.identifier = identifier;
+            this.parameters = parameters;
+            this.blockStatement = blockStatement;
+        }
+
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitFunctionDeclarationStatement(this);
@@ -117,9 +152,21 @@ public abstract class Statement
     }
     public class VariableDeclarationStatement : Statement
     {
+        public readonly OtherNonTerminals.Type type;
+        public readonly Token identifier;
+        public readonly Expression? initializingExpression;
+
+        public VariableDeclarationStatement(OtherNonTerminals.Type type, Token identifier, Expression? initializingExpression)
+        {
+            this.type = type;
+            this.identifier = identifier;
+            this.initializingExpression = initializingExpression;
+        }
+
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitVariableDeclarationStatement(this);
         }
     }
+
 }

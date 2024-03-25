@@ -15,7 +15,15 @@ public class Parser
         current = 0;
         while (!IsAtEnd())
         {
-            statements.Add(Declaration());
+            try
+            {
+                statements.Add(Declaration());
+            }
+            catch (ParseException e)
+            {
+                Console.WriteLine(e);
+                Synchronize();
+            }
         }
         return statements;
     }

@@ -91,7 +91,7 @@ public class Parser
     {
         OtherNonTerminals.Type type;
         Token identifier;
-        Expr? initializingExpression = null;
+        Expression? initializingExpression = null;
 
         type = Type();
 
@@ -100,7 +100,7 @@ public class Parser
         if (Peek().type == TokenType.EQUAL)
         {
             Advance();
-            initializingExpression = Expr();
+            initializingExpression = Expression();
         }
 
         Consume(TokenType.SEMICOLON, "missing semicolon");
@@ -188,7 +188,7 @@ public class Parser
                 throw new InvalidTokenException("Invalid or missing type");
         }
 
-        return new OtherNonTerminals.Type(type);
+        return new OtherNonTerminals.Type(type, typeArguments);
     }
 
     private Statement Declaration()
@@ -196,7 +196,7 @@ public class Parser
         return null;
     }
     
-    private Statement.BlockStatement BlockStmt()
+    private Statement.BlockStatement BlockStatement()
     {
         var statements = new List<Statement>();
         while (!Match(TokenType.RIGHT_BRACE))
@@ -206,18 +206,18 @@ public class Parser
         return new Statement.BlockStatement(statements);
     }
     
-    private Statement ExprStmt()
+    private Statement ExpressionStatement()
     {
-        var expression = Expr();
+        var expression = Expression();
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
         return new Statement.ExpressionStatement(expression);
     }
     
     #endregion
 
-    #region GraphStmt
+    #region GraphStatement
 
-    private Statement.GraphStatement GraphStmt()
+    private Statement.GraphStatement GraphStatement()
     {
         var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier.");
         if (!Match(TokenType.LEFT_BRACE)) throw new ParseException("Expect '{' after identifier.");
@@ -242,11 +242,11 @@ public class Parser
             case TokenType.STRING_LITERAL:
                 return RetagOperation();
             case TokenType.WHILE:
-                return GraphWhileStmt();
+                return GraphWhileStatement();
             case TokenType.IF:
-                return GraphIfStmt();
+                return GraphIfStatement();
             default:
-                return GraphExpressionStmt();
+                return GraphExpressionStatement();
         }
     }
 
@@ -257,15 +257,15 @@ public class Parser
         switch (token.type)
         {
             case TokenType.PLUS:
-                return GraphAddVertexExpr();
+                return GraphAddVertexExpression();
             case TokenType.MINUS:
-                return GraphRemoveVertexExpr();
+                return GraphRemoveVertexExpression();
             default:
                 throw new ParseException("Expect '+' or '-' after 'V'.");
         }
     }
 
-    private GraphExpression.GraphAddVertexExpression GraphAddVertexExpr()
+    private GraphExpression.GraphAddVertexExpression GraphAddVertexExpression()
     {
         GraphExpression.GraphAddVertexExpression expression;
         Consume(TokenType.PLUS, "Expect '+' after 'V'.");
@@ -277,7 +277,7 @@ public class Parser
         return expression;
     }
 
-    private GraphExpression.GraphRemoveVertexExpression GraphRemoveVertexExpr()
+    private GraphExpression.GraphRemoveVertexExpression GraphRemoveVertexExpression()
     {
         GraphExpression.GraphRemoveVertexExpression expression;
         Consume(TokenType.MINUS, "Expect '-' after 'V'.");
@@ -382,32 +382,32 @@ public class Parser
         return new GraphExpression.GraphReTagExpression(oldTag, token);
     }
 
-    private GraphExpression.GraphWhileStmt GraphWhileStmt()
+    private GraphExpression.GraphWhileStatement GraphWhileStatement()
     {
         Consume(TokenType.WHILE, "Expect 'while' at the beginning of the statement.");
         Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
-        var condition = Expr();
+        var condition = Expression();
         Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
-        var body = GraphBlockStmt();
-        return new GraphExpression.GraphWhileStmt(condition, body);
+        var body = GraphBlockStatement();
+        return new GraphExpression.GraphWhileStatement(condition, body);
     }
 
-    private GraphExpression.GraphIfStmt GraphIfStmt()
+    private GraphExpression.GraphIfStatement GraphIfStatement()
     {
         Consume(TokenType.IF, "Expect 'if' at the beginning of the statement.");
         Consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
-        var condition = Expr();
+        var condition = Expression();
         Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
-        var thenBranch = GraphBlockStmt();
+        var thenBranch = GraphBlockStatement();
         if (Match(TokenType.ELSE))
         {
-            var elseBranch = GraphBlockStmt();
-            return new GraphExpression.GraphIfStmt(condition, thenBranch, elseBranch);
+            var elseBranch = GraphBlockStatement();
+            return new GraphExpression.GraphIfStatement(condition, thenBranch, elseBranch);
         }
-        return new GraphExpression.GraphIfStmt(condition, thenBranch, null);
+        return new GraphExpression.GraphIfStatement(condition, thenBranch, null);
     }
 
-    private GraphExpression.GraphBlockStmt GraphBlockStmt()
+    private GraphExpression.GraphBlockStatement GraphBlockStatement()
     {
         Consume(TokenType.LEFT_BRACE, "Expect '{' at the beginning of the block.");
         var statements = new List<GraphExpression>();
@@ -415,25 +415,25 @@ public class Parser
         {
             statements.Add(GraphOperation());
         }
-        return new GraphExpression.GraphBlockStmt(statements);
+        return new GraphExpression.GraphBlockStatement(statements);
     }
 
-    private GraphExpression.GraphExpressionStmt GraphExpressionStmt()
+    private GraphExpression.GraphExpressionStatement GraphExpressionStatement()
     {
-        var statement = ExprStmt();
-        return new GraphExpression.GraphExpressionStmt(statement);
+        var statement = ExpressionStatement();
+        return new GraphExpression.GraphExpressionStatement(statement);
     }
 
     #endregion
 
     #region Expressions
     
-    private Expr Expr()
+    private Expression Expression()
     {
         return Assignment();
     }
     
-    private Expr Assignment()
+    private Expression Assignment()
     {
         var expression = NonAssignment();
         if (!Match(TokenType.EQUAL)) return expression;
@@ -441,13 +441,13 @@ public class Parser
         var value = NonAssignment();
         return expression switch
         {
-            Expr.VariableExpression variable => new Expr.AssignmentExpression(variable.name, value),
-            Expr.GetFieldExpression get => new Expr.SetFieldExpression(get.obj, get.field, value),
+            Expression.VariableExpression variable => new Expression.AssignmentExpression(variable.name, value),
+            Expression.GetFieldExpression get => new Expression.SetFieldExpression(get.obj, get.field, value),
             _ => throw new ParseException("Invalid assignment target.")
         };
     }
     
-    private Expr NonAssignment()
+    private Expression NonAssignment()
     {
         return Peek().type switch
         {
@@ -457,27 +457,27 @@ public class Parser
         };
     }
     
-    private Expr AnonFunc()
+    private Expression AnonFunc()
     {
         Consume(TokenType.LEFT_PAREN, "Expect '(' at the beginning of the anonymous function.");
         var parameters = Parameters();
         Consume(TokenType.ARROW, "Expect '=>' after parameters.");
-        var body = BlockStmt();
-        return new Expr.AnonFunctionExpression(parameters, body);
+        var body = BlockStatement();
+        return new Expression.AnonFunctionExpression(parameters, body);
     }
 
-    private Expr Instance()
+    private Expression Instance()
     {
         Consume(TokenType.NEW, "Expect 'new' at the beginning of the instance creation.");
         var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier after 'new'.");
         if (!Match(TokenType.LEFT_PAREN)) throw new ParseException("Expect '(' after identifier.");
         var arguments = Arguments();
-        return new Expr.InstanceExpression(identifier, arguments);
+        return new Expression.InstanceExpression(identifier, arguments);
     }
 
-    private List<Expr> Arguments()
+    private List<Expression> Arguments()
     {
-        var arguments = new List<Expr>();
+        var arguments = new List<Expression>();
         while (!Match(TokenType.RIGHT_PAREN))
         {
             arguments.Add(NonAssignment());
@@ -486,7 +486,7 @@ public class Parser
         return arguments;
     }
 
-    private Expr Or()
+    private Expression Or()
     {
         var expression = And();
 
@@ -494,13 +494,13 @@ public class Parser
         {
             var @operator = Previous();
             var right = And();
-            expression = new Expr.LogicalExpression(expression, @operator, right);
+            expression = new Expression.LogicalExpression(expression, @operator, right);
         }
 
         return expression;
     }
 
-    private Expr And()
+    private Expression And()
     {
         var expression = Equality();
 
@@ -508,13 +508,13 @@ public class Parser
         {
             var @operator = Previous();
             var right = Equality();
-            expression = new Expr.LogicalExpression(expression, @operator, right);
+            expression = new Expression.LogicalExpression(expression, @operator, right);
         }
 
         return expression;
     }
 
-    private Expr Equality()
+    private Expression Equality()
     {
         var expression = Comparison();
 
@@ -522,13 +522,13 @@ public class Parser
         {
             var @operator = Previous();
             var right = Comparison();
-            expression = new Expr.BinaryExpression(expression, @operator, right);
+            expression = new Expression.BinaryExpression(expression, @operator, right);
         }
 
         return expression;
     }
 
-    private Expr Comparison()
+    private Expression Comparison()
     {
         var expression = Additive();
 
@@ -536,12 +536,12 @@ public class Parser
         {
             var @operator = Previous();
             var right = Additive();
-            expression = new Expr.BinaryExpression(expression, @operator, right);
+            expression = new Expression.BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
 
-    private Expr Additive()
+    private Expression Additive()
     {
         var expression = Multiplicative();
 
@@ -549,12 +549,12 @@ public class Parser
         {
             var @operator = Previous();
             var right = Multiplicative();
-            expression = new Expr.BinaryExpression(expression, @operator, right);
+            expression = new Expression.BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
 
-    private Expr Multiplicative()
+    private Expression Multiplicative()
     {
         var expression = Unary();
 
@@ -562,40 +562,40 @@ public class Parser
         {
             var @operator = Previous();
             var right = Unary();
-            expression = new Expr.BinaryExpression(expression, @operator, right);
+            expression = new Expression.BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
 
-    private Expr Unary()
+    private Expression Unary()
     {
         if(Match(TokenType.MINUS) || Match(TokenType.BANG))
         {
             var @operator = Previous();
             var right = Unary();
-            var expression = new Expr.UnaryExpression(@operator, right);
+            var expression = new Expression.UnaryExpression(@operator, right);
             return expression;
         }
         return Call();
     }
 
-    private Expr Call()
+    private Expression Call()
     {
         var expression = Primary();
 
-        if (expression is not Graphite.Parser.Expr.VariableExpression) return expression;
+        if (expression is not Graphite.Parser.Expression.VariableExpression) return expression;
 
         while (true)
         {
             if (Match(TokenType.LEFT_PAREN))
             {
                 var arguments = Arguments();
-                expression = new Expr.CallExpression(expression, arguments);
+                expression = new Expression.CallExpression(expression, arguments);
             }
             if (Match(TokenType.DOT))
             {
                 var field = Consume(TokenType.IDENTIFIER, "Expect field name after '.'.");
-                expression = new Expr.GetFieldExpression(expression, field);
+                expression = new Expression.GetFieldExpression(expression, field);
             }
             else
             {
@@ -606,22 +606,22 @@ public class Parser
         return expression;
     }
 
-    private Expr Primary()
+    private Expression Primary()
     {
         return null;
     }
 
-    private Expr List()
+    private Expression List()
     {
         return null;
     }
 
-    private Expr ElementAccess()
+    private Expression ElementAccess()
     {
         return null;
     }
 
-    private Expr Set()
+    private Expression Set()
     {
         while (!Match(TokenType.RIGHT_BRACE))
         {

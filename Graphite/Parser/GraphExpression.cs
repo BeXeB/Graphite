@@ -11,10 +11,10 @@ public abstract class GraphExpression
         T VisitGraphRemoveVertexExpression (GraphRemoveVertexExpression expression);
         T VisitGraphTagExpression (GraphTagExpression expression);
         T VisitGraphReTagExpression (GraphReTagExpression expression);
-        T VisitGraphWhileStmt (GraphWhileStmt expression);
-        T VisitGraphIfStmt (GraphIfStmt expression);
-        T VisitGraphExpressionStmt (GraphExpressionStmt expression);
-        T VisitGraphBlockStmt (GraphBlockStmt expression);
+        T VisitGraphWhileStmt (GraphWhileStatement expression);
+        T VisitGraphIfStmt (GraphIfStatement expression);
+        T VisitGraphExpressionStmt (GraphExpressionStatement expression);
+        T VisitGraphBlockStmt (GraphBlockStatement expression);
         T VisitPredicateOrExpression (PredicateOrExpression expression);
         T VisitPredicateAndExpression (PredicateAndExpression expression);
         T VisitPredicateGroupingExpression (PredicateGroupingExpression expression);
@@ -47,10 +47,10 @@ public abstract class GraphExpression
     
     public class GraphAddVertexExpression : GraphExpression
     {
-        public readonly Expr tags;
+        public readonly Expression tags;
         public readonly Token times;
         
-        public GraphAddVertexExpression (Expr tags, Token times)
+        public GraphAddVertexExpression (Expression tags, Token times)
         {
             this.tags = tags;
             this.times = times;
@@ -81,9 +81,9 @@ public abstract class GraphExpression
     {
         public readonly GraphExpression predicate;
         public readonly Token @operator;
-        public readonly Expr tags;
+        public readonly Expression tags;
         
-        public GraphTagExpression (GraphExpression predicate, Token @operator, Expr tags)
+        public GraphTagExpression (GraphExpression predicate, Token @operator, Expression tags)
         {
             this.predicate = predicate;
             this.@operator = @operator;
@@ -113,12 +113,12 @@ public abstract class GraphExpression
         }
     }
     
-    public class GraphWhileStmt : GraphExpression
+    public class GraphWhileStatement : GraphExpression
     {
-        public readonly Expr condition;
+        public readonly Expression condition;
         public readonly GraphExpression body;
         
-        public GraphWhileStmt (Expr condition, GraphExpression body)
+        public GraphWhileStatement (Expression condition, GraphExpression body)
         {
             this.condition = condition;
             this.body = body;
@@ -130,13 +130,13 @@ public abstract class GraphExpression
         }
     }
     
-    public class GraphIfStmt : GraphExpression
+    public class GraphIfStatement : GraphExpression
     {
-        public readonly Expr condition;
+        public readonly Expression condition;
         public readonly GraphExpression thenBranch;
         public readonly GraphExpression? elseBranch;
         
-        public GraphIfStmt (Expr condition, GraphExpression thenBranch, GraphExpression? elseBranch)
+        public GraphIfStatement (Expression condition, GraphExpression thenBranch, GraphExpression? elseBranch)
         {
             this.condition = condition;
             this.thenBranch = thenBranch;
@@ -149,10 +149,10 @@ public abstract class GraphExpression
         }
     }
     
-    public class GraphExpressionStmt : GraphExpression
+    public class GraphExpressionStatement : GraphExpression
     {
         public readonly Statement statement;
-        public GraphExpressionStmt (Statement statement)
+        public GraphExpressionStatement (Statement statement)
         {
             this.statement = statement;
         }
@@ -163,11 +163,11 @@ public abstract class GraphExpression
         }
     }
     
-    public class GraphBlockStmt : GraphExpression
+    public class GraphBlockStatement : GraphExpression
     {
         public readonly List<GraphExpression> statements;
         
-        public GraphBlockStmt (List<GraphExpression> statements)
+        public GraphBlockStatement (List<GraphExpression> statements)
         {
             this.statements = statements;
         }
@@ -249,9 +249,9 @@ public abstract class GraphExpression
     
     public class PredicateLiteralExpression : GraphExpression
     {
-        public readonly Expr expression;
+        public readonly Expression expression;
         
-        public PredicateLiteralExpression (Expr expression)
+        public PredicateLiteralExpression (Expression expression)
         {
             this.expression = expression;
         }

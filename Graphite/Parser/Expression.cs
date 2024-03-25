@@ -2,7 +2,7 @@
 
 namespace Graphite.Parser;
 
-public abstract class Expr
+public abstract class Expression
 {
     public interface IExpressionVisitor<T>
     {
@@ -27,13 +27,13 @@ public abstract class Expr
     
     public abstract T Accept<T> (IExpressionVisitor<T> visitor);
     
-    public class BinaryExpression : Expr
+    public class BinaryExpression : Expression
     {
-        public readonly Expr left;
+        public readonly Expression left;
         public readonly Token @operator;
-        public readonly Expr right;
+        public readonly Expression right;
         
-        public BinaryExpression (Expr left, Token @operator, Expr right)
+        public BinaryExpression (Expression left, Token @operator, Expression right)
         {
             this.left = left;
             this.@operator = @operator;
@@ -46,7 +46,7 @@ public abstract class Expr
         }
     }
     
-    public class GroupingExpression : Expr
+    public class GroupingExpression : Expression
     {
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
@@ -54,7 +54,7 @@ public abstract class Expr
         }
     }
     
-    public class LiteralExpression : Expr
+    public class LiteralExpression : Expression
     {
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
@@ -62,12 +62,12 @@ public abstract class Expr
         }
     }
     
-    public class UnaryExpression : Expr
+    public class UnaryExpression : Expression
     {
         public readonly Token @operator;
-        public readonly Expr right;
+        public readonly Expression right;
 
-        public UnaryExpression(Token @operator, Expr right)
+        public UnaryExpression(Token @operator, Expression right)
         {
             this.@operator = @operator;
             this.right = right;
@@ -79,12 +79,12 @@ public abstract class Expr
         }
     }
     
-    public class AssignmentExpression : Expr
+    public class AssignmentExpression : Expression
     {
         public Token name;
-        public Expr value;
+        public Expression value;
         
-        public AssignmentExpression (Token name, Expr value)
+        public AssignmentExpression (Token name, Expression value)
         {
             this.name = name;
             this.value = value;
@@ -96,7 +96,7 @@ public abstract class Expr
         }
     }
     
-    public class VariableExpression : Expr
+    public class VariableExpression : Expression
     {
         public readonly Token name;
         
@@ -111,13 +111,13 @@ public abstract class Expr
         }
     }
     
-    public class LogicalExpression : Expr
+    public class LogicalExpression : Expression
     {
-        public readonly Expr left;
+        public readonly Expression left;
         public readonly Token @operator;
-        public readonly Expr right;
+        public readonly Expression right;
         
-        public LogicalExpression(Expr left, Token @operator, Expr right)
+        public LogicalExpression(Expression left, Token @operator, Expression right)
         {
             this.left = left;
             this.@operator = @operator;
@@ -130,12 +130,12 @@ public abstract class Expr
         }
     }
     
-    public class CallExpression : Expr
+    public class CallExpression : Expression
     {
-        public readonly Expr callee;
-        public readonly List<Expr> arguments;
+        public readonly Expression callee;
+        public readonly List<Expression> arguments;
         
-        public CallExpression (Expr callee, List<Expr> arguments)
+        public CallExpression (Expression callee, List<Expression> arguments)
         {
             this.callee = callee;
             this.arguments = arguments;
@@ -147,7 +147,7 @@ public abstract class Expr
         }
     }
     
-    public class ThisExpression : Expr
+    public class ThisExpression : Expression
     {
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
@@ -155,7 +155,7 @@ public abstract class Expr
         }
     }
     
-    public class SuperExpression : Expr
+    public class SuperExpression : Expression
     {
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
@@ -163,7 +163,7 @@ public abstract class Expr
         }
     }
     
-    public class ListExpression : Expr
+    public class ListExpression : Expression
     {
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
@@ -171,7 +171,7 @@ public abstract class Expr
         }
     }
     
-    public class SetExpression : Expr
+    public class SetExpression : Expression
     {
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
@@ -179,12 +179,12 @@ public abstract class Expr
         }
     }
     
-    public class GetFieldExpression : Expr
+    public class GetFieldExpression : Expression
     {
-        public readonly Expr obj;
+        public readonly Expression obj;
         public readonly Token field;
         
-        public GetFieldExpression (Expr obj, Token field)
+        public GetFieldExpression (Expression obj, Token field)
         {
             this.obj = obj;
             this.field = field;
@@ -196,13 +196,13 @@ public abstract class Expr
         }
     }
     
-    public class SetFieldExpression : Expr
+    public class SetFieldExpression : Expression
     {
-        public readonly Expr obj;
+        public readonly Expression obj;
         public readonly Token field;
-        public readonly Expr value;
+        public readonly Expression value;
         
-        public SetFieldExpression (Expr obj, Token field, Expr value)
+        public SetFieldExpression (Expression obj, Token field, Expression value)
         {
             this.obj = obj;
             this.field = field;
@@ -215,7 +215,7 @@ public abstract class Expr
         }
     }
     
-    public class AnonFunctionExpression : Expr
+    public class AnonFunctionExpression : Expression
     {
         public readonly Statement.BlockStatement body;
         public readonly OtherNonTerminals.Parameters parameters;
@@ -232,12 +232,12 @@ public abstract class Expr
         }
     }
     
-    public class InstanceExpression : Expr
+    public class InstanceExpression : Expression
     {
         public readonly Token className;
-        public readonly List<Expr> arguments;
+        public readonly List<Expression> arguments;
         
-        public InstanceExpression (Token className, List<Expr> arguments)
+        public InstanceExpression (Token className, List<Expression> arguments)
         {
             this.className = className;
             this.arguments = arguments;

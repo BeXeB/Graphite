@@ -20,11 +20,12 @@ namespace Graphite.Parser
         public class Type : OtherNonTerminals
         {
             public readonly Token? type;
-            //public readonly FunctionType? funtionType;
+            public readonly List<Type> typeArguments;
 
-            public Type(Token type)
+            public Type(Token type, List<Type> typeArguments)
             {
                 this.type = type;
+                this.typeArguments = typeArguments;
             }
 
             public override T Accept<T>(IOtherNonTerminalsVisitor<T> visitor)

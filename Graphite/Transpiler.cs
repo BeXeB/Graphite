@@ -3,7 +3,7 @@ using Graphite.Parser;
 
 namespace Graphite;
 
-public class Transpiler : Statement.IStatementVisitor<string>, Expr.IExpressionVisitor<string>
+public class Transpiler : Statement.IStatementVisitor<string>, Expression.IExpressionVisitor<string>
 {
     public string Transpile(List<Statement> statements)
     {
@@ -104,7 +104,7 @@ public class Transpiler : Statement.IStatementVisitor<string>, Expr.IExpressionV
         throw new NotImplementedException();
     }
 
-    public string VisitBinaryExpression(Expr.BinaryExpression expression)
+    public string VisitBinaryExpression(Expression.BinaryExpression expression)
     {
         var left = expression.left.Accept(this);
         var right = expression.right.Accept(this);
@@ -119,77 +119,77 @@ public class Transpiler : Statement.IStatementVisitor<string>, Expr.IExpressionV
         return $"{left} {@operator} {right}";
     }
 
-    public string VisitGroupingExpression(Expr.GroupingExpression expression)
+    public string VisitGroupingExpression(Expression.GroupingExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitLiteralExpression(Expr.LiteralExpression expression)
+    public string VisitLiteralExpression(Expression.LiteralExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitUnaryExpression(Expr.UnaryExpression expression)
+    public string VisitUnaryExpression(Expression.UnaryExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitAssignmentExpression(Expr.AssignmentExpression expression)
+    public string VisitAssignmentExpression(Expression.AssignmentExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitVariableExpression(Expr.VariableExpression expression)
+    public string VisitVariableExpression(Expression.VariableExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitLogicalExpression(Expr.LogicalExpression expression)
+    public string VisitLogicalExpression(Expression.LogicalExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitCallExpression(Expr.CallExpression expression)
+    public string VisitCallExpression(Expression.CallExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitGetFieldExpression(Expr.GetFieldExpression expression)
+    public string VisitGetFieldExpression(Expression.GetFieldExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitSetFieldExpression(Expr.SetFieldExpression expression)
+    public string VisitSetFieldExpression(Expression.SetFieldExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitThisExpression(Expr.ThisExpression expression)
+    public string VisitThisExpression(Expression.ThisExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitSuperExpression(Expr.SuperExpression expression)
+    public string VisitSuperExpression(Expression.SuperExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitListExpression(Expr.ListExpression expression)
+    public string VisitListExpression(Expression.ListExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitSetExpression(Expr.SetExpression expression)
+    public string VisitSetExpression(Expression.SetExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitInstanceExpression(Expr.InstanceExpression expression)
+    public string VisitInstanceExpression(Expression.InstanceExpression expression)
     {
         throw new NotImplementedException();
     }
 
-    public string VisitAnonFunctionExpression(Expr.AnonFunctionExpression expression)
+    public string VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
     {
         throw new NotImplementedException();
     }

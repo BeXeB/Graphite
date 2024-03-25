@@ -621,21 +621,23 @@ public class Parser
         return null;
     }
 
-    private Expression List()
+    private Expression Set()
     {
+        Consume(TokenType.LEFT_BRACE, "Expect '{' at the beginning of the set.");
         var elements = Arguments();
         Consume(TokenType.RIGHT_BRACE, "Expect '}' at the end of the set.");
         return new Expression.SetExpression(elements);
     }
 
-    private Expression ElementAccess()
+    private Expression List()
     {
+        Consume(TokenType.LEFT_BRACKET, "Expect '[' at the beginning of the list.");
         var elements = Arguments();
         Consume(TokenType.RIGHT_BRACKET, "Expect ']' at the end of the list.");
         return new Expression.ListExpression(elements);
     }
 
-    private Expression Set()
+    private Expression ElementAccess()
     {
         var token = Consume(TokenType.IDENTIFIER, "Expect identifier.");
         Expression expression = new Expression.VariableExpression(token);

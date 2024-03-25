@@ -1,6 +1,7 @@
-﻿using Graphite.Lexer;
+using Graphite.Lexer;
 using static Graphite.Parser.OtherNonTerminals;
 using static Graphite.Statement;
+using System.Linq.Expressions;
 
 namespace Graphite.Parser;
 
@@ -16,11 +17,13 @@ public class Parser
         current = 0;
         while (!IsAtEnd())
         {
-            statements.Add(GraphStmt());
+            statements.Add(Declaration());
         }
         return statements;
     }
 
+    #region Statements
+    
     private Statement.ClassDeclarationStatement ClassDeclarationStatement()
     {
         Token accessModifier;
@@ -187,6 +190,35 @@ public class Parser
 
         return new OtherNonTerminals.Type(type);
     }
+
+    private Statement Declaration()
+    {
+        return null;
+    }
+    
+    private List<Token>? Parameters()
+    {
+        return null;
+    }
+    
+    private Statement.BlockStatement BlockStmt()
+    {
+        var statements = new List<Statement>();
+        while (!Match(TokenType.RIGHT_BRACE))
+        {
+            statements.Add(Declaration());
+        }
+        return new Statement.BlockStatement(statements);
+    }
+    
+    private Statement ExprStmt()
+    {
+        var expression = Expr();
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
+        return new Statement.ExpressionStatement(expression);
+    }
+    
+    #endregion
 
     #region GraphStmt
 
@@ -399,28 +431,64 @@ public class Parser
 
     #endregion
 
-    private Statement ExprStmt()
+    #region Expressions
+    
+    private Expression Expr()
     {
-        while (!Match(TokenType.SEMICOLON))
+        return Assignment();
+    }
+    
+    private Expression Assignment()
+    {
+        var expression = NonAssignment();
+        if (!Match(TokenType.EQUAL)) return expression;
+        var equals = Previous();
+        var value = NonAssignment();
+        return expression switch
         {
-            Advance();
-        }
-        return null;
+            Expression.VariableExpression variable => new Expression.AssignmentExpression(variable.name, value),
+            Expression.GetFieldExpression get => new Expression.SetFieldExpression(get.obj, get.field, value),
+            _ => throw new ParseException("Invalid assignment target.")
+        };
+    }
+    
+    private Expression NonAssignment()
+    {
+        return Peek().type switch
+        {
+            TokenType.LEFT_PAREN => AnonFunc(),
+            TokenType.NEW => Instance(),
+            _ => Or()
+        };
+    }
+    
+    private Expression AnonFunc()
+    {
+        Consume(TokenType.LEFT_PAREN, "Expect '(' at the beginning of the anonymous function.");
+        var parameters = Parameters();
+        Consume(TokenType.ARROW, "Expect '=>' after parameters.");
+        var body = BlockStmt();
+        return new Expression.AnonFunctionExpression(parameters, body);
     }
 
-    private Expression Expression()
+    private Expression Instance()
     {
-        while (Peek().type != TokenType.RIGHT_PAREN)
-        {
-            Advance();
-        }
-        return null;
+        Consume(TokenType.NEW, "Expect 'new' at the beginning of the instance creation.");
+        var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier after 'new'.");
+        if (!Match(TokenType.LEFT_PAREN)) throw new ParseException("Expect '(' after identifier.");
+        var arguments = Arguments();
+        return new Expression.InstanceExpression(identifier, arguments);
     }
 
-    private Expression Additive()
+    private List<Expression> Arguments()
     {
-        Consume(TokenType.STRING_LITERAL, "Expect string literal.");
-        return null;
+        var arguments = new List<Expression>();
+        while (!Match(TokenType.RIGHT_PAREN))
+        {
+            arguments.Add(NonAssignment());
+            if (!Match(TokenType.COMMA)) break;
+        }
+        return arguments;
     }
 
     private Expression Or()
@@ -439,6 +507,127 @@ public class Parser
 
     private Expression And()
     {
+        var expression = Equality();
+
+        while (Match(TokenType.AND))
+        {
+            var @operator = Previous();
+            var right = Equality();
+            expression = new Expression.LogicalExpression(expression, @operator, right);
+        }
+
+        return expression;
+    }
+
+    private Expression Equality()
+    {
+        var expression = Comparison();
+
+        while (Match(TokenType.EQUAL_EQUAL) || Match(TokenType.BANG_EQUAL)) 
+        {
+            var @operator = Previous();
+            var right = Comparison();
+            expression = new Expression.BinaryExpression(expression, @operator, right);
+        }
+
+        return expression;
+    }
+
+    private Expression Comparison()
+    {
+        var expression = Additive();
+
+        while(Match(TokenType.LESS) || Match(TokenType.LESS_EQUAL) || Match(TokenType.GREATER_EQUAL) || Match(TokenType.GREATER))
+        {
+            var @operator = Previous();
+            var right = Additive();
+            expression = new Expression.BinaryExpression(expression, @operator, right);
+        }
+        return expression;
+    }
+
+    private Expression Additive()
+    {
+        var expression = Multiplicative();
+
+        while (Match(TokenType.PLUS) || Match(TokenType.MINUS))
+        {
+            var @operator = Previous();
+            var right = Multiplicative();
+            expression = new Expression.BinaryExpression(expression, @operator, right);
+        }
+        return expression;
+    }
+
+    private Expression Multiplicative()
+    {
+        var expression = Unary();
+
+        while (Match(TokenType.STAR) || Match(TokenType.SLASH) || Match(TokenType.MOD))
+        {
+            var @operator = Previous();
+            var right = Unary();
+            expression = new Expression.BinaryExpression(expression, @operator, right);
+        }
+        return expression;
+    }
+
+    private Expression Unary()
+    {
+        if(Match(TokenType.MINUS) || Match(TokenType.BANG))
+        {
+            var @operator = Previous();
+            var right = Unary();
+            var expression = new Expression.UnaryExpression(@operator, right);
+            return expression;
+        }
+        return Call();
+    }
+
+    private Expression Call()
+    {
+        var expression = Primary();
+
+        if (expression is not Expression.VariableExpression) return expression;
+
+        while (true)
+        {
+            if (Match(TokenType.LEFT_PAREN))
+            {
+                var arguments = Arguments();
+                expression = new Expression.CallExpression(expression, arguments);
+            }
+            if (Match(TokenType.DOT))
+            {
+                var field = Consume(TokenType.IDENTIFIER, "Expect field name after '.'.");
+                expression = new Expression.GetFieldExpression(expression, field);
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        return expression;
+    }
+
+    private Expression Primary()
+    {
+        return null;
+    }
+
+    private Expression Set()
+    {
+        return null;
+    }
+
+    private Expression List()
+    {
+        return null;
+    }
+
+    private Expression ElementAccess()
+    {
         return null;
     }
 
@@ -451,6 +640,11 @@ public class Parser
         return null;
     }
 
+    
+    #endregion
+
+    #region Helpers
+    
     private Token Previous()
     {
         return tokens[current - 1];
@@ -490,4 +684,6 @@ public class Parser
     {
         return tokens[current + steps];
     }
+    
+    #endregion
 }

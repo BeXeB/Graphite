@@ -38,6 +38,13 @@ public abstract class Statement
     
     public class ExpressionStatement : Statement
     {
+        public readonly Expression expression;
+        
+        public ExpressionStatement (Expression expression)
+        {
+            this.expression = expression;
+        }
+        
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitExpressionStatement(this);

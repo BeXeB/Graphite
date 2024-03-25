@@ -14,14 +14,15 @@ public abstract class Expression
         T VisitVariableExpression (VariableExpression expression);
         T VisitLogicalExpression (LogicalExpression expression);
         T VisitCallExpression (CallExpression expression);
-        // T VisitGetExpression (GetExpression expression); //expression for accessing field of a class
-        // T VisitSetExpression (SetExpression expression); //expression for setting field of a class
+        T VisitGetFieldExpression (GetFieldExpression expression); //expression for accessing field of a class
+        T VisitSetFieldExpression (SetFieldExpression expression); //expression for setting field of a class
         T VisitThisExpression (ThisExpression expression);
         T VisitSuperExpression (SuperExpression expression);
         T VisitListExpression (ListExpression expression);
         T VisitSetExpression (SetExpression expression);
         //expression of element access
-        //expression for anon function
+        T VisitInstanceExpression (InstanceExpression expression);
+        T VisitAnonFunctionExpression (AnonFunctionExpression expression);
     }
     
     public abstract T Accept<T> (IExpressionVisitor<T> visitor);
@@ -63,6 +64,15 @@ public abstract class Expression
     
     public class UnaryExpression : Expression
     {
+        public readonly Token @operator;
+        public readonly Expression right;
+
+        public UnaryExpression(Token @operator, Expression right)
+        {
+            this.@operator = @operator;
+            this.right = right;
+        }
+
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitUnaryExpression(this);
@@ -71,6 +81,15 @@ public abstract class Expression
     
     public class AssignmentExpression : Expression
     {
+        public Token name;
+        public Expression value;
+        
+        public AssignmentExpression (Token name, Expression value)
+        {
+            this.name = name;
+            this.value = value;
+        }
+        
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitAssignmentExpression(this);
@@ -79,6 +98,13 @@ public abstract class Expression
     
     public class VariableExpression : Expression
     {
+        public readonly Token name;
+        
+        public VariableExpression (Token name)
+        {
+            this.name = name;
+        }
+        
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitVariableExpression(this);
@@ -106,6 +132,15 @@ public abstract class Expression
     
     public class CallExpression : Expression
     {
+        public readonly Expression callee;
+        public readonly List<Expression> arguments;
+        
+        public CallExpression (Expression callee, List<Expression> arguments)
+        {
+            this.callee = callee;
+            this.arguments = arguments;
+        }
+        
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitCallExpression(this);
@@ -141,6 +176,76 @@ public abstract class Expression
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitSetExpression(this);
+        }
+    }
+    
+    public class GetFieldExpression : Expression
+    {
+        public readonly Expression obj;
+        public readonly Token field;
+        
+        public GetFieldExpression (Expression obj, Token field)
+        {
+            this.obj = obj;
+            this.field = field;
+        }
+        
+        public override T Accept<T> (IExpressionVisitor<T> visitor)
+        {
+            return visitor.VisitGetFieldExpression(this);
+        }
+    }
+    
+    public class SetFieldExpression : Expression
+    {
+        public readonly Expression obj;
+        public readonly Token field;
+        public readonly Expression value;
+        
+        public SetFieldExpression (Expression obj, Token field, Expression value)
+        {
+            this.obj = obj;
+            this.field = field;
+            this.value = value;
+        }
+        
+        public override T Accept<T> (IExpressionVisitor<T> visitor)
+        {
+            return visitor.VisitSetFieldExpression(this);
+        }
+    }
+    
+    public class AnonFunctionExpression : Expression
+    {
+        public readonly Statement.BlockStatement body;
+        public readonly List<Token>? parameters;
+        
+        public AnonFunctionExpression (List<Token>? parameters, Statement.BlockStatement body)
+        {
+            this.parameters = parameters;
+            this.body = body;
+        }
+        
+        public override T Accept<T> (IExpressionVisitor<T> visitor)
+        {
+            return visitor.VisitAnonFunctionExpression(this);
+        }
+    }
+    
+    public class InstanceExpression : Expression
+    {
+        public readonly Token className;
+        public readonly List<Expression> arguments;
+        
+        public InstanceExpression (Token className, List<Expression> arguments)
+        {
+            this.className = className;
+            this.arguments = arguments;
+        }
+        
+        public override T Accept<T> (IExpressionVisitor<T> visitor)
+        {
+            return visitor.VisitInstanceExpression(this);
         }
     }
 }

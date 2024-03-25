@@ -154,6 +154,16 @@ public class Transpiler : Statement.IStatementVisitor<string>, Expression.IExpre
         throw new NotImplementedException();
     }
 
+    public string VisitGetFieldExpression(Expression.GetFieldExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitSetFieldExpression(Expression.SetFieldExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
     public string VisitThisExpression(Expression.ThisExpression expression)
     {
         throw new NotImplementedException();
@@ -170,6 +180,16 @@ public class Transpiler : Statement.IStatementVisitor<string>, Expression.IExpre
     }
 
     public string VisitSetExpression(Expression.SetExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitInstanceExpression(Expression.InstanceExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
     {
         throw new NotImplementedException();
     }

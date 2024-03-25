@@ -1,7 +1,5 @@
 using Graphite.Lexer;
-using static Graphite.Parser.OtherNonTerminals;
 using static Graphite.Statement;
-using System.Linq.Expressions;
 
 namespace Graphite.Parser;
 
@@ -23,6 +21,11 @@ public class Parser
     }
 
     #region Statements
+    
+    private Statement Declaration()
+    {
+        return null;
+    }
     
     private Statement.ClassDeclarationStatement ClassDeclarationStatement()
     {
@@ -50,7 +53,7 @@ public class Parser
             extendsIdentifier = Consume(TokenType.IDENTIFIER, "Extending invalid identifier");
         }
 
-        Consume(TokenType.LEFT_BRACE, "Expecting '{' after identifier at class decleration");
+        Consume(TokenType.LEFT_BRACE, "Expecting '{' after identifier at class declaration");
 
         while (Peek().type != TokenType.RIGHT_BRACE)
         {
@@ -66,14 +69,14 @@ public class Parser
             // TODO: discuss if we really want óur current syntax or the variable/function syntax like c#/java/c/..
             switch (Peek(1).type)
             {
-                case TokenType.LEFT_PAREN: // Meaning its a function decleration
+                case TokenType.LEFT_PAREN: // Meaning its a function declaration
                     functionDeclarationStatements.Add(FunctionDeclarationStatement());
                     break;
-                case TokenType.IDENTIFIER: // Meaning its a variable decleration
+                case TokenType.IDENTIFIER: // Meaning its a variable declaration
                     variableDeclarationStatements.Add(VariableDeclarationStatement());
                     break;
                 default:
-                    throw new InvalidTokenException("Unexpected token inside class decleration. Expected class- or function decleration");
+                    throw new InvalidTokenException("Unexpected token inside class declaration. Expected class- or function declaration");
             }
         }
 
@@ -126,7 +129,7 @@ public class Parser
     {
         var parameters = new List<(OtherNonTerminals.Type, Token)>();
 
-        Consume(TokenType.LEFT_PAREN, "missing left parantheses before parameters");
+        Consume(TokenType.LEFT_PAREN, "missing left parentheses before parameters");
 
         bool firstParameter = true;
 
@@ -134,7 +137,7 @@ public class Parser
         {
             if (!firstParameter)
             {
-                Consume(TokenType.COMMA, "expecting comma seperation between parameters");
+                Consume(TokenType.COMMA, "expecting comma separation between parameters");
             }
 
             OtherNonTerminals.Type parameterType = Type();
@@ -172,7 +175,7 @@ public class Parser
                 {
                     if (!firstArgument)
                     {
-                        Consume(TokenType.COMMA, "expecting comma seperation between type arguments");
+                        Consume(TokenType.COMMA, "expecting comma separation between type arguments");
                     }
 
                     OtherNonTerminals.Type argumentType = Type();
@@ -189,11 +192,6 @@ public class Parser
         }
 
         return new OtherNonTerminals.Type(type, typeArguments);
-    }
-
-    private Statement Declaration()
-    {
-        return null;
     }
     
     private Statement.BlockStatement BlockStatement()
@@ -248,7 +246,7 @@ public class Parser
             case TokenType.LEFT_BRACKET:
                 return PredOperation();
             case TokenType.STRING_LITERAL:
-                return ReTagOperation();
+                return RetagOperation();
             case TokenType.WHILE:
                 return GraphWhileStatement();
             case TokenType.IF:

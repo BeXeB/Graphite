@@ -127,6 +127,17 @@ public abstract class Statement
     }
     public class FunctionDeclarationStatement : Statement
     {
+        private Token identifier;
+        readonly OtherNonTerminals.Parameters parameters;
+        readonly BlockStatement blockStatement;
+
+        public FunctionDeclarationStatement(Token identifier, OtherNonTerminals.Parameters parameters, BlockStatement blockStatement)
+        {
+            this.identifier = identifier;
+            this.parameters = parameters;
+            this.blockStatement = blockStatement;
+        }
+
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitFunctionDeclarationStatement(this);
@@ -134,11 +145,11 @@ public abstract class Statement
     }
     public class VariableDeclarationStatement : Statement
     {
-        public readonly Token type;
+        public readonly OtherNonTerminals.Type type;
         public readonly Token identifier;
         public readonly Expression? initializingExpression;
 
-        public VariableDeclarationStatement(Token type, Token identifier, Expression? initializingExpression)
+        public VariableDeclarationStatement(OtherNonTerminals.Type type, Token identifier, Expression? initializingExpression)
         {
             this.type = type;
             this.identifier = identifier;
@@ -150,4 +161,5 @@ public abstract class Statement
             return visitor.VisitVariableDeclarationStatement(this);
         }
     }
+
 }

@@ -205,25 +205,17 @@ public class Parser
     private Statement Statement()
     {
         var token = Peek();
-        switch (token.type)
+        return token.type switch
         {
-            case TokenType.IF:
-                return IfStatement();
-            case TokenType.WHILE:
-                return WhileStatement();
-            case TokenType.RETURN:
-                return ReturnStatement();
-            case TokenType.BREAK:
-                return BreakStatement();
-            case TokenType.CONTINUE:
-                return ContinueStatement();
-            case TokenType.IDENTIFIER:
-                return GraphStatement();
-            case TokenType.LEFT_BRACE:
-                return BlockStatement();
-            default:
-                return ExpressionStatement();
-        }
+            TokenType.IF => IfStatement(),
+            TokenType.WHILE => WhileStatement(),
+            TokenType.RETURN => ReturnStatement(),
+            TokenType.BREAK => BreakStatement(),
+            TokenType.CONTINUE => ContinueStatement(),
+            TokenType.IDENTIFIER => Peek(1).type == TokenType.LEFT_BRACE ? GraphStatement() : ExpressionStatement(),
+            TokenType.LEFT_BRACE => BlockStatement(),
+            _ => ExpressionStatement()
+        };
     }
     
     private Statement.IfStatement IfStatement()

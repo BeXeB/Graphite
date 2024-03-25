@@ -47,10 +47,10 @@ public abstract class GraphExpression
     
     public class GraphAddVertexExpression : GraphExpression
     {
-        public readonly Expression tags;
+        public readonly Expr tags;
         public readonly Token times;
         
-        public GraphAddVertexExpression (Expression tags, Token times)
+        public GraphAddVertexExpression (Expr tags, Token times)
         {
             this.tags = tags;
             this.times = times;
@@ -81,9 +81,9 @@ public abstract class GraphExpression
     {
         public readonly GraphExpression predicate;
         public readonly Token @operator;
-        public readonly Expression tags;
+        public readonly Expr tags;
         
-        public GraphTagExpression (GraphExpression predicate, Token @operator, Expression tags)
+        public GraphTagExpression (GraphExpression predicate, Token @operator, Expr tags)
         {
             this.predicate = predicate;
             this.@operator = @operator;
@@ -115,10 +115,10 @@ public abstract class GraphExpression
     
     public class GraphWhileStmt : GraphExpression
     {
-        public readonly Expression condition;
+        public readonly Expr condition;
         public readonly GraphExpression body;
         
-        public GraphWhileStmt (Expression condition, GraphExpression body)
+        public GraphWhileStmt (Expr condition, GraphExpression body)
         {
             this.condition = condition;
             this.body = body;
@@ -132,11 +132,11 @@ public abstract class GraphExpression
     
     public class GraphIfStmt : GraphExpression
     {
-        public readonly Expression condition;
+        public readonly Expr condition;
         public readonly GraphExpression thenBranch;
         public readonly GraphExpression? elseBranch;
         
-        public GraphIfStmt (Expression condition, GraphExpression thenBranch, GraphExpression? elseBranch)
+        public GraphIfStmt (Expr condition, GraphExpression thenBranch, GraphExpression? elseBranch)
         {
             this.condition = condition;
             this.thenBranch = thenBranch;
@@ -249,9 +249,9 @@ public abstract class GraphExpression
     
     public class PredicateLiteralExpression : GraphExpression
     {
-        public readonly Expression expression;
+        public readonly Expr expression;
         
-        public PredicateLiteralExpression (Expression expression)
+        public PredicateLiteralExpression (Expr expression)
         {
             this.expression = expression;
         }

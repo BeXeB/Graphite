@@ -38,9 +38,9 @@ public abstract class Statement
     
     public class ExpressionStatement : Statement
     {
-        public readonly Expression expression;
+        public readonly Expr expression;
         
-        public ExpressionStatement (Expression expression)
+        public ExpressionStatement (Expr expression)
         {
             this.expression = expression;
         }
@@ -154,9 +154,9 @@ public abstract class Statement
     {
         public readonly OtherNonTerminals.Type type;
         public readonly Token identifier;
-        public readonly Expression? initializingExpression;
+        public readonly Expr? initializingExpression;
 
-        public VariableDeclarationStatement(OtherNonTerminals.Type type, Token identifier, Expression? initializingExpression)
+        public VariableDeclarationStatement(OtherNonTerminals.Type type, Token identifier, Expr? initializingExpression)
         {
             this.type = type;
             this.identifier = identifier;

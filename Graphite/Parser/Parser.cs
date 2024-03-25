@@ -91,7 +91,7 @@ public class Parser
     {
         OtherNonTerminals.Type type;
         Token identifier;
-        Expression? initializingExpression = null;
+        Expr? initializingExpression = null;
 
         type = Type();
 
@@ -100,7 +100,7 @@ public class Parser
         if (Peek().type == TokenType.EQUAL)
         {
             Advance();
-            initializingExpression = Expression();
+            initializingExpression = Expr();
         }
 
         Consume(TokenType.SEMICOLON, "missing semicolon");
@@ -192,11 +192,6 @@ public class Parser
     }
 
     private Statement Declaration()
-    {
-        return null;
-    }
-    
-    private List<Token>? Parameters()
     {
         return null;
     }
@@ -391,7 +386,7 @@ public class Parser
     {
         Consume(TokenType.WHILE, "Expect 'while' at the beginning of the statement.");
         Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
-        var condition = Expression();
+        var condition = Expr();
         Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
         var body = GraphBlockStmt();
         return new GraphExpression.GraphWhileStmt(condition, body);
@@ -401,7 +396,7 @@ public class Parser
     {
         Consume(TokenType.IF, "Expect 'if' at the beginning of the statement.");
         Consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
-        var condition = Expression();
+        var condition = Expr();
         Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
         var thenBranch = GraphBlockStmt();
         if (Match(TokenType.ELSE))
@@ -433,12 +428,12 @@ public class Parser
 
     #region Expressions
     
-    private Expression Expr()
+    private Expr Expr()
     {
         return Assignment();
     }
     
-    private Expression Assignment()
+    private Expr Assignment()
     {
         var expression = NonAssignment();
         if (!Match(TokenType.EQUAL)) return expression;
@@ -446,13 +441,13 @@ public class Parser
         var value = NonAssignment();
         return expression switch
         {
-            Expression.VariableExpression variable => new Expression.AssignmentExpression(variable.name, value),
-            Expression.GetFieldExpression get => new Expression.SetFieldExpression(get.obj, get.field, value),
+            Expr.VariableExpression variable => new Expr.AssignmentExpression(variable.name, value),
+            Expr.GetFieldExpression get => new Expr.SetFieldExpression(get.obj, get.field, value),
             _ => throw new ParseException("Invalid assignment target.")
         };
     }
     
-    private Expression NonAssignment()
+    private Expr NonAssignment()
     {
         return Peek().type switch
         {
@@ -462,27 +457,27 @@ public class Parser
         };
     }
     
-    private Expression AnonFunc()
+    private Expr AnonFunc()
     {
         Consume(TokenType.LEFT_PAREN, "Expect '(' at the beginning of the anonymous function.");
         var parameters = Parameters();
         Consume(TokenType.ARROW, "Expect '=>' after parameters.");
         var body = BlockStmt();
-        return new Expression.AnonFunctionExpression(parameters, body);
+        return new Expr.AnonFunctionExpression(parameters, body);
     }
 
-    private Expression Instance()
+    private Expr Instance()
     {
         Consume(TokenType.NEW, "Expect 'new' at the beginning of the instance creation.");
         var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier after 'new'.");
         if (!Match(TokenType.LEFT_PAREN)) throw new ParseException("Expect '(' after identifier.");
         var arguments = Arguments();
-        return new Expression.InstanceExpression(identifier, arguments);
+        return new Expr.InstanceExpression(identifier, arguments);
     }
 
-    private List<Expression> Arguments()
+    private List<Expr> Arguments()
     {
-        var arguments = new List<Expression>();
+        var arguments = new List<Expr>();
         while (!Match(TokenType.RIGHT_PAREN))
         {
             arguments.Add(NonAssignment());
@@ -491,7 +486,7 @@ public class Parser
         return arguments;
     }
 
-    private Expression Or()
+    private Expr Or()
     {
         var expression = And();
 
@@ -499,13 +494,13 @@ public class Parser
         {
             var @operator = Previous();
             var right = And();
-            expression = new Expression.LogicalExpression(expression, @operator, right);
+            expression = new Expr.LogicalExpression(expression, @operator, right);
         }
 
         return expression;
     }
 
-    private Expression And()
+    private Expr And()
     {
         var expression = Equality();
 
@@ -513,13 +508,13 @@ public class Parser
         {
             var @operator = Previous();
             var right = Equality();
-            expression = new Expression.LogicalExpression(expression, @operator, right);
+            expression = new Expr.LogicalExpression(expression, @operator, right);
         }
 
         return expression;
     }
 
-    private Expression Equality()
+    private Expr Equality()
     {
         var expression = Comparison();
 
@@ -527,13 +522,13 @@ public class Parser
         {
             var @operator = Previous();
             var right = Comparison();
-            expression = new Expression.BinaryExpression(expression, @operator, right);
+            expression = new Expr.BinaryExpression(expression, @operator, right);
         }
 
         return expression;
     }
 
-    private Expression Comparison()
+    private Expr Comparison()
     {
         var expression = Additive();
 
@@ -541,12 +536,12 @@ public class Parser
         {
             var @operator = Previous();
             var right = Additive();
-            expression = new Expression.BinaryExpression(expression, @operator, right);
+            expression = new Expr.BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
 
-    private Expression Additive()
+    private Expr Additive()
     {
         var expression = Multiplicative();
 
@@ -554,12 +549,12 @@ public class Parser
         {
             var @operator = Previous();
             var right = Multiplicative();
-            expression = new Expression.BinaryExpression(expression, @operator, right);
+            expression = new Expr.BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
 
-    private Expression Multiplicative()
+    private Expr Multiplicative()
     {
         var expression = Unary();
 
@@ -567,40 +562,40 @@ public class Parser
         {
             var @operator = Previous();
             var right = Unary();
-            expression = new Expression.BinaryExpression(expression, @operator, right);
+            expression = new Expr.BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
 
-    private Expression Unary()
+    private Expr Unary()
     {
         if(Match(TokenType.MINUS) || Match(TokenType.BANG))
         {
             var @operator = Previous();
             var right = Unary();
-            var expression = new Expression.UnaryExpression(@operator, right);
+            var expression = new Expr.UnaryExpression(@operator, right);
             return expression;
         }
         return Call();
     }
 
-    private Expression Call()
+    private Expr Call()
     {
         var expression = Primary();
 
-        if (expression is not Expression.VariableExpression) return expression;
+        if (expression is not Graphite.Parser.Expr.VariableExpression) return expression;
 
         while (true)
         {
             if (Match(TokenType.LEFT_PAREN))
             {
                 var arguments = Arguments();
-                expression = new Expression.CallExpression(expression, arguments);
+                expression = new Expr.CallExpression(expression, arguments);
             }
             if (Match(TokenType.DOT))
             {
                 var field = Consume(TokenType.IDENTIFIER, "Expect field name after '.'.");
-                expression = new Expression.GetFieldExpression(expression, field);
+                expression = new Expr.GetFieldExpression(expression, field);
             }
             else
             {
@@ -611,27 +606,22 @@ public class Parser
         return expression;
     }
 
-    private Expression Primary()
+    private Expr Primary()
     {
         return null;
     }
 
-    private Expression Set()
+    private Expr List()
     {
         return null;
     }
 
-    private Expression List()
+    private Expr ElementAccess()
     {
         return null;
     }
 
-    private Expression ElementAccess()
-    {
-        return null;
-    }
-
-    private Expression Set()
+    private Expr Set()
     {
         while (!Match(TokenType.RIGHT_BRACE))
         {

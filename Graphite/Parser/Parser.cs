@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Graphite.Lexer;
 using static Graphite.Statement;
 
@@ -220,12 +221,27 @@ public class Parser
     
     private Statement.IfStatement IfStatement()
     {
-        return null;
+        Consume(TokenType.IF, "Expect 'if' at the beginning of the statement.");
+        Consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+        var condition = Expression();
+        Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+        var thenBranch = BlockStatement();
+        if (Match(TokenType.ELSE))
+        {
+            var elseBranch = BlockStatement();
+            return new Statement.IfStatement(condition, thenBranch, elseBranch);
+        }
+        return new Statement.IfStatement(condition, thenBranch, null);
     }
     
     private Statement.WhileStatement WhileStatement()
     {
-        return null;
+        Consume(TokenType.WHILE, "Expect 'while' at the beginning of the statement.");
+        Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+        var condition = Expression();
+        Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+        var body = BlockStatement();
+        return new Statement.WhileStatement(condition, body);
     }
     
     private Statement.ReturnStatement ReturnStatement()
@@ -666,7 +682,36 @@ public class Parser
 
     private Expression Primary()
     {
-        return null;
+        Token token = Peek();
+
+        switch (token.type)
+        {
+            case TokenType.LEFT_PAREN:
+                var expression = Expression();
+                Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+                return new Expression.GroupingExpression(expression);
+            case TokenType.LEFT_BRACE:
+                return Set();
+            case TokenType.LEFT_BRACKET:
+                return List();
+            case TokenType.STRING_LITERAL:
+            case TokenType.CHAR_LITERAL:
+            case TokenType.INT_LITERAL:
+            case TokenType.DECIMAL_LITERAL:
+                var literal = Advance().literal;
+                return new Expression.LiteralExpression(literal);
+            case TokenType.TRUE:
+                Advance();
+                return new Expression.LiteralExpression(true);
+            case TokenType.FALSE:
+                Advance();
+                return new Expression.LiteralExpression(false);
+            case TokenType.NULL:
+                Advance();
+                return new Expression.LiteralExpression(null);
+            default:
+                throw new ParseException("Unexpected expression.");
+        }
     }
 
     private Expression Set()

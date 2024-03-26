@@ -1,5 +1,6 @@
 ﻿using Graphite.Lexer;
 using Graphite.Parser;
+using static Graphite.Parser.GraphExpression;
 
 namespace Graphite;
 
@@ -52,6 +53,17 @@ public abstract class Statement
     }
     public class IfStatement : Statement
     {
+        public readonly Expression condition;
+        public readonly Statement thenBranch;
+        public readonly Statement? elseBranch;
+
+        public IfStatement(Expression condition, Statement thenBranch, Statement? elseBranch)
+        {
+            this.condition = condition;
+            this.thenBranch = thenBranch;
+            this.elseBranch = elseBranch;
+        }
+
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitIfStatement(this);
@@ -59,6 +71,15 @@ public abstract class Statement
     }
     public class WhileStatement : Statement
     {
+        public readonly Expression condition;
+        public readonly Statement body;
+
+        public WhileStatement(Expression condition, Statement body)
+        {
+            this.condition = condition;
+            this.body = body;
+        }
+
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitWhileStatement(this);

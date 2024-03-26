@@ -48,6 +48,13 @@ public abstract class Expression
     
     public class GroupingExpression : Expression
     {
+        public readonly Expression expression;
+
+        public GroupingExpression(Expression expression)
+        {
+            this.expression = expression;
+        }
+
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitGroupingExpression(this);
@@ -56,6 +63,13 @@ public abstract class Expression
     
     public class LiteralExpression : Expression
     {
+        public readonly object? value;
+
+        public LiteralExpression(object? value)
+        {
+            this.value = value;
+        }
+
         public override T Accept<T> (IExpressionVisitor<T> visitor)
         {
             return visitor.VisitLiteralExpression(this);

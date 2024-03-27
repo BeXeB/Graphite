@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using Graphite.Lexer;
 using static Graphite.Statement;
 
@@ -33,7 +32,20 @@ public class Parser
     
     private Statement Declaration()
     {
-        return null;
+        var token = Peek();
+        return token.type switch
+        {
+            TokenType.INT => VariableDeclarationStatement(),
+            TokenType.DEC => VariableDeclarationStatement(),
+            TokenType.BOOL => VariableDeclarationStatement(),
+            TokenType.STR => VariableDeclarationStatement(),
+            TokenType.CHAR => VariableDeclarationStatement(),
+            TokenType.FUNC_TYPE => VariableDeclarationStatement(),
+            TokenType.PUBLIC => ClassDeclarationStatement(),
+            TokenType.PRIVATE => ClassDeclarationStatement(),
+            TokenType.IDENTIFIER => Peek(1).type == TokenType.LEFT_PAREN ? FunctionDeclarationStatement() : Statement(),
+            _ => Statement()
+        };
     }
     
     private Statement.ClassDeclarationStatement ClassDeclarationStatement()
@@ -347,9 +359,9 @@ public class Parser
     {
         Consume(TokenType.PLUS, "Expect '+' after 'V'.");
         var tags = Set();
-        var expression = Peek().type == TokenType.INT_LITERAL
-            ? new GraphExpression.GraphAddVertexExpression(tags, Advance()) 
-            : new GraphExpression.GraphAddVertexExpression(tags, new Token { type = TokenType.INT_LITERAL, lexeme = "", literal = 1 });
+        var expression = Peek().type != TokenType.SEMICOLON
+            ? new GraphExpression.GraphAddVertexExpression(tags, Expression()) 
+            : new GraphExpression.GraphAddVertexExpression(tags, new Expression.LiteralExpression(1));
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
         return expression;
     }
@@ -375,9 +387,9 @@ public class Parser
                 Consume(token.type, "Expect '=>', '<=>' or '=/=' after predicate.");
                 var right = Predicate();
                 var peek = Peek();
-                var weight = peek.type is TokenType.INT_LITERAL or TokenType.DECIMAL_LITERAL
-                    ? Advance()
-                    : new Token { type = TokenType.INT_LITERAL, lexeme = "", literal = 1.0 };
+                var weight = peek.type is not TokenType.SEMICOLON
+                    ? Expression()
+                    : new Expression.LiteralExpression(1);
                 Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
                 return new GraphExpression.GraphEdgeExpression(predicate, token, right, weight);
             case TokenType.PLUS_PLUS:
@@ -709,6 +721,8 @@ public class Parser
             case TokenType.NULL:
                 Advance();
                 return new Expression.LiteralExpression(null);
+            case TokenType.IDENTIFIER:
+                return ElementAccess();
             default:
                 throw new ParseException("Unexpected expression.");
         }

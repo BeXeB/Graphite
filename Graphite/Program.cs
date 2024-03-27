@@ -18,8 +18,39 @@ using Graphite.Parser;
 //            Func<int,bool>
 //            """;
 var code = """
+           
+           dec x = 1.2;
+           bool b = true;
+           int a = 0;
+           str s = "Hello World";
+           char c = 'c';
+           
+           test(int a, bool b, str s, char c) returns int {
+               return a;
+           }
+           
+           Func<int, int, bool, str, char> f = test;
+           
+           class TestClass {
+               public int x = 0;
+               private bool b = false;
+               
+               public TestClass(int x, bool b) returns void {
+                   this.x = x;
+                   this.b = b;
+               }
+               
+               public void test(int a, bool b, str s, char c) returns int {
+                   return a;
+               }
+           }
+           
+           var obj = new TestClass(1, true);
+           
+           obj.test(1, true, "Hello World", 'c');
+           
            G{
-               [("tag1" and "tag2") or "tag3"] => ["tag4"] 1.2;
+               [("tag1" and "tag2") or "tag3"] => ["tag4"] d;
                [("tag1" and !"tag2") or "tag3"] <=> ["tag4"] 2;
                [!("tag1" and "tag2") or "tag3"] <=> ["tag4"];
                [("tag1" and "tag2") or "tag3"] =/= ["tag4"];
@@ -33,6 +64,11 @@ var code = """
                while (a < 10) {
                     V + {"tag1", "tag2"};
                     a = a + 1;
+               }
+               if (a == 10) {
+                    V + {"tag1", "tag2"};
+               } else {
+                    V - ["tag1"];
                }
            };
            """;

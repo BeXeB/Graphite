@@ -46,8 +46,8 @@ graphOperation		→ predicateOperation
 			| graphWhile
 			| graphIf  
 predicateOperation	→ predicate ("=>" | "<=>") predicate (nonAssignment | "") ";"
-			| "=/=" predicate";"
-			| ("++"|"--") set";"  
+			| predicate "=/=" predicate";"
+			| predicate ("++"|"--") set";"  
 vertexOperation 	→ "-" predicate ";"
 			| "+" set (nonAssignment | "") ";"  
 graphWhile		→ "while" "("expression")" graphBlock  

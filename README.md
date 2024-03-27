@@ -45,11 +45,11 @@ graphOperation		→ predicateOperation
 			| expressionStatement
 			| graphWhile
 			| graphIf  
-predicateOperation	→ predicate ("=>" | "<=>") predicate (INTEGER | DECIMAL | "") ";"
+predicateOperation	→ predicate ("=>" | "<=>") predicate (nonAssignment | "") ";"
 			| "=/=" predicate";"
 			| ("++"|"--") set";"  
 vertexOperation 	→ "-" predicate ";"
-			| "+" set (INTEGER | "") ";"  
+			| "+" set (nonAssignment | "") ";"  
 graphWhile		→ "while" "("expression")" graphBlock  
 graphIf			→ "if" "("expression")" graphBlock "else" graphBlock   
 graphBlock		→ "{" (graphOperation | expressionStatement)*  "}"  

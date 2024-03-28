@@ -87,7 +87,9 @@ primary 		→ "(" expression ")"
 			| elementAccess
 			| set 
 			| list
-			| "null"  
+			| "null"
+			| "this"
+			| "super"  
 set			→ "{" arguments "}"  
 list			→ "[" arguments "]"  
 elementAccess		→ IDENTIFIER ("[" nonAssignment "]" | "")

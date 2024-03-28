@@ -1,6 +1,5 @@
 ﻿using Graphite.Lexer;
 using Graphite.Parser;
-using static Graphite.Parser.GraphExpression;
 
 namespace Graphite;
 
@@ -165,12 +164,14 @@ public abstract class Statement
         private Token identifier;
         readonly OtherNonTerminals.Parameters parameters;
         readonly BlockStatement blockStatement;
-
-        public FunctionDeclarationStatement(Token identifier, OtherNonTerminals.Parameters parameters, BlockStatement blockStatement)
+        readonly OtherNonTerminals.Type returnType;
+        
+        public FunctionDeclarationStatement(Token identifier, OtherNonTerminals.Parameters parameters, BlockStatement blockStatement, OtherNonTerminals.Type returnType)
         {
             this.identifier = identifier;
             this.parameters = parameters;
             this.blockStatement = blockStatement;
+            this.returnType = returnType;
         }
 
         public override T Accept<T>(IStatementVisitor<T> visitor)

@@ -21,7 +21,7 @@ public class Parser
             }
             catch (ParseException e)
             {
-                Console.WriteLine(e);
+                Console.WriteLine(e.Message);
                 Synchronize();
             }
         }
@@ -65,11 +65,13 @@ public class Parser
 
         if (accessModifier.type != TokenType.PUBLIC && accessModifier.type != TokenType.PRIVATE)
         {
-            throw new InvalidTokenException("Invalid or missing access modifier");
+            throw new ParseException("Invalid or missing access modifier");
         }
 
         Advance();
 
+        Consume(TokenType.CLASS, "Expecting 'class' at the beginning of the class declaration");
+        
         classIdentifier = Consume(TokenType.IDENTIFIER, "Invalid class identifier");
 
         if (Peek().type == TokenType.EXTENDS)
@@ -77,7 +79,7 @@ public class Parser
             extends = Consume(TokenType.EXTENDS, "Unexpected internal error in parser");
             extendsIdentifier = Consume(TokenType.IDENTIFIER, "Extending invalid identifier");
         }
-
+        
         Consume(TokenType.LEFT_BRACE, "Expecting '{' after identifier at class declaration");
 
         while (Peek().type != TokenType.RIGHT_BRACE)
@@ -86,7 +88,7 @@ public class Parser
 
             if (accessModifier.type != TokenType.PUBLIC && accessModifier.type != TokenType.PRIVATE)
             {
-                throw new InvalidTokenException("Invalid or missing access modifier");
+                throw new ParseException("Invalid or missing access modifier");
             }
 
             Advance();
@@ -101,10 +103,12 @@ public class Parser
                     variableDeclarationStatements.Add(VariableDeclarationStatement());
                     break;
                 default:
-                    throw new InvalidTokenException("Unexpected token inside class declaration. Expected class- or function declaration");
+                    throw new ParseException("Unexpected token inside class declaration. Expected class- or function declaration");
             }
         }
 
+        Consume(TokenType.RIGHT_BRACE, "Expecting '}' after class declaration");
+        
         return new ClassDeclarationStatement(
             accessModifier,
             classIdentifier,
@@ -145,9 +149,14 @@ public class Parser
         identifier = Consume(TokenType.IDENTIFIER, "expecting function identifier");
 
         parameters = Parameters();
+        
+        Consume(TokenType.RETURNS, "expecting 'returns' after function parameters");
+        
+        OtherNonTerminals.Type returnType = Type();
+        
         blockStatement = BlockStatement();
 
-        return new FunctionDeclarationStatement(identifier, parameters, blockStatement);
+        return new FunctionDeclarationStatement(identifier, parameters, blockStatement, returnType);
     }
 
     private OtherNonTerminals.Parameters Parameters()
@@ -172,6 +181,8 @@ public class Parser
 
             firstParameter = false;
         }
+        
+        Consume(TokenType.RIGHT_PAREN, "missing right parentheses after parameters");
 
         return new OtherNonTerminals.Parameters(parameters);
     }
@@ -189,6 +200,7 @@ public class Parser
             case TokenType.DEC:
             case TokenType.BOOL:
             case TokenType.IDENTIFIER:
+            case TokenType.VOID:
                 Advance();
                 break;
             case TokenType.FUNC_TYPE:
@@ -286,18 +298,14 @@ public class Parser
     private Statement.BlockStatement BlockStatement()
     {
         var statements = new List<Statement>();
+        
+        Consume(TokenType.LEFT_BRACE, "Expect '{' at the beginning of the block.");
+        
         while (!Match(TokenType.RIGHT_BRACE))
         {
-            try
-            {
-                statements.Add(Declaration());
-            }
-            catch (ParseException e)
-            {
-                Console.WriteLine(e);
-                Synchronize();
-            }
+            statements.Add(Declaration());
         }
+        
         return new Statement.BlockStatement(statements);
     }
     
@@ -543,15 +551,14 @@ public class Parser
     {
         return Peek().type switch
         {
-            TokenType.LEFT_PAREN => AnonFunc(),
+            TokenType.LEFT_PAREN => AnonymousFunction(),
             TokenType.NEW => Instance(),
             _ => Or()
         };
     }
     
-    private Expression AnonFunc()
+    private Expression AnonymousFunction()
     {
-        Consume(TokenType.LEFT_PAREN, "Expect '(' at the beginning of the anonymous function.");
         var parameters = Parameters();
         Consume(TokenType.ARROW, "Expect '=>' after parameters.");
         var body = BlockStatement();
@@ -729,6 +736,12 @@ public class Parser
                 return new Expression.LiteralExpression(null);
             case TokenType.IDENTIFIER:
                 return ElementAccess();
+            case TokenType.THIS:
+                Advance();
+                return new Expression.ThisExpression();
+            case TokenType.SUPER:
+                Advance();
+                return new Expression.SuperExpression();
             default:
                 throw new ParseException("Unexpected expression. At line: " + token.line);
         }

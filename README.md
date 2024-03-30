@@ -17,7 +17,7 @@ type			→ "str"
 			| "dec" 
 			| "bool" 
 			| IDENTIFIER
-			| "Func""<"type("," type)*">"  
+			| "Func""<"(type | "void")("," type)*">"  
 initializer		→ "=" nonAssignment 
 			| ""  
 functionDeclaration	→ IDENTIFIER "("parameters")" "returns" (type | "void") block  

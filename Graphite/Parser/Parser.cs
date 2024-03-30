@@ -152,7 +152,8 @@ public class Parser
         
         Consume(TokenType.RETURNS, "expecting 'returns' after function parameters");
         
-        OtherNonTerminals.Type returnType = Type();
+        var peek = Peek();
+        var returnType = peek.type == TokenType.VOID ? new OtherNonTerminals.Type(peek, []) : Type();
         
         blockStatement = BlockStatement();
 
@@ -200,7 +201,6 @@ public class Parser
             case TokenType.DEC:
             case TokenType.BOOL:
             case TokenType.IDENTIFIER:
-            case TokenType.VOID:
                 Advance();
                 break;
             case TokenType.FUNC_TYPE:
@@ -215,11 +215,16 @@ public class Parser
                     {
                         Consume(TokenType.COMMA, "expecting comma separation between type arguments");
                     }
-
+                    
+                    if (Peek().type == TokenType.VOID && firstArgument)
+                    {
+                        typeArguments.Add(new OtherNonTerminals.Type(Advance(), []));
+                        firstArgument = false;
+                        continue;
+                    }
+                    
                     OtherNonTerminals.Type argumentType = Type();
-
                     typeArguments.Add(argumentType);
-
                     firstArgument = false;
                 }
 

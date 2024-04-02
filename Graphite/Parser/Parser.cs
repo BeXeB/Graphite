@@ -153,7 +153,7 @@ public class Parser
         Consume(TokenType.RETURNS, "expecting 'returns' after function parameters");
         
         var peek = Peek();
-        var returnType = peek.type == TokenType.VOID ? new OtherNonTerminals.Type(peek, []) : Type();
+        var returnType = peek.type == TokenType.VOID ? new OtherNonTerminals.Type(Advance(), []) : Type();
         
         blockStatement = BlockStatement();
 

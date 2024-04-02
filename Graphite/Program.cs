@@ -54,9 +54,15 @@ var code = """
                }
            };
            
+           Func<void, int> a = () => {
+               return 1;
+           };
+           
            TestClass obj = new TestClass(1, true);
            
            obj.test(1, true, "Hello World", 'c');
+           
+           test[123].test(1, true, "Hello World", 'c');
            
            """;
 

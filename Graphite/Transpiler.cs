@@ -3,14 +3,18 @@ using Graphite.Parser;
 
 namespace Graphite;
 
-public class Transpiler : Statement.IStatementVisitor<string>, Expression.IExpressionVisitor<string>
+public class Transpiler : 
+    Statement.IStatementVisitor<string>, 
+    Expression.IExpressionVisitor<string>, 
+    OtherNonTerminals.IOtherNonTerminalsVisitor<string>, 
+    GraphExpression.IGraphExpressionVisitor<string>
 {
     public string Transpile(List<Statement> statements)
     {
         string code = "";
-        foreach (var VARIABLE in statements)
+        foreach (var statement in statements)
         {
-            code += VARIABLE.Accept(this);
+            code += statement.Accept(this);
         }
 
         return code;
@@ -195,6 +199,86 @@ public class Transpiler : Statement.IStatementVisitor<string>, Expression.IExpre
     }
 
     public string VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitType(OtherNonTerminals.Type type)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitParameters(OtherNonTerminals.Parameters parameters)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphEdgeExpression(GraphExpression.GraphEdgeExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphAddVertexExpression(GraphExpression.GraphAddVertexExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphRemoveVertexExpression(GraphExpression.GraphRemoveVertexExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphTagExpression(GraphExpression.GraphTagExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphReTagExpression(GraphExpression.GraphReTagExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphWhileStmt(GraphExpression.GraphWhileStatement expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphIfStmt(GraphExpression.GraphIfStatement expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphExpressionStmt(GraphExpression.GraphExpressionStatement expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitPredicateOrExpression(GraphExpression.PredicateOrExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitPredicateAndExpression(GraphExpression.PredicateAndExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitPredicateGroupingExpression(GraphExpression.PredicateGroupingExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitPredicateUnaryExpression(GraphExpression.PredicateUnaryExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string VisitPredicateLiteralExpression(GraphExpression.PredicateLiteralExpression expression)
     {
         throw new NotImplementedException();
     }

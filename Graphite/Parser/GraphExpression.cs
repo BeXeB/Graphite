@@ -29,9 +29,9 @@ public abstract class GraphExpression
         public readonly GraphExpression leftPredicate;
         public readonly Token @operator;
         public readonly GraphExpression rightPredicate;
-        public readonly Token weight;
+        public readonly Expression weight;
         
-        public GraphEdgeExpression (GraphExpression leftPredicate, Token @operator, GraphExpression rightPredicate, Token weight)
+        public GraphEdgeExpression (GraphExpression leftPredicate, Token @operator, GraphExpression rightPredicate, Expression weight)
         {
             this.leftPredicate = leftPredicate;
             this.@operator = @operator;
@@ -48,9 +48,9 @@ public abstract class GraphExpression
     public class GraphAddVertexExpression : GraphExpression
     {
         public readonly Expression tags;
-        public readonly Token times;
+        public readonly Expression times;
         
-        public GraphAddVertexExpression (Expression tags, Token times)
+        public GraphAddVertexExpression (Expression tags, Expression times)
         {
             this.tags = tags;
             this.times = times;

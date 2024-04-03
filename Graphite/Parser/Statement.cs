@@ -52,6 +52,17 @@ public abstract class Statement
     }
     public class IfStatement : Statement
     {
+        public readonly Expression condition;
+        public readonly Statement thenBranch;
+        public readonly Statement? elseBranch;
+
+        public IfStatement(Expression condition, Statement thenBranch, Statement? elseBranch)
+        {
+            this.condition = condition;
+            this.thenBranch = thenBranch;
+            this.elseBranch = elseBranch;
+        }
+
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitIfStatement(this);
@@ -59,6 +70,15 @@ public abstract class Statement
     }
     public class WhileStatement : Statement
     {
+        public readonly Expression condition;
+        public readonly Statement body;
+
+        public WhileStatement(Expression condition, Statement body)
+        {
+            this.condition = condition;
+            this.body = body;
+        }
+
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitWhileStatement(this);
@@ -66,6 +86,13 @@ public abstract class Statement
     }
     public class ReturnStatement : Statement
     {
+        public readonly Expression expression;
+        
+        public ReturnStatement (Expression expression)
+        {
+            this.expression = expression;
+        }
+        
         public override T Accept<T>(IStatementVisitor<T> visitor)
         {
             return visitor.VisitReturnStatement(this);
@@ -137,12 +164,14 @@ public abstract class Statement
         private Token identifier;
         readonly OtherNonTerminals.Parameters parameters;
         readonly BlockStatement blockStatement;
-
-        public FunctionDeclarationStatement(Token identifier, OtherNonTerminals.Parameters parameters, BlockStatement blockStatement)
+        readonly OtherNonTerminals.Type returnType;
+        
+        public FunctionDeclarationStatement(Token identifier, OtherNonTerminals.Parameters parameters, BlockStatement blockStatement, OtherNonTerminals.Type returnType)
         {
             this.identifier = identifier;
             this.parameters = parameters;
             this.blockStatement = blockStatement;
+            this.returnType = returnType;
         }
 
         public override T Accept<T>(IStatementVisitor<T> visitor)

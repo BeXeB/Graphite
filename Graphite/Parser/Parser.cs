@@ -21,7 +21,7 @@ public class Parser
             }
             catch (ParseException e)
             {
-                Console.WriteLine(e);
+                Console.WriteLine(e.Message);
                 Synchronize();
             }
         }
@@ -32,7 +32,24 @@ public class Parser
     
     private Statement Declaration()
     {
-        return null;
+        var token = Peek();
+        return token.type switch
+        {
+            TokenType.INT => VariableDeclarationStatement(),
+            TokenType.DEC => VariableDeclarationStatement(),
+            TokenType.BOOL => VariableDeclarationStatement(),
+            TokenType.STR => VariableDeclarationStatement(),
+            TokenType.CHAR => VariableDeclarationStatement(),
+            TokenType.FUNC_TYPE => VariableDeclarationStatement(),
+            TokenType.PUBLIC => ClassDeclarationStatement(),
+            TokenType.PRIVATE => ClassDeclarationStatement(),
+            TokenType.IDENTIFIER => Peek(1).type == TokenType.LEFT_PAREN ? 
+                FunctionDeclarationStatement() : 
+                Peek(1).type == TokenType.IDENTIFIER ? 
+                    VariableDeclarationStatement() : 
+                    Statement(),
+            _ => Statement()
+        };
     }
     
     private Statement.ClassDeclarationStatement ClassDeclarationStatement()
@@ -48,11 +65,13 @@ public class Parser
 
         if (accessModifier.type != TokenType.PUBLIC && accessModifier.type != TokenType.PRIVATE)
         {
-            throw new InvalidTokenException("Invalid or missing access modifier");
+            throw new ParseException("Invalid or missing access modifier");
         }
 
         Advance();
 
+        Consume(TokenType.CLASS, "Expecting 'class' at the beginning of the class declaration");
+        
         classIdentifier = Consume(TokenType.IDENTIFIER, "Invalid class identifier");
 
         if (Peek().type == TokenType.EXTENDS)
@@ -60,7 +79,7 @@ public class Parser
             extends = Consume(TokenType.EXTENDS, "Unexpected internal error in parser");
             extendsIdentifier = Consume(TokenType.IDENTIFIER, "Extending invalid identifier");
         }
-
+        
         Consume(TokenType.LEFT_BRACE, "Expecting '{' after identifier at class declaration");
 
         while (Peek().type != TokenType.RIGHT_BRACE)
@@ -69,7 +88,7 @@ public class Parser
 
             if (accessModifier.type != TokenType.PUBLIC && accessModifier.type != TokenType.PRIVATE)
             {
-                throw new InvalidTokenException("Invalid or missing access modifier");
+                throw new ParseException("Invalid or missing access modifier");
             }
 
             Advance();
@@ -84,10 +103,12 @@ public class Parser
                     variableDeclarationStatements.Add(VariableDeclarationStatement());
                     break;
                 default:
-                    throw new InvalidTokenException("Unexpected token inside class declaration. Expected class- or function declaration");
+                    throw new ParseException("Unexpected token inside class declaration. Expected class- or function declaration");
             }
         }
 
+        Consume(TokenType.RIGHT_BRACE, "Expecting '}' after class declaration");
+        
         return new ClassDeclarationStatement(
             accessModifier,
             classIdentifier,
@@ -128,9 +149,15 @@ public class Parser
         identifier = Consume(TokenType.IDENTIFIER, "expecting function identifier");
 
         parameters = Parameters();
+        
+        Consume(TokenType.RETURNS, "expecting 'returns' after function parameters");
+        
+        var peek = Peek();
+        var returnType = peek.type == TokenType.VOID ? new OtherNonTerminals.Type(Advance(), []) : Type();
+        
         blockStatement = BlockStatement();
 
-        return new FunctionDeclarationStatement(identifier, parameters, blockStatement);
+        return new FunctionDeclarationStatement(identifier, parameters, blockStatement, returnType);
     }
 
     private OtherNonTerminals.Parameters Parameters()
@@ -155,6 +182,8 @@ public class Parser
 
             firstParameter = false;
         }
+        
+        Consume(TokenType.RIGHT_PAREN, "missing right parentheses after parameters");
 
         return new OtherNonTerminals.Parameters(parameters);
     }
@@ -175,6 +204,7 @@ public class Parser
                 Advance();
                 break;
             case TokenType.FUNC_TYPE:
+                Advance();
                 Consume(TokenType.LESS, "expected '<' after Func type to declare return- and argument types");
 
                 bool firstArgument = true;
@@ -185,38 +215,102 @@ public class Parser
                     {
                         Consume(TokenType.COMMA, "expecting comma separation between type arguments");
                     }
-
+                    
+                    if (Peek().type == TokenType.VOID && firstArgument)
+                    {
+                        typeArguments.Add(new OtherNonTerminals.Type(Advance(), []));
+                        firstArgument = false;
+                        continue;
+                    }
+                    
                     OtherNonTerminals.Type argumentType = Type();
-
                     typeArguments.Add(argumentType);
-
                     firstArgument = false;
                 }
 
                 Consume(TokenType.GREATER, "expecting type arguments to end with an >");
                 break;
             default:
-                throw new InvalidTokenException("Invalid or missing type");
+                throw new ParseException("Invalid or missing type. At line: " + Peek().line);
         }
 
         return new OtherNonTerminals.Type(type, typeArguments);
     }
+
+    private Statement Statement()
+    {
+        var token = Peek();
+        return token.type switch
+        {
+            TokenType.IF => IfStatement(),
+            TokenType.WHILE => WhileStatement(),
+            TokenType.RETURN => ReturnStatement(),
+            TokenType.BREAK => BreakStatement(),
+            TokenType.CONTINUE => ContinueStatement(),
+            TokenType.IDENTIFIER => Peek(1).type == TokenType.LEFT_BRACE ? GraphStatement() : ExpressionStatement(),
+            TokenType.LEFT_BRACE => BlockStatement(),
+            _ => ExpressionStatement()
+        };
+    }
     
+    private Statement.IfStatement IfStatement()
+    {
+        Consume(TokenType.IF, "Expect 'if' at the beginning of the statement.");
+        Consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
+        var condition = Expression();
+        Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+        var thenBranch = BlockStatement();
+        if (Match(TokenType.ELSE))
+        {
+            var elseBranch = BlockStatement();
+            return new Statement.IfStatement(condition, thenBranch, elseBranch);
+        }
+        return new Statement.IfStatement(condition, thenBranch, null);
+    }
+    
+    private Statement.WhileStatement WhileStatement()
+    {
+        Consume(TokenType.WHILE, "Expect 'while' at the beginning of the statement.");
+        Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+        var condition = Expression();
+        Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+        var body = BlockStatement();
+        return new Statement.WhileStatement(condition, body);
+    }
+    
+    private Statement.ReturnStatement ReturnStatement()
+    {
+        Consume(TokenType.RETURN, "Expect 'return' at the beginning of the statement.");
+        var value = Expression();
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
+        return new Statement.ReturnStatement(value);
+    }
+    
+    private Statement.BreakStatement BreakStatement()
+    {
+        Consume(TokenType.BREAK, "Expect 'break' at the beginning of the statement.");
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
+        return new Statement.BreakStatement();
+    }
+    
+    private Statement.ContinueStatement ContinueStatement()
+    {
+        Consume(TokenType.CONTINUE, "Expect 'continue' at the beginning of the statement.");
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
+        return new Statement.ContinueStatement();
+    }
+
     private Statement.BlockStatement BlockStatement()
     {
         var statements = new List<Statement>();
+        
+        Consume(TokenType.LEFT_BRACE, "Expect '{' at the beginning of the block.");
+        
         while (!Match(TokenType.RIGHT_BRACE))
         {
-            try
-            {
-                statements.Add(Declaration());
-            }
-            catch (ParseException e)
-            {
-                Console.WriteLine(e);
-                Synchronize();
-            }
+            statements.Add(Declaration());
         }
+        
         return new Statement.BlockStatement(statements);
     }
     
@@ -234,7 +328,7 @@ public class Parser
     private Statement.GraphStatement GraphStatement()
     {
         var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier.");
-        if (!Match(TokenType.LEFT_BRACE)) throw new ParseException("Expect '{' after identifier.");
+        if (!Match(TokenType.LEFT_BRACE)) throw new ParseException("Expect '{' after identifier. At line: " + Peek().line);
         var expressions = new List<GraphExpression>();
         while (!Match(TokenType.RIGHT_BRACE))
         {
@@ -275,7 +369,7 @@ public class Parser
             case TokenType.MINUS:
                 return GraphRemoveVertexExpression();
             default:
-                throw new ParseException("Expect '+' or '-' after 'V'.");
+                throw new ParseException("Expect '+' or '-' after 'V'. At line: " + token.line);
         }
     }
 
@@ -283,9 +377,9 @@ public class Parser
     {
         Consume(TokenType.PLUS, "Expect '+' after 'V'.");
         var tags = Set();
-        var expression = Peek().type == TokenType.INT_LITERAL
-            ? new GraphExpression.GraphAddVertexExpression(tags, Advance()) 
-            : new GraphExpression.GraphAddVertexExpression(tags, new Token { type = TokenType.INT_LITERAL, lexeme = "", literal = 1 });
+        var expression = Peek().type != TokenType.SEMICOLON
+            ? new GraphExpression.GraphAddVertexExpression(tags, Expression()) 
+            : new GraphExpression.GraphAddVertexExpression(tags, new Expression.LiteralExpression(1));
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
         return expression;
     }
@@ -311,9 +405,9 @@ public class Parser
                 Consume(token.type, "Expect '=>', '<=>' or '=/=' after predicate.");
                 var right = Predicate();
                 var peek = Peek();
-                var weight = peek.type is TokenType.INT_LITERAL or TokenType.DECIMAL_LITERAL
-                    ? Advance()
-                    : new Token { type = TokenType.INT_LITERAL, lexeme = "", literal = 1.0 };
+                var weight = peek.type is not TokenType.SEMICOLON
+                    ? Expression()
+                    : new Expression.LiteralExpression(1);
                 Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
                 return new GraphExpression.GraphEdgeExpression(predicate, token, right, weight);
             case TokenType.PLUS_PLUS:
@@ -323,7 +417,7 @@ public class Parser
                 Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
                 return new GraphExpression.GraphTagExpression(predicate, token, tags);
             default:
-                throw new ParseException("Expect '=>', '<=>', '=/=', '++' or '--' after predicate.");
+                throw new ParseException("Expect '=>', '<=>', '=/=', '++' or '--' after predicate. At line: " + token.line);
         }
     }
 
@@ -388,7 +482,7 @@ public class Parser
         Consume(TokenType.LEFT_LEFT, "Expect '<<' after string literal.");
         var token = Peek();
         if (token.type is not (TokenType.STRING_LITERAL or TokenType.NULL))
-            throw new ParseException("Expect string literal or 'null' after '<<'.");
+            throw new ParseException("Expect string literal or 'null' after '<<'. At line: " + token.line);
         Advance();
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
         return new GraphExpression.GraphReTagExpression(oldTag, token);
@@ -454,7 +548,7 @@ public class Parser
         {
             Expression.VariableExpression variable => new Expression.AssignmentExpression(variable.name, value),
             Expression.GetFieldExpression get => new Expression.SetFieldExpression(get.obj, get.field, value),
-            _ => throw new ParseException("Invalid assignment target.")
+            _ => throw new ParseException("Invalid assignment target. At line: " + Peek().line)
         };
     }
     
@@ -462,15 +556,14 @@ public class Parser
     {
         return Peek().type switch
         {
-            TokenType.LEFT_PAREN => AnonFunc(),
+            TokenType.LEFT_PAREN => AnonymousFunction(),
             TokenType.NEW => Instance(),
             _ => Or()
         };
     }
     
-    private Expression AnonFunc()
+    private Expression AnonymousFunction()
     {
-        Consume(TokenType.LEFT_PAREN, "Expect '(' at the beginning of the anonymous function.");
         var parameters = Parameters();
         Consume(TokenType.ARROW, "Expect '=>' after parameters.");
         var body = BlockStatement();
@@ -481,8 +574,9 @@ public class Parser
     {
         Consume(TokenType.NEW, "Expect 'new' at the beginning of the instance creation.");
         var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier after 'new'.");
-        if (!Match(TokenType.LEFT_PAREN)) throw new ParseException("Expect '(' after identifier.");
+        if (!Match(TokenType.LEFT_PAREN)) throw new ParseException("Expect '(' after identifier. At line: " + Peek().line);
         var arguments = Arguments();
+        Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
         return new Expression.InstanceExpression(identifier, arguments);
     }
 
@@ -618,7 +712,44 @@ public class Parser
 
     private Expression Primary()
     {
-        return null;
+        Token token = Peek();
+
+        switch (token.type)
+        {
+            case TokenType.LEFT_PAREN:
+                var expression = Expression();
+                Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+                return new Expression.GroupingExpression(expression);
+            case TokenType.LEFT_BRACE:
+                return Set();
+            case TokenType.LEFT_BRACKET:
+                return List();
+            case TokenType.STRING_LITERAL:
+            case TokenType.CHAR_LITERAL:
+            case TokenType.INT_LITERAL:
+            case TokenType.DECIMAL_LITERAL:
+                var literal = Advance().literal;
+                return new Expression.LiteralExpression(literal);
+            case TokenType.TRUE:
+                Advance();
+                return new Expression.LiteralExpression(true);
+            case TokenType.FALSE:
+                Advance();
+                return new Expression.LiteralExpression(false);
+            case TokenType.NULL:
+                Advance();
+                return new Expression.LiteralExpression(null);
+            case TokenType.IDENTIFIER:
+                return ElementAccess();
+            case TokenType.THIS:
+                Advance();
+                return new Expression.ThisExpression();
+            case TokenType.SUPER:
+                Advance();
+                return new Expression.SuperExpression();
+            default:
+                throw new ParseException("Unexpected expression. At line: " + token.line);
+        }
     }
 
     private Expression Set()
@@ -663,7 +794,7 @@ public class Parser
     private Token Consume(TokenType type, string errorMessage)
     {
         if (Check(type)) return Advance();
-        throw new ParseException(errorMessage);
+        throw new ParseException(errorMessage + " At line: " + Peek().line);
     }
 
     private bool Match(TokenType type)

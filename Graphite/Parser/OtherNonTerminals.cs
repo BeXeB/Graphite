@@ -1,10 +1,4 @@
 ﻿using Graphite.Lexer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Graphite.Statement;
 
 namespace Graphite.Parser
 {

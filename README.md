@@ -17,6 +17,7 @@ type			→ "str"
 			| "dec" 
 			| "bool" 
 			| IDENTIFIER
+			| (Set | List) "<"type">"
 			| "Func""<"(type | "void")("," type)*">"  
 initializer		→ "=" nonAssignment 
 			| ""  

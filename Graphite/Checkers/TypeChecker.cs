@@ -142,7 +142,7 @@ namespace Graphite.Checkers
             }
             else
             {
-                throw new BinaryOperationTypeException(TokenType.DEC, @operator, otherType);
+                throw new BinaryOperationTypeException(TokenType.INT, @operator, otherType);
             }
         }
 

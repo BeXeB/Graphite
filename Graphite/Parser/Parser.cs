@@ -41,6 +41,8 @@ public class Parser
             TokenType.STR => VariableDeclarationStatement(),
             TokenType.CHAR => VariableDeclarationStatement(),
             TokenType.FUNC_TYPE => VariableDeclarationStatement(),
+            TokenType.SET => VariableDeclarationStatement(),
+            TokenType.LIST => VariableDeclarationStatement(),
             TokenType.PUBLIC => ClassDeclarationStatement(),
             TokenType.PRIVATE => ClassDeclarationStatement(),
             TokenType.IDENTIFIER => Peek(1).type == TokenType.LEFT_PAREN ? 
@@ -202,6 +204,13 @@ public class Parser
             case TokenType.BOOL:
             case TokenType.IDENTIFIER:
                 Advance();
+                break;
+            case TokenType.SET:
+            case TokenType.LIST:
+                Advance();
+                Consume(TokenType.LESS, "expected '<' after Set type to declare type arguments");
+                typeArguments.Add(Type());
+                Consume(TokenType.GREATER, "expecting type arguments to end with an >");
                 break;
             case TokenType.FUNC_TYPE:
                 Advance();

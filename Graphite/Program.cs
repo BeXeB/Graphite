@@ -24,6 +24,8 @@ var code = """
            int a = 0;
            str s = "Hello World";
            char c = 'c';
+           Set<int> set = {1, 2, 3, 4};
+           List<int> list = [1, 2, 3, 4];
            
            test(int a, bool b, str s, char c) returns int {
                return a;

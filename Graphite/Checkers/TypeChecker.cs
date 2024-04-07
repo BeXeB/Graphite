@@ -21,14 +21,16 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitBinaryExpression(Expression.BinaryExpression expression)
         {
-            if (expression.left.Accept(this).type == null || expression.right.Accept(this).type == null)
+            var leftType = expression.left.Accept(this).type?.type;
+            var rightType = expression.right.Accept(this).type?.type;
+            if (leftType == null || rightType == null)
             {
                 // If 'type' token is null here, it means its a type of Set<> or List<> and we do not
                 // allow binary operations on these. TODO should we?
                 throw new CheckException("Attempted to do binary operation on non-eligible type");
             }
-            var leftType = expression.left.Accept(this).type!.Value.type;
-            var rightType = expression.right.Accept(this).type!.Value.type;
+            leftType = leftType!.Value;
+            rightType = rightType!.Value;
             var @operatorType = expression.@operator.type;
 
             TokenType tokenType;

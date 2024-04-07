@@ -3,81 +3,80 @@
 ## Grammar
 ```
 program 		→ declaration* EOF  
-declaration		→ classDecl
-			| variableDecl 
-			| funcDecl 
-			| stmt  
-classDecl		→ accessMod "class" IDENTIFIER ("extends" IDENTIFIER | "") "{" (accessMod (funcDecl | variableDecl))* "}"  
-accessMod		→ "private" 
+declaration		→ classDeclaration
+			| variableDeclaration 
+			| functionDeclaration 
+			| statement  
+classDeclaration	→ accessModifier "class" IDENTIFIER ("extends" IDENTIFIER | "") "{" (accessModifier (functionDeclaration | variableDeclaration))* "}"  
+accessModifier		→ "private" 
 			| "public"  
-variableDecl		→ type IDENTIFIER initializer ";"  
+variableDeclaration	→ type IDENTIFIER initializer ";"  
 type			→ "str" 
 			| "char" 
 			| "int" 
 			| "dec" 
 			| "bool" 
 			| IDENTIFIER
-			| "Func""<"type("," type)*">"  
-initializer		→ "=" expression 
+			| ("Set" | "List") "<"type">"
+			| "Func""<"(type | "void")("," type)*">"  
+initializer		→ "=" nonAssignment 
 			| ""  
-funcDecl		→ IDENTIFIER "("parameters")" "returns" (type | "void") block  
+functionDeclaration	→ IDENTIFIER "("parameters")" "returns" (type | "void") block  
 parameters		→ type IDENTIFIER ("," type IDENTIFIER)*
 			| ""  
-stmt			→ ifStmt 
-			| whileStmt 
-			| returnStmt 
-			| continueStmt 
-			| breakStmt 
+statement		→ ifStatement 
+			| whileStatement 
+			| returnStatement 
+			| continueStatement 
+			| breakStatement 
 			| block 
-			| exprStmt
-			| graphStmt  
-ifStmt			→ "if" "("expression")" block ("else" block | "")  
-whileStmt		→ "while" "("expression")" block  
-returnStmt		→ "return" (expression | "") ";"  
-continueStmt		→ "continue"";"  
-breakStmt		→ "break"";"  
+			| expressionStatement
+			| graphStatement  
+ifStatement		→ "if" "("expression")" block ("else" block | "")  
+whileStatement		→ "while" "("expression")" block  
+returnStatement		→ "return" (expression | "") ";"  
+continueStatement	→ "continue"";"  
+breakStatement		→ "break"";"  
 block			→ "{"declaration*"}"  
-exprStmt		→ expression";"  
-graphStmt		→ IDENTIFIER "{" graphOperation* "}"";"  
-graphOperation		→ predicate predOperation
+expressionStatement	→ expression";"  
+graphStatement		→ IDENTIFIER "{" graphOperation* "}"";"  
+graphOperation		→ predicateOperation
 			| "V" vertexOperation
 			| STRING "<<" (STRING | "null");
-			| exprStmt
+			| expressionStatement
 			| graphWhile
 			| graphIf  
-predOperation		→ ("=>" | "<=>") predicate (INTEGER | DECIMAL | "") ";"
-			| "=/=" predicate";"
-			| ("++"|"--") set";"  
+predicateOperation	→ predicate ("=>" | "<=>") predicate (nonAssignment | "") ";"
+			| predicate "=/=" predicate";"
+			| predicate ("++"|"--") set";"  
 vertexOperation 	→ "-" predicate ";"
-			| "+" set (INTEGER | "") ";"  
+			| "+" set (nonAssignment | "") ";"  
 graphWhile		→ "while" "("expression")" graphBlock  
 graphIf			→ "if" "("expression")" graphBlock "else" graphBlock   
-graphBlock		→ "{" (graphOperation | exprStmt)*  "}"  
-predicate		→ "[" predOr "]"  
-predOr			→ predAnd ("or" predAnd)*  
-predAnd			→ predPrimary ("and" predPrimary)*
-predUnary		→ ("!" | "") predPrimary
-predPrimary		→ "(" predOr ")"
+graphBlock		→ "{" (graphOperation | expressionStatement)*  "}"  
+predicate		→ "[" predicateOr "]"  
+predicateOr		→ predicateAnd ("or" predicateAnd)*  
+predicateAnd		→ predicateUnary ("and" predicateUnary)*
+predicateUnary		→ "!"predicateUnary
+			| predicatePrimary
+predicatePrimary	→ "(" predicateOr ")"
 			| additive
-expression		→ assignment 
-			| nonAssignment  	
-assignment		→ IDENTIFIER "=" nonAssignment 
-			| call "." IDENTIFIER "=" expression 
-			| "new" IDENTIFIER "("arguments")"  
+expression		→ assignment
+assignment		→ nonAssignment ("=" nonAssignment | "") 
 nonAssignment 		→ or 
-			| anonFunc  
-anonFunc		→ "("parameters")" "=>" block  
+			| anonymousFunction
+			| "new" IDENTIFIER "("arguments")"
+anonymousFunction	→ "("parameters")" "=>" block  
 or			→ and ("or" and)*  
 and			→ equality ("and" equality)*  
 equality 		→ comparison (("==" | "!=") comparison)*  
 comparison		→ additive (("<" | "<=" | ">=" | ">") additive)*  
-additive		→ mult (("+" | "-") mult)*  
-mult			→ unary (("*"| "/" | "mod") unary)*  
+additive		→ multiplicative (("+" | "-") multiplicative)*  
+multiplicative		→ unary (("*"| "/" | "mod") unary)*  
 unary			→ ("-" | "!") unary
-			| call 
-			| primary  
-call 			→ IDENTIFIER ("(" arguments ")" | "") ("." call)*  
-arguments		→ expression ("," expression)* 
+			| call   
+call 			→ primary ("(" arguments ")" | "") ("." call)*  
+arguments		→ nonAssignment ("," nonAssignment)* 
 			| ""  
 primary 		→ "(" expression ")" 
 			| STRING 
@@ -86,16 +85,15 @@ primary 		→ "(" expression ")"
 			| DECIMAL
 			| "true" 
 			| "false" 
-			| IDENTIFIER 
+			| elementAccess
 			| set 
 			| list
-			| elementAccess
-			| "null"  
-set			→ "{" elements "}"  
-list			→ "[" elements "]"  
-elementAccess		→ primary "[" arguments "]"  
-elements		→ expression ("," expression)* 
-			| ""  
+			| "null"
+			| "this"
+			| "super"  
+set			→ "{" arguments "}"  
+list			→ "[" arguments "]"  
+elementAccess		→ IDENTIFIER ("[" nonAssignment "]" | "")
 ```
 
 

@@ -102,5 +102,5 @@ ugraph.Connect(v => v.Contains("e"), v => v.Contains("c"));
 dgraph.PrintGraphInfo();
 ugraph.PrintGraphInfo();
 
-/// Uncomment to visualize the graph in the browser
+// Uncomment to visualize the graph in the browser
 //GraphVisualizer<bool>.VisualizeInBrowser(dgraph);

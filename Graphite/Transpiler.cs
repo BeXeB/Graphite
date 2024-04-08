@@ -9,9 +9,11 @@ public class Transpiler :
     OtherNonTerminals.IOtherNonTerminalsVisitor<string>, 
     GraphExpression.IGraphExpressionVisitor<string>
 {
+    private string graphIdentifier = "";
+    
     public string Transpile(List<Statement> statements)
     {
-        string code = "";
+        var code = "";
         foreach (var statement in statements)
         {
             code += statement.Accept(this);
@@ -57,7 +59,14 @@ public class Transpiler :
 
     public string VisitGraphStatement(Statement.GraphStatement statement)
     {
-        throw new NotImplementedException();
+        graphIdentifier = statement.identifier.lexeme;
+        var code = "";
+        foreach (var graphExpression in statement.expressions)
+        {
+            code += graphExpression.Accept(this);
+        }
+        graphIdentifier = "";
+        return code;
     }
 
     public string VisitClassDeclarationStatement(Statement.ClassDeclarationStatement statement)
@@ -213,73 +222,131 @@ public class Transpiler :
         throw new NotImplementedException();
     }
 
+    #region GraphStatement
+    
     public string VisitGraphEdgeExpression(GraphExpression.GraphEdgeExpression expression)
     {
-        throw new NotImplementedException();
+        var leftPredicate = $"v => {expression.leftPredicate.Accept(this)}"; 
+        var rightPredicate = $"v => {expression.rightPredicate.Accept(this)}";
+        var weight = expression.weight.Accept(this);
+        //TODO: Implement weight and edge direction in Graph Classes
+        switch (expression.@operator.type)
+        {
+            case TokenType.ARROW:
+                return $"{graphIdentifier}.Connect({leftPredicate}, {rightPredicate}, {weight});";
+            case TokenType.DOUBLE_ARROW:
+                return $"{graphIdentifier}.Connect({leftPredicate}, {rightPredicate}, {weight});";
+            case TokenType.SLASHED_EQUAL:
+                return $"{graphIdentifier}.Disconnect({leftPredicate}, {rightPredicate});";
+            default:
+                throw new TranspileException("Invalid operator in graph edge expression. At: " 
+                                             + expression.@operator.line);
+        }
     }
 
     public string VisitGraphAddVertexExpression(GraphExpression.GraphAddVertexExpression expression)
     {
-        throw new NotImplementedException();
+        var tags = expression.tags.Accept(this);
+        var times = expression.times.Accept(this);
+        //TODO: Implement adding vertices x times in Graph Classes
+        return $"{graphIdentifier}.AddVertex({tags}, {times});";
     }
 
     public string VisitGraphRemoveVertexExpression(GraphExpression.GraphRemoveVertexExpression expression)
     {
+        //TODO: Implement removing vertices in Graph Classes
         throw new NotImplementedException();
     }
 
     public string VisitGraphTagExpression(GraphExpression.GraphTagExpression expression)
     {
-        throw new NotImplementedException();
+        var predicate = $"v => {expression.predicate.Accept(this)}";
+        var tags = expression.tags.Accept(this);
+        switch (expression.@operator.type)
+        {
+            case TokenType.PLUS_PLUS:
+                return $"{graphIdentifier}.AddTags({predicate}, {tags});";
+            case TokenType.MINUS_MINUS:
+                return $"{graphIdentifier}.RemoveTags({predicate}, {tags});";
+            default:
+                throw new TranspileException("Invalid operator in graph tag expression. At: " 
+                                             + expression.@operator.line);
+        }
     }
 
     public string VisitGraphReTagExpression(GraphExpression.GraphReTagExpression expression)
     {
-        throw new NotImplementedException();
+        var oldTag = expression.oldTag.lexeme;
+        var newTag = expression.newTag.lexeme;
+        return $"{graphIdentifier}.Retag({oldTag}, {newTag});";
     }
 
     public string VisitGraphWhileStmt(GraphExpression.GraphWhileStatement expression)
     {
-        throw new NotImplementedException();
+        var condition = expression.condition.Accept(this);
+        var code = $"while ({condition})";
+        code += expression.body.Accept(this);
+        return code;
     }
 
     public string VisitGraphIfStmt(GraphExpression.GraphIfStatement expression)
     {
-        throw new NotImplementedException();
+        var condition = expression.condition.Accept(this);
+        var code = $"if ({condition})";
+        code += expression.thenBranch.Accept(this);
+        if (expression.elseBranch == null) return code;
+        code += "else";
+        code += expression.elseBranch.Accept(this);
+        return code;
     }
 
     public string VisitGraphExpressionStmt(GraphExpression.GraphExpressionStatement expression)
     {
-        throw new NotImplementedException();
+        return expression.statement.Accept(this);
     }
 
     public string VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
     {
-        throw new NotImplementedException();
+        var code = "{";
+        foreach (var graphExpression in expression.statements)
+        {
+            code += graphExpression.Accept(this);
+        }
+        code += "}";
+        return code;
     }
 
     public string VisitPredicateOrExpression(GraphExpression.PredicateOrExpression expression)
     {
-        throw new NotImplementedException();
+        var left = expression.left.Accept(this);
+        var right = expression.right.Accept(this);
+        return $"{left} || {right}";
     }
 
     public string VisitPredicateAndExpression(GraphExpression.PredicateAndExpression expression)
     {
-        throw new NotImplementedException();
+        var left = expression.left.Accept(this);
+        var right = expression.right.Accept(this);
+        return $"{left} && {right}";
     }
 
     public string VisitPredicateGroupingExpression(GraphExpression.PredicateGroupingExpression expression)
     {
-        throw new NotImplementedException();
+        var expressionCode = expression.expression.Accept(this);
+        return $"({expressionCode})";
     }
 
     public string VisitPredicateUnaryExpression(GraphExpression.PredicateUnaryExpression expression)
     {
-        throw new NotImplementedException();
+        var right = expression.right.Accept(this);
+        return $"!{right}";
     }
 
     public string VisitPredicateLiteralExpression(GraphExpression.PredicateLiteralExpression expression)
     {
-        throw new NotImplementedException();
+        var literal = expression.expression.Accept(this);
+        return $"v.Contains({literal})";
     }
+
+    #endregion
 }

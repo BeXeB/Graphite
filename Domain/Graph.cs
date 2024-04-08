@@ -7,9 +7,10 @@
         public List<List<T>> AdjMatrix { get; set; } = [];
 
         public abstract void AddVertex(string[] vertexTags);
+        public abstract void AddVertex(string[] vertexTags, int amount);
         public abstract void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
         public abstract void Disconnect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
-
+        public abstract void RemoveVertex(Predicate<List<string>> pred);
         public void AddVertices(List<string[]> vertexTags) => vertexTags.ForEach(AddVertex);
 
         public int[] GetVertices(Predicate<List<string>> pred)

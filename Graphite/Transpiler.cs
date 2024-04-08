@@ -214,12 +214,50 @@ public class Transpiler :
 
     public string VisitType(OtherNonTerminals.Type type)
     {
-        throw new NotImplementedException();
+        if (type.type is null) return "";
+        switch (type.type.Value.type)
+        {
+            case TokenType.INT:
+                return "int";
+            case TokenType.DEC:
+                return "decimal";
+            case TokenType.BOOL:
+                return "bool";
+            case TokenType.STR:
+                return "string";
+            case TokenType.CHAR:
+                return "char";
+            case TokenType.VOID:
+                return "void";
+            case TokenType.SET:
+                var setType = type.typeArguments[0].Accept(this);
+                return $"HashSet<{setType}>";
+            case TokenType.LIST:
+                var listType = type.typeArguments[0].Accept(this);
+                return $"List<{listType}>";
+            case TokenType.FUNC_TYPE:
+                var returnType = type.typeArguments[0].Accept(this);
+                var parameters = "";
+                for (var i = 1; i < type.typeArguments.Count; i++)
+                {
+                    parameters += type.typeArguments[i].Accept(this) + ", ";
+                }
+                parameters = parameters.Remove(parameters.Length - 2);
+                return returnType.Equals("void") ? $"Action<{parameters}>" : $"Func<{parameters}, {returnType}>";
+            default:
+                throw new TranspileException("Invalid type in transpiler. At: " + type.type.Value.line);
+        }
     }
 
     public string VisitParameters(OtherNonTerminals.Parameters parameters)
     {
-        throw new NotImplementedException();
+        var code = "";
+        foreach (var (type, name) in parameters.parameters)
+        {
+            code += type.Accept(this) + " " + name.lexeme + ", ";
+        }
+        code = code.Remove(code.Length - 2);
+        return code;
     }
 
     #region GraphStatement
@@ -229,13 +267,14 @@ public class Transpiler :
         var leftPredicate = $"v => {expression.leftPredicate.Accept(this)}"; 
         var rightPredicate = $"v => {expression.rightPredicate.Accept(this)}";
         var weight = expression.weight.Accept(this);
-        //TODO: Implement weight and edge direction in Graph Classes
+        //TODO: Implement weight in Graph Classes
         switch (expression.@operator.type)
         {
             case TokenType.ARROW:
                 return $"{graphIdentifier}.Connect({leftPredicate}, {rightPredicate}, {weight});";
             case TokenType.DOUBLE_ARROW:
-                return $"{graphIdentifier}.Connect({leftPredicate}, {rightPredicate}, {weight});";
+                return $"{graphIdentifier}.Connect({leftPredicate}, {rightPredicate}, {weight});" + 
+                       $"{graphIdentifier}.Connect({rightPredicate}, {leftPredicate}, {weight});";
             case TokenType.SLASHED_EQUAL:
                 return $"{graphIdentifier}.Disconnect({leftPredicate}, {rightPredicate});";
             default:
@@ -248,14 +287,13 @@ public class Transpiler :
     {
         var tags = expression.tags.Accept(this);
         var times = expression.times.Accept(this);
-        //TODO: Implement adding vertices x times in Graph Classes
         return $"{graphIdentifier}.AddVertex({tags}, {times});";
     }
 
     public string VisitGraphRemoveVertexExpression(GraphExpression.GraphRemoveVertexExpression expression)
     {
-        //TODO: Implement removing vertices in Graph Classes
-        throw new NotImplementedException();
+        var predicate = $"v => {expression.predicate.Accept(this)}";
+        return $"{graphIdentifier}.RemoveVertex({predicate});";
     }
 
     public string VisitGraphTagExpression(GraphExpression.GraphTagExpression expression)

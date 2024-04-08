@@ -378,7 +378,21 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitWhileStatement(Statement.WhileStatement statement)
         {
-            throw new NotImplementedException();
+            var conditionTypeNullable = statement.condition.Accept(this).type?.type;
+            if (conditionTypeNullable == null)
+            {
+                throw new CheckException("");
+            }
+            var valueType = conditionTypeNullable.Value;
+                        
+            if (valueType == TokenType.BOOL)
+            {
+                return new OtherNonTerminals.Type(new Token() { type = TokenType.BOOL}, null);
+            }
+            else
+            {
+                throw new CheckException("The condition must be of type boolean.");
+            }
         }
     }
 }

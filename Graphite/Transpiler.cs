@@ -113,19 +113,19 @@ public class Transpiler :
         var left = expression.left.Accept(this);
         var right = expression.right.Accept(this);
         
-        var @operator = expression.@operator.lexeme switch
+        var @operator = expression.@operator.type switch
         {
-            "==" => "==",
-            "!=" => "!=",
-            ">" => ">",
-            ">=" => ">=",
-            "<" => "<",
-            "<=" => "<=",
-            "+" => "+",
-            "-" => "-",
-            "*" => "*",
-            "/" => "/",
-            "mod" => "%",
+            TokenType.EQUAL_EQUAL => "==",
+            TokenType.BANG_EQUAL => "!=",
+            TokenType.GREATER => ">",
+            TokenType.GREATER_EQUAL => ">=",
+            TokenType.LESS => "<",
+            TokenType.LESS_EQUAL => "<=",
+            TokenType.PLUS => "+",
+            TokenType.MINUS => "-",
+            TokenType.STAR => "*",
+            TokenType.SLASH => "/",
+            TokenType.MOD => "%",
             _ => throw new Exception("Invalid operator")
         };
         
@@ -147,10 +147,10 @@ public class Transpiler :
     {
         var right = expression.right.Accept(this);
 
-        var @operator = expression.@operator.lexeme switch
+        var @operator = expression.@operator.type switch
         {
-            "-" => "-",
-            "!" => "!",
+            TokenType.MINUS => "-",
+            TokenType.BANG => "!",
             _ => throw new Exception("Invalid operator")
         };
 
@@ -174,10 +174,10 @@ public class Transpiler :
         var left = expression.left.Accept(this);
         var right = expression.right.Accept(this);
 
-        var @operator = expression.@operator.lexeme switch
+        var @operator = expression.@operator.type switch
         {
-            "and" => "&&",
-            "or" => "||",
+            TokenType.AND => "&&",
+            TokenType.OR => "||",
             _ => throw new Exception("Invalid operator")
         };
 

@@ -216,7 +216,7 @@ public class Transpiler :
 
     public string VisitSuperExpression(Expression.SuperExpression expression)
     {
-        return "super";
+        return "base";
     }
 
     public string VisitListExpression(Expression.ListExpression expression)

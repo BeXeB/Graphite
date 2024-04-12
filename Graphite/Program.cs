@@ -77,7 +77,7 @@ var parser = new Parser();
 var tokens = lexer.ScanCode(code);
 var statements = parser.Parse(tokens);
 
-Console.ReadKey();
+// Console.ReadKey();
 
 var dgraph = new DGraph();
 dgraph.AddVertex(["a", "b"]);
@@ -97,7 +97,8 @@ ugraph.AddVertices([["f", "g"], ["h", "i"]]);
 ugraph.Retag("a", "e");
 ugraph.AddTags(v => v.Contains("e") || v.Contains("h"), ["j", "i"]);
 ugraph.RemoveTags(v => v.Contains("j") || v.Contains("e"), ["j", "b"]);
-ugraph.Connect(v => v.Contains("e"), v => v.Contains("c"));
+ugraph.Connect(v => v.Contains("e"), v => v.Contains("c"), 123);
+ugraph.Connect(v => v.Contains("f"), v => v.Contains("h"), 123.123);
 
 dgraph.PrintGraphInfo();
 ugraph.PrintGraphInfo();

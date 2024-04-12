@@ -14,9 +14,9 @@ namespace Graphite.Parser
         public class Type : OtherNonTerminals
         {
             public readonly Token? type;
-            public readonly List<Type> typeArguments;
+            public readonly List<Type>? typeArguments;
 
-            public Type(Token type, List<Type> typeArguments)
+            public Type(Token type, List<Type>? typeArguments)
             {
                 this.type = type;
                 this.typeArguments = typeArguments;

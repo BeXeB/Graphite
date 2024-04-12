@@ -2,7 +2,7 @@
 
 namespace Graphite.Checkers
 {
-    internal class TypeChecker :
+    internal class SemanticChecker :
         Statement.IStatementVisitor<OtherNonTerminals.Type>,
         Expression.IExpressionVisitor<OtherNonTerminals.Type>,
         OtherNonTerminals.IOtherNonTerminalsVisitor<OtherNonTerminals.Type>,

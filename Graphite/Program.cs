@@ -69,6 +69,7 @@ var code = """
            
            test[123].test(1, true, "Hello World", 'c');
            
+           b = (3 + 3) * 3 > 10;
            """;
 
 var lexer = new Lexer();

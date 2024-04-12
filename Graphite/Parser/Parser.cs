@@ -563,12 +563,23 @@ public class Parser
     
     private Expression NonAssignment()
     {
-        return Peek().type switch
+        var peek = Peek();
+
+        switch (peek.type)
         {
-            TokenType.LEFT_PAREN => AnonymousFunction(),
-            TokenType.NEW => Instance(),
-            _ => Or()
-        };
+            case TokenType.NEW:
+                return Instance();
+            case TokenType.LEFT_PAREN:
+                var i = 1;
+                while (true)
+                {
+                    if (Peek(i).type == TokenType.RIGHT_PAREN) break;
+                    i++;
+                }
+                return Peek(i + 1).type == TokenType.ARROW ? AnonymousFunction() : Or();
+            default:
+                return Or();
+        }
     }
     
     private Expression AnonymousFunction()
@@ -726,6 +737,7 @@ public class Parser
         switch (token.type)
         {
             case TokenType.LEFT_PAREN:
+                Advance();
                 var expression = Expression();
                 Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
                 return new Expression.GroupingExpression(expression);

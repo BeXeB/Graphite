@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Type = Graphite.Parser.OtherNonTerminals.Type;
 using Graphite.Parser;
+using static Graphite.Statement;
+using Graphite.Lexer;
 
 namespace Graphite.Checkers
 {
@@ -13,7 +11,8 @@ namespace Graphite.Checkers
         OtherNonTerminals.IOtherNonTerminalsVisitor<object>,
         GraphExpression.IGraphExpressionVisitor<object>
     {
-
+        private VariableTable variableTable;
+        private FunctionTable functionTable;
 
         public object VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
         {
@@ -135,6 +134,38 @@ namespace Graphite.Checkers
 
         public object VisitIfStatement(Statement.IfStatement statement)
         {
+            // Check if the condition expression is a boolean expression
+            TokenType conditionType = statement.condition;
+            if (conditionType != TokenType.BOOL)
+            {
+                throw new CheckException("Condition expression in if statement must be of type boolean.");
+            }
+
+            // Enter a new scope for the body of the if statement
+            variableTable.EnterScope();
+            functionTable.EnterScope();
+
+            // Type-check the then branch of the if statement
+            BlockStatement thenBranch = statement.thenBranch;
+            TypeChecker.VisitBlockStatement(statement.thenBranch);
+
+            // Exit the scope after checking the body
+            variableTable.ExitScope();
+            functionTable.ExitScope();
+
+            //Checvking whether there is an else branch
+            if(statement.elseBranch != null)
+            {
+                variableTable.EnterScope();
+                functionTable.EnterScope();
+
+                // Type-check the else branch of the if statement
+                TypeChecker.VisitBlockStatement(statement.elseBranch);
+
+                // Exit the scope after checking the body
+                variableTable.ExitScope();
+                functionTable.ExitScope();
+            }
             throw new NotImplementedException();
         }
 

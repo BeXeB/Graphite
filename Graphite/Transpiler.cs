@@ -113,10 +113,19 @@ public class Transpiler :
         var left = expression.left.Accept(this);
         var right = expression.right.Accept(this);
         
-        var @operator = expression.@operator.lexeme switch
+        var @operator = expression.@operator.type switch
         {
-            "==" => "==",
-            "!=" => "!=",
+            TokenType.EQUAL_EQUAL => "==",
+            TokenType.BANG_EQUAL => "!=",
+            TokenType.GREATER => ">",
+            TokenType.GREATER_EQUAL => ">=",
+            TokenType.LESS => "<",
+            TokenType.LESS_EQUAL => "<=",
+            TokenType.PLUS => "+",
+            TokenType.MINUS => "-",
+            TokenType.STAR => "*",
+            TokenType.SLASH => "/",
+            TokenType.MOD => "%",
             _ => throw new Exception("Invalid operator")
         };
         
@@ -125,82 +134,124 @@ public class Transpiler :
 
     public string VisitGroupingExpression(Expression.GroupingExpression expression)
     {
-        throw new NotImplementedException();
+        var innerExpression = expression.expression.Accept(this);
+        return $"({innerExpression})";
     }
 
     public string VisitLiteralExpression(Expression.LiteralExpression expression)
     {
-        throw new NotImplementedException();
+        return $"{expression.value}";
     }
 
     public string VisitUnaryExpression(Expression.UnaryExpression expression)
     {
-        throw new NotImplementedException();
+        var right = expression.right.Accept(this);
+
+        var @operator = expression.@operator.type switch
+        {
+            TokenType.MINUS => "-",
+            TokenType.BANG => "!",
+            _ => throw new Exception("Invalid operator")
+        };
+
+        return $"{@operator}{right}";
     }
 
     public string VisitAssignmentExpression(Expression.AssignmentExpression expression)
     {
-        throw new NotImplementedException();
+        var value = expression.value.Accept(this);
+
+        return $"{expression.name.lexeme} = {value}";
     }
 
     public string VisitVariableExpression(Expression.VariableExpression expression)
     {
-        throw new NotImplementedException();
+        return expression.name.lexeme;
     }
 
     public string VisitLogicalExpression(Expression.LogicalExpression expression)
     {
-        throw new NotImplementedException();
+        var left = expression.left.Accept(this);
+        var right = expression.right.Accept(this);
+
+        var @operator = expression.@operator.type switch
+        {
+            TokenType.AND => "&&",
+            TokenType.OR => "||",
+            _ => throw new Exception("Invalid operator")
+        };
+
+        return $"{left} {@operator} {right}";
     }
 
     public string VisitCallExpression(Expression.CallExpression expression)
     {
-        throw new NotImplementedException();
+        var callee = expression.callee.Accept(this);
+        var arguments = expression.arguments.Select(a => a.Accept(this));
+
+        return $"{callee}({string.Join(", ", arguments)})";
     }
 
     public string VisitGetFieldExpression(Expression.GetFieldExpression expression)
     {
-        throw new NotImplementedException();
+        var obj = expression.obj.Accept(this);
+        var field = expression.field.Accept(this);
+
+        return $"{obj}.{field}";
     }
 
     public string VisitSetFieldExpression(Expression.SetFieldExpression expression)
     {
-        throw new NotImplementedException();
+        var obj = expression.obj.Accept(this);
+        var field = expression.field.Accept(this);
+        var value = expression.value.Accept(this);
+
+        return $"{obj}.{field} = {value}";
     }
 
     public string VisitThisExpression(Expression.ThisExpression expression)
     {
-        throw new NotImplementedException();
+        return "this";
     }
 
     public string VisitSuperExpression(Expression.SuperExpression expression)
     {
-        throw new NotImplementedException();
+        return "base";
     }
 
     public string VisitListExpression(Expression.ListExpression expression)
     {
-        throw new NotImplementedException();
+        var elements = expression.elements.Select(e => e.Accept(this));
+        return $"[{string.Join(", ", elements)}]";
     }
 
     public string VisitSetExpression(Expression.SetExpression expression)
     {
-        throw new NotImplementedException();
+        var elements = expression.elements.Select(e => e.Accept(this));
+        return $"[{string.Join(", ", elements)}]";
     }
 
     public string VisitElementAccessExpression(Expression.ElementAccessExpression expression)
     {
-        throw new NotImplementedException();
+        var obj = expression.obj.Accept(this);
+        var index = expression.index.Accept(this);
+
+        return $"{obj}[{index}]";
     }
 
     public string VisitInstanceExpression(Expression.InstanceExpression expression)
     {
-        throw new NotImplementedException();
+        var arguments = expression.arguments.Select(a => a.Accept(this));
+
+        return $"new {expression.className.lexeme}({string.Join(", ", arguments)})";
     }
 
     public string VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
     {
-        throw new NotImplementedException();
+        var body = expression.body.Accept(this);
+        var parameters = expression.parameters.Accept(this);
+
+        return $"({parameters}) => {body}";
     }
 
     public string VisitType(OtherNonTerminals.Type type)

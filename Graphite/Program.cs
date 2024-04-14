@@ -93,15 +93,19 @@ dgraph.Connect(v => v.Contains("e"), v => v.Contains("h"));
 var ugraph = new UGraph();
 ugraph.AddVertex(["a", "b"]);
 ugraph.AddVertex(["c", "d"]);
+ugraph.AddVertex(["asd"], 5);
 ugraph.AddVertices([["f", "g"], ["h", "i"]]);
 ugraph.Retag("a", "e");
 ugraph.AddTags(v => v.Contains("e") || v.Contains("h"), ["j", "i"]);
 ugraph.RemoveTags(v => v.Contains("j") || v.Contains("e"), ["j", "b"]);
 ugraph.Connect(v => v.Contains("e"), v => v.Contains("c"), 123);
 ugraph.Connect(v => v.Contains("f"), v => v.Contains("h"), 123.123);
-
-dgraph.PrintGraphInfo();
 ugraph.PrintGraphInfo();
+ugraph.RemoveVertex(v => v.Contains("asd"));
+
+ugraph.PrintGraphInfo();
+dgraph.PrintGraphInfo();
+
 
 // Uncomment to visualize the graph in the browser
 //GraphVisualizer<bool>.VisualizeInBrowser(dgraph);

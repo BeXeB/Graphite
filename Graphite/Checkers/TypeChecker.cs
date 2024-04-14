@@ -16,6 +16,18 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitAssignmentExpression(Expression.AssignmentExpression expression)
         {
+            var valueTypeNullable = expression.value.Accept(this).type?.type;
+            if (valueTypeNullable == null)
+            {
+                throw new NotImplementedException();
+            }
+            var valueType = valueTypeNullable.Value;
+            var nameType = expression.name.type;
+
+
+
+
+
             throw new NotImplementedException();
         }
 

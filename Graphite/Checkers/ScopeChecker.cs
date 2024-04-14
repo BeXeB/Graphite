@@ -6,265 +6,300 @@ using Graphite.Lexer;
 namespace Graphite.Checkers
 {
     internal class ScopeChecker :
-        Statement.IStatementVisitor<object>,
-        Expression.IExpressionVisitor<object>,
-        OtherNonTerminals.IOtherNonTerminalsVisitor<object>,
-        GraphExpression.IGraphExpressionVisitor<object>
+        Statement.IStatementVisitor<Type>,
+        Expression.IExpressionVisitor<Type>,
+        OtherNonTerminals.IOtherNonTerminalsVisitor<Type>,
+        GraphExpression.IGraphExpressionVisitor<Type>
     {
         private VariableTable variableTable;
         private FunctionTable functionTable;
 
-        public object VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
+        public Type VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitAssignmentExpression(Expression.AssignmentExpression expression)
+        public Type VisitAssignmentExpression(Expression.AssignmentExpression expression)
+        {
+            if (!variableTable.IsVariableDeclared(expression.name.lexeme))
+            {
+                throw new CheckException("Variable has not been declared.");
+            }
+
+            var valueType = expression.value.Accept(this);
+            var variableType = variableTable.GetVariableType(expression.name.lexeme);
+
+            if (valueType != variableType)
+            {
+                throw new CheckException($"Cannot convert {valueType} to {variableType}.");
+            }
+
+            //TO DO: create a check also for the name
+
+            throw new NotImplementedException();
+        }
+
+        public Type VisitBinaryExpression(Expression.BinaryExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitBinaryExpression(Expression.BinaryExpression expression)
+        public Type VisitBlockStatement(Statement.BlockStatement statement)
         {
-            
+            // Enter a new scope for the body of the if statement
+            variableTable.EnterScope();
+            functionTable.EnterScope();
 
+            foreach (var singleStatement in statement.statements)
+            {
+                singleStatement.Accept(this);
+            }
 
+            // Exit the scope after checking the body
+            variableTable.ExitScope();
+            functionTable.ExitScope();
             throw new NotImplementedException();
         }
 
-        public object VisitBlockStatement(Statement.BlockStatement statement)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object VisitBreakStatement(Statement.BreakStatement statement)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object VisitCallExpression(Expression.CallExpression expression)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object VisitClassDeclarationStatement(Statement.ClassDeclarationStatement statement)
+        public Type VisitBreakStatement(Statement.BreakStatement statement)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitContinueStatement(Statement.ContinueStatement statement)
+        public Type VisitCallExpression(Expression.CallExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitElementAccessExpression(Expression.ElementAccessExpression expression)
+        public Type VisitClassDeclarationStatement(Statement.ClassDeclarationStatement statement)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitExpressionStatement(Statement.ExpressionStatement statement)
+        public Type VisitContinueStatement(Statement.ContinueStatement statement)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)
+        public Type VisitElementAccessExpression(Expression.ElementAccessExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGetFieldExpression(Expression.GetFieldExpression expression)
+        public Type VisitExpressionStatement(Statement.ExpressionStatement statement)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphAddVertexExpression(GraphExpression.GraphAddVertexExpression expression)
+        public Type VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
+        public Type VisitGetFieldExpression(Expression.GetFieldExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphEdgeExpression(GraphExpression.GraphEdgeExpression expression)
+        public Type VisitGraphAddVertexExpression(GraphExpression.GraphAddVertexExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphExpressionStmt(GraphExpression.GraphExpressionStatement expression)
+        public Type VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphIfStmt(GraphExpression.GraphIfStatement expression)
+        public Type VisitGraphEdgeExpression(GraphExpression.GraphEdgeExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphRemoveVertexExpression(GraphExpression.GraphRemoveVertexExpression expression)
+        public Type VisitGraphExpressionStmt(GraphExpression.GraphExpressionStatement expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphReTagExpression(GraphExpression.GraphReTagExpression expression)
+        public Type VisitGraphIfStmt(GraphExpression.GraphIfStatement expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphStatement(Statement.GraphStatement statement)
+        public Type VisitGraphRemoveVertexExpression(GraphExpression.GraphRemoveVertexExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphTagExpression(GraphExpression.GraphTagExpression expression)
+        public Type VisitGraphReTagExpression(GraphExpression.GraphReTagExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGraphWhileStmt(GraphExpression.GraphWhileStatement expression)
+        public Type VisitGraphStatement(Statement.GraphStatement statement)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitGroupingExpression(Expression.GroupingExpression expression)
+        public Type VisitGraphTagExpression(GraphExpression.GraphTagExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitIfStatement(Statement.IfStatement statement)
+        public Type VisitGraphWhileStmt(GraphExpression.GraphWhileStatement expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Type VisitGroupingExpression(Expression.GroupingExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Type VisitIfStatement(Statement.IfStatement statement)
         {
             // Check if the condition expression is a boolean expression
-            TokenType conditionType = statement.condition;
+            TokenType conditionType = statement.condition.Accept(this).type.Value.type;
             if (conditionType != TokenType.BOOL)
             {
                 throw new CheckException("Condition expression in if statement must be of type boolean.");
             }
 
-            // Enter a new scope for the body of the if statement
-            variableTable.EnterScope();
-            functionTable.EnterScope();
-
             // Type-check the then branch of the if statement
-            BlockStatement thenBranch = statement.thenBranch;
-            TypeChecker.VisitBlockStatement(statement.thenBranch);
+            statement.thenBranch.Accept(this);
 
-            // Exit the scope after checking the body
-            variableTable.ExitScope();
-            functionTable.ExitScope();
-
-            //Checvking whether there is an else branch
+            //Checking whether there is an else branch
             if(statement.elseBranch != null)
             {
-                variableTable.EnterScope();
-                functionTable.EnterScope();
-
                 // Type-check the else branch of the if statement
-                TypeChecker.VisitBlockStatement(statement.elseBranch);
-
-                // Exit the scope after checking the body
-                variableTable.ExitScope();
-                functionTable.ExitScope();
+                statement.elseBranch.Accept(this);
             }
+
             throw new NotImplementedException();
         }
 
-        public object VisitInstanceExpression(Expression.InstanceExpression expression)
+        public Type VisitInstanceExpression(Expression.InstanceExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitListExpression(Expression.ListExpression expression)
+        public Type VisitListExpression(Expression.ListExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitLiteralExpression(Expression.LiteralExpression expression)
+        public Type VisitLiteralExpression(Expression.LiteralExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitLogicalExpression(Expression.LogicalExpression expression)
+        public Type VisitLogicalExpression(Expression.LogicalExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitParameters(OtherNonTerminals.Parameters parameters)
+        public Type VisitParameters(OtherNonTerminals.Parameters parameters)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitPredicateAndExpression(GraphExpression.PredicateAndExpression expression)
+        public Type VisitPredicateAndExpression(GraphExpression.PredicateAndExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitPredicateGroupingExpression(GraphExpression.PredicateGroupingExpression expression)
+        public Type VisitPredicateGroupingExpression(GraphExpression.PredicateGroupingExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitPredicateLiteralExpression(GraphExpression.PredicateLiteralExpression expression)
+        public Type VisitPredicateLiteralExpression(GraphExpression.PredicateLiteralExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitPredicateOrExpression(GraphExpression.PredicateOrExpression expression)
+        public Type VisitPredicateOrExpression(GraphExpression.PredicateOrExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitPredicateUnaryExpression(GraphExpression.PredicateUnaryExpression expression)
+        public Type VisitPredicateUnaryExpression(GraphExpression.PredicateUnaryExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitReturnStatement(Statement.ReturnStatement statement)
+        public Type VisitReturnStatement(Statement.ReturnStatement statement)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitSetExpression(Expression.SetExpression expression)
+        public Type VisitSetExpression(Expression.SetExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitSetFieldExpression(Expression.SetFieldExpression expression)
+        public Type VisitSetFieldExpression(Expression.SetFieldExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitSuperExpression(Expression.SuperExpression expression)
+        public Type VisitSuperExpression(Expression.SuperExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitThisExpression(Expression.ThisExpression expression)
+        public Type VisitThisExpression(Expression.ThisExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitType(OtherNonTerminals.Type type)
+        public Type VisitType(OtherNonTerminals.Type type)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitUnaryExpression(Expression.UnaryExpression expression)
+        public Type VisitUnaryExpression(Expression.UnaryExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitVariableDeclarationStatement(Statement.VariableDeclarationStatement statement)
+        public Type VisitVariableDeclarationStatement(Statement.VariableDeclarationStatement statement)
+        {
+            var type = statement.type.Accept(this);
+            var identifier = statement.type.Accept(this);
+            var initializing = statement.initializingExpression.Accept(this);
+
+            if(identifier.type.Value.type != TokenType.IDENTIFIER)
+            {
+                throw new CheckException("");
+            }
+
+            if(statement.initializingExpression != null)
+            {
+                //Do a type checking whether the initialization matches the declared type
+                if(type != initializing)
+                {
+                    throw new CheckException("");                
+                }
+            }
+
+            if(variableTable.IsVariableDeclared(statement.identifier.lexeme))
+            {
+                throw new CheckException("");
+            }
+
+            variableTable.AddVariable(statement.identifier.lexeme, statement.type.Accept(this));
+
+
+            throw new NotImplementedException();
+        }
+
+        public Type VisitVariableExpression(Expression.VariableExpression expression)
         {
             throw new NotImplementedException();
         }
 
-        public object VisitVariableExpression(Expression.VariableExpression expression)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object VisitWhileStatement(Statement.WhileStatement statement)
+        public Type VisitWhileStatement(Statement.WhileStatement statement)
         {
             throw new NotImplementedException();
         }

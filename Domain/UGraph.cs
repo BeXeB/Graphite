@@ -4,7 +4,6 @@
     {
         public override void AddVertex(string[] vertexTags)
         {
-            NoOfVertices++;
             Tags.Add([.. vertexTags]);
 
             foreach (var vertex in AdjMatrix)
@@ -26,6 +25,23 @@
                 {
                     AdjMatrix[from][to] = true;
                     AdjMatrix[to][from] = true;
+                }
+            }
+        }
+
+        public override void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred, object weight)
+        {
+            var fromIndexes = GetVertices(fromPred);
+            var toIndexes = GetVertices(toPred);
+            
+            var weightBool = Convert.ToBoolean(weight);
+            
+            foreach (var from in fromIndexes)
+            {
+                foreach (var to in toIndexes)
+                {
+                    AdjMatrix[from][to] = weightBool;
+                    AdjMatrix[to][from] = weightBool;
                 }
             }
         }

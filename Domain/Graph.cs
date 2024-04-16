@@ -2,18 +2,26 @@
 {
     public abstract class Graph<T> : IGraph
     {
-        public int NoOfVertices { get; set; } = 0;
-        public List<List<string>> Tags { get; set; } = []; //tags[n] is an array of the tags of the n-th vertex
-        public List<List<T>> AdjMatrix { get; set; } = [];
+        public int NoOfVertices => Tags.Count;
+        public List<List<string>> Tags { get; protected set; } = []; //tags[n] is an array of the tags of the n-th vertex
+        public List<List<T>> AdjMatrix { get; } = [];
 
         public abstract void AddVertex(string[] vertexTags);
         public abstract void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
+        public abstract void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred, object weight);
         public abstract void Disconnect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
-
         public void AddVertices(List<string[]> vertexTags) => vertexTags.ForEach(AddVertex);
 
         public int[] GetVertices(Predicate<List<string>> pred)
             => Enumerable.Range(0, Tags.Count).Where(i => pred(Tags[i])).ToArray();
+
+        public void AddVertex(string[] vertexTags, int amount)
+        {
+            for (var i = 0; i < amount; i++)
+            {
+                AddVertex(vertexTags);
+            }
+        }
 
         public void Retag(string from, string to)
         {
@@ -67,6 +75,24 @@
             }
         }
 
+        public void RemoveVertex(Predicate<List<string>> pred)
+        {
+            var indexes = GetVertices(pred);
+            //Reverse so the higher indexes are removed first, so the lower indexes don't change
+            indexes = indexes.Reverse().ToArray(); 
+            
+            foreach (var index in indexes)
+            {
+                Tags.RemoveAt(index);
+                AdjMatrix.RemoveAt(index);
+
+                foreach (var vertex in AdjMatrix)
+                {
+                    vertex.RemoveAt(index);
+                }
+            }
+        }
+
         public void PrintGraphInfo()
         {
             Console.WriteLine("Graph Information and Adjacency Matrix: " + GetType().Name);
@@ -98,7 +124,9 @@
         public void AddVertices(List<string[]> vertexTags);
         public int[] GetVertices(Predicate<List<string>> pred);
         public void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
+        public void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred, object weight);
         public void Disconnect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
+        public void RemoveVertex(Predicate<List<string>> pred);
         public void AddTags(Predicate<List<string>> pred, List<string> tags);
         public void RemoveTags(Predicate<List<string>> pred, List<string> tags);
         public void Retag(string from, string to);

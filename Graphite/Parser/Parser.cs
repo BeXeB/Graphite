@@ -583,6 +583,7 @@ public class Parser
     private List<Expression> Arguments()
     {
         var arguments = new List<Expression>();
+        if (Peek().type == TokenType.RIGHT_PAREN) return arguments;
         while (true)
         {
             arguments.Add(NonAssignment());

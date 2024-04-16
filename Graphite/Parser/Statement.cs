@@ -136,7 +136,7 @@ public abstract class Statement
         public readonly Token? extendsIdentifier;
 
         public readonly List<VariableDeclarationStatement> variableDeclarationStatements;
-        public readonly List <FunctionDeclarationStatement> functionDeclarationStatements;
+        public readonly List<FunctionDeclarationStatement> functionDeclarationStatements;
 
         public ClassDeclarationStatement(
             Token accessModifier, 
@@ -161,10 +161,10 @@ public abstract class Statement
     }
     public class FunctionDeclarationStatement : Statement
     {
-        private Token identifier;
-        readonly OtherNonTerminals.Parameters parameters;
-        readonly BlockStatement blockStatement;
-        readonly OtherNonTerminals.Type returnType;
+        public readonly Token identifier;
+        public readonly OtherNonTerminals.Parameters parameters;
+        public readonly BlockStatement blockStatement;
+        public readonly OtherNonTerminals.Type returnType;
         
         public FunctionDeclarationStatement(Token identifier, OtherNonTerminals.Parameters parameters, BlockStatement blockStatement, OtherNonTerminals.Type returnType)
         {

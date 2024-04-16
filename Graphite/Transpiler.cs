@@ -37,13 +37,13 @@ public class Transpiler :
     public string VisitIfStatement(Statement.IfStatement statement)
     {
         var condition = statement.condition.Accept(this);
-        var then = statement.thenBranch.Accept(this);
+        var thenBranch = statement.thenBranch.Accept(this);
         if (statement.elseBranch is null)
         {
-            return $"if({condition}) {then}";
+            return $"if({condition}) {thenBranch}";
         }
-        var eelse = statement.elseBranch.Accept(this);
-        return $"if({condition}) {then} else {eelse}";
+        var elseBranch = statement.elseBranch.Accept(this);
+        return $"if({condition}) {thenBranch} else {elseBranch}";
     }
 
     public string VisitWhileStatement(Statement.WhileStatement statement)
@@ -94,7 +94,7 @@ public class Transpiler :
                 accessModifier = "private";
                 break;
             default:
-                throw new InvalidTokenException("Invalid or missing accessmodifier");
+                throw new InvalidTokenException("Invalid or missing accessModifier");
         }
 
         string identifier = statement.identifier.lexeme;
@@ -121,12 +121,8 @@ public class Transpiler :
         var identifier = statement.identifier.lexeme;
         var parameters = statement.parameters.Accept(this);
         var block = statement.blockStatement.Accept(this);
-        //TODO: null check
-        var returnType = "void";
-        if (((Token)statement.returnType.type).type != TokenType.VOID)
-        {
-            returnType = statement.returnType.Accept(this);
-        }
+        var returnType = statement.returnType.Accept(this);
+        
         return $"{returnType} {identifier}({parameters}) {block}";
     }
 
@@ -139,6 +135,7 @@ public class Transpiler :
             return $"{type} {identifier};";
         }
         var expression = statement.initializingExpression.Accept(this);
+        
         return $"{type} {identifier} = {expression};";
     }
 
@@ -313,12 +310,7 @@ public class Transpiler :
                 return $"List<{listType}>";
             case TokenType.FUNC_TYPE:
                 var returnType = type.typeArguments[0].Accept(this);
-                var parameters = "";
-                for (var i = 1; i < type.typeArguments.Count; i++)
-                {
-                    parameters += type.typeArguments[i].Accept(this) + ", ";
-                }
-                parameters = parameters.Remove(parameters.Length - 2);
+                var parameters = String.Join(',', type.typeArguments.Skip(1).Select(t => t.Accept(this)));
                 return returnType.Equals("void") ? $"Action<{parameters}>" : $"Func<{parameters}, {returnType}>";
             default:
                 throw new TranspileException("Invalid type in transpiler. At: " + type.type.Value.line);
@@ -338,7 +330,6 @@ public class Transpiler :
         var leftPredicate = $"v => {expression.leftPredicate.Accept(this)}"; 
         var rightPredicate = $"v => {expression.rightPredicate.Accept(this)}";
         var weight = expression.weight.Accept(this);
-        //TODO: Implement weight in Graph Classes
         switch (expression.@operator.type)
         {
             case TokenType.ARROW:

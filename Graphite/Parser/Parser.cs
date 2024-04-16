@@ -54,14 +54,13 @@ public class Parser
         };
     }
     
-    private Statement.ClassDeclarationStatement ClassDeclarationStatement()
+    private ClassDeclarationStatement ClassDeclarationStatement()
     {
         Token accessModifier;
         Token classIdentifier;
-        Token? extends = null;
         Token? extendsIdentifier = null;
-        List<VariableDeclarationStatement> variableDeclarationStatements = new List<VariableDeclarationStatement>();
-        List<FunctionDeclarationStatement> functionDeclarationStatements = new List<FunctionDeclarationStatement>();
+        List<(Token accesModifier, VariableDeclarationStatement statement)> variableDeclarationStatements = [];
+        List<(Token accesModifier, FunctionDeclarationStatement statement)> functionDeclarationStatements = [];
 
         accessModifier = Peek();
 
@@ -78,7 +77,7 @@ public class Parser
 
         if (Peek().type == TokenType.EXTENDS)
         {
-            extends = Consume(TokenType.EXTENDS, "Unexpected internal error in parser");
+            Consume(TokenType.EXTENDS, "Unexpected internal error in parser");
             extendsIdentifier = Consume(TokenType.IDENTIFIER, "Extending invalid identifier");
         }
         
@@ -86,7 +85,7 @@ public class Parser
 
         while (Peek().type != TokenType.RIGHT_BRACE)
         {
-            accessModifier = Peek();
+            var modifier = Peek();
 
             if (accessModifier.type != TokenType.PUBLIC && accessModifier.type != TokenType.PRIVATE)
             {
@@ -94,15 +93,14 @@ public class Parser
             }
 
             Advance();
-
-            // TODO: discuss if we really want óur current syntax or the variable/function syntax like c#/java/c/..
+            
             switch (Peek(1).type)
             {
-                case TokenType.LEFT_PAREN: // Meaning its a function declaration
-                    functionDeclarationStatements.Add(FunctionDeclarationStatement());
+                case TokenType.LEFT_PAREN: // Meaning it is a function declaration
+                    functionDeclarationStatements.Add((modifier ,FunctionDeclarationStatement()));
                     break;
-                case TokenType.IDENTIFIER: // Meaning its a variable declaration
-                    variableDeclarationStatements.Add(VariableDeclarationStatement());
+                case TokenType.IDENTIFIER: // Meaning it is a variable declaration
+                    variableDeclarationStatements.Add((modifier ,VariableDeclarationStatement()));
                     break;
                 default:
                     throw new ParseException("Unexpected token inside class declaration. Expected class- or function declaration");
@@ -114,14 +112,13 @@ public class Parser
         return new ClassDeclarationStatement(
             accessModifier,
             classIdentifier,
-            extends,
             extendsIdentifier,
             variableDeclarationStatements,
             functionDeclarationStatements
             );
     }
 
-    private Statement.VariableDeclarationStatement VariableDeclarationStatement()
+    private VariableDeclarationStatement VariableDeclarationStatement()
     {
         OtherNonTerminals.Type type;
         Token identifier;
@@ -142,7 +139,7 @@ public class Parser
         return new VariableDeclarationStatement(type, identifier, initializingExpression);
     }
 
-    private Statement.FunctionDeclarationStatement FunctionDeclarationStatement()
+    private FunctionDeclarationStatement FunctionDeclarationStatement()
     {
         Token identifier;
         OtherNonTerminals.Parameters parameters;
@@ -262,7 +259,7 @@ public class Parser
         };
     }
     
-    private Statement.IfStatement IfStatement()
+    private IfStatement IfStatement()
     {
         Consume(TokenType.IF, "Expect 'if' at the beginning of the statement.");
         Consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
@@ -272,44 +269,44 @@ public class Parser
         if (Match(TokenType.ELSE))
         {
             var elseBranch = BlockStatement();
-            return new Statement.IfStatement(condition, thenBranch, elseBranch);
+            return new IfStatement(condition, thenBranch, elseBranch);
         }
-        return new Statement.IfStatement(condition, thenBranch, null);
+        return new IfStatement(condition, thenBranch, null);
     }
     
-    private Statement.WhileStatement WhileStatement()
+    private WhileStatement WhileStatement()
     {
         Consume(TokenType.WHILE, "Expect 'while' at the beginning of the statement.");
         Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
         var condition = Expression();
         Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
         var body = BlockStatement();
-        return new Statement.WhileStatement(condition, body);
+        return new WhileStatement(condition, body);
     }
     
-    private Statement.ReturnStatement ReturnStatement()
+    private ReturnStatement ReturnStatement()
     {
         Consume(TokenType.RETURN, "Expect 'return' at the beginning of the statement.");
         var value = Expression();
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
-        return new Statement.ReturnStatement(value);
+        return new ReturnStatement(value);
     }
     
-    private Statement.BreakStatement BreakStatement()
+    private BreakStatement BreakStatement()
     {
         Consume(TokenType.BREAK, "Expect 'break' at the beginning of the statement.");
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
-        return new Statement.BreakStatement();
+        return new BreakStatement();
     }
     
-    private Statement.ContinueStatement ContinueStatement()
+    private ContinueStatement ContinueStatement()
     {
         Consume(TokenType.CONTINUE, "Expect 'continue' at the beginning of the statement.");
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
-        return new Statement.ContinueStatement();
+        return new ContinueStatement();
     }
 
-    private Statement.BlockStatement BlockStatement()
+    private BlockStatement BlockStatement()
     {
         var statements = new List<Statement>();
         
@@ -320,21 +317,21 @@ public class Parser
             statements.Add(Declaration());
         }
         
-        return new Statement.BlockStatement(statements);
+        return new BlockStatement(statements);
     }
     
     private Statement ExpressionStatement()
     {
         var expression = Expression();
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
-        return new Statement.ExpressionStatement(expression);
+        return new ExpressionStatement(expression);
     }
     
     #endregion
 
     #region GraphStatement
 
-    private Statement.GraphStatement GraphStatement()
+    private GraphStatement GraphStatement()
     {
         var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier.");
         if (!Match(TokenType.LEFT_BRACE)) throw new ParseException("Expect '{' after identifier. At line: " + Peek().line);
@@ -344,7 +341,7 @@ public class Parser
             expressions.Add(GraphOperation());
         }
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
-        return new Statement.GraphStatement(identifier, expressions);
+        return new GraphStatement(identifier, expressions);
     }
 
     private GraphExpression GraphOperation()
@@ -603,6 +600,7 @@ public class Parser
     private List<Expression> Arguments()
     {
         var arguments = new List<Expression>();
+        if (Peek().type == TokenType.RIGHT_PAREN) return arguments;
         while (true)
         {
             arguments.Add(NonAssignment());

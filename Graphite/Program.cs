@@ -86,6 +86,20 @@ var code = """
            Test2 () returns int {
                return Test1();
            }
+           
+           public class TestClass2 {
+                public int x;
+           
+               public TestClass2(int x, bool b) returns void {
+                   this.x = x;
+                   this.b = b;
+               }
+               
+               public test(int a, bool b, str s, char c) returns int {
+                   return a;
+               }
+           }
+           
            """;
 
 var lexer = new Lexer();

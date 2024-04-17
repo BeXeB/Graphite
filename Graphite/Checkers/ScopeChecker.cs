@@ -75,7 +75,6 @@ namespace Graphite.Checkers
             // Enter a new scope for the body of the if statement
             variableTable.EnterScope();
             functionTable.EnterScope();
-            typeTable.EnterScope();
 
             firstPass = true;
 
@@ -101,7 +100,6 @@ namespace Graphite.Checkers
             // Exit the scope after checking the body
             variableTable.ExitScope();
             functionTable.ExitScope();
-            typeTable.ExitScope();
             
             return null!;
         }
@@ -124,7 +122,7 @@ namespace Graphite.Checkers
 
                 if (statement.extendsIdentifier != null)
                 {
-                    type.SetSuperClass(statement.extendsIdentifier.Value.lexeme);
+                    type.SetSuperClass(statement.extendsIdentifier.Value);
                 }
 
                 foreach (var variableDeclaration in statement.variableDeclarationStatements)
@@ -186,7 +184,6 @@ namespace Graphite.Checkers
 
             variableTable.EnterScope();
             functionTable.EnterScope();
-            typeTable.EnterScope();
 
             foreach (var (parameterType, parameterToken) in statement.parameters.parameters)
             {
@@ -197,7 +194,6 @@ namespace Graphite.Checkers
 
             variableTable.ExitScope();
             functionTable.ExitScope();
-            typeTable.ExitScope();
             
             return null!;
         }

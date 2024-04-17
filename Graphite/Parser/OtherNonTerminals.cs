@@ -17,29 +17,30 @@ namespace Graphite.Parser
             public readonly List<Type>? typeArguments;
             
             //for class types
-            public string SuperClass { get; private set; }
-            public readonly List<(string, Type)>? fields;
-            public readonly List<(string, Type)>? methods;
+            public Token? SuperClass { get; private set; }
+            public readonly Dictionary<string, Type> fields;
+            public readonly Dictionary<string, Type> methods;
 
             public Type(Token type, List<Type>? typeArguments)
             {
                 this.type = type;
                 this.typeArguments = typeArguments;
-                fields = new List<(string, Type)>();
-                methods = new List<(string, Type)>();
+                fields = [];
+                methods = [];
+                SuperClass = null;
             }
             
-            public void AddField((string, Type) fields)
+            public void AddField((string name, Type type) fields)
             {
-                this.fields?.Add(fields);
+                this.fields.Add(fields.name, fields.type);
             }
             
-            public void AddMethod((string, Type) methods)
+            public void AddMethod((string name, Type type) methods)
             {
-                this.methods?.Add(methods);
+                this.methods.Add(methods.name, methods.type);
             }
             
-            public void SetSuperClass(string superClass)
+            public void SetSuperClass(Token superClass)
             {
                 SuperClass = superClass;
             }

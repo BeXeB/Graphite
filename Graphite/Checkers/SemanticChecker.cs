@@ -1,5 +1,7 @@
 ﻿using Graphite.Lexer;
 using Graphite.Parser;
+using System.Reflection;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Graphite.Checkers
 {
@@ -9,6 +11,79 @@ namespace Graphite.Checkers
         OtherNonTerminals.IOtherNonTerminalsVisitor<OtherNonTerminals.Type>,
         GraphExpression.IGraphExpressionVisitor<OtherNonTerminals.Type>
     {
+        // TODO add global scoope
+        // TODO how about "global" scope, inside a class (functions being able to use functions/variables declered below itself
+        private Stack<Dictionary<string, Variable>> variableScopes = new Stack<Dictionary<string, Variable>>();
+        private Stack<Dictionary<string, Method>> methodScopes = new Stack<Dictionary<string, Method>>();
+        // TODO consider if i should merge method and variable scopes into one
+        public struct Variable
+        {
+            public string Name;
+            public OtherNonTerminals.Type Type;
+            public bool IsInitialized;
+        }
+        
+        public struct Method
+        {
+            public string Name;
+            public List<Variable> Parameters;
+            public OtherNonTerminals.Type ReturnType;
+        }
+
+        private void BeginScope()
+        {
+            variableScopes.Push(new Dictionary<String, Variable>());
+            methodScopes.Push(new Dictionary<String, Method>());
+        }
+
+        private void EndScope()
+        {
+            variableScopes.Pop();
+            methodScopes.Pop();
+        }
+        
+        // TODO confirm if this works
+        // TODO add possibility to find the right overloaded version of the method
+        private Method FindClosestMethod(string methodName)
+        {
+            var result = methodScopes.SelectMany(scope => scope)
+                .FirstOrDefault(methodEntry => methodEntry.Key == methodName);
+
+            if (result.Key == null)
+            {
+                throw new CheckException("Trying to reference non-existing method in scope");
+            }
+
+            return result.Value;
+        }
+
+        // TODO confirm if this works
+        private Variable FindClosestVariable(string variableName)
+        {
+            var result = variableScopes.SelectMany(scope => scope)
+                .FirstOrDefault(variableEntry => variableEntry.Key == variableName);
+
+            if (result.Key == null)
+            {
+                throw new CheckException("Trying to reference non-existing variable in scope");
+            }
+
+            return result.Value;
+        }
+
+        public OtherNonTerminals.Type VisitBlockStatement(Statement.BlockStatement statement)
+        {
+            // NOTE: we cant begin the scope here. For example methods that have parameters, should add a new scope with the parameters before
+            // visiting the block statement
+            foreach (Statement currStm in statement.statements)
+            {
+                currStm.Accept(this);
+            }
+            EndScope();
+            return null;
+        }
+
+
         public OtherNonTerminals.Type VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
         {
             throw new NotImplementedException();
@@ -176,14 +251,11 @@ namespace Graphite.Checkers
             }
         }
 
-        public OtherNonTerminals.Type VisitBlockStatement(Statement.BlockStatement statement)
-        {
-            throw new NotImplementedException();
-        }
 
         public OtherNonTerminals.Type VisitBreakStatement(Statement.BreakStatement statement)
         {
-            throw new NotImplementedException();
+            EndScope();
+            return null;
         }
 
         public OtherNonTerminals.Type VisitCallExpression(Expression.CallExpression expression)
@@ -193,12 +265,26 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitClassDeclarationStatement(Statement.ClassDeclarationStatement statement)
         {
+            // TODO handle accessmodifier making things available outside scope
+            // TODO handle extends
+            BeginScope();
+            foreach(var currStatement in statement.variableDeclarationStatements)
+            {
+                currStatement.Accept(this);
+            }
+            foreach(var currStatement in statement.functionDeclarationStatements)
+            {
+                currStatement.Accept(this);
+            }
+            EndScope();
+
+            // TODO add to type scope
             throw new NotImplementedException();
         }
 
         public OtherNonTerminals.Type VisitContinueStatement(Statement.ContinueStatement statement)
         {
-            throw new NotImplementedException();
+            return null; // This does not need to do anything right
         }
 
         public OtherNonTerminals.Type VisitElementAccessExpression(Expression.ElementAccessExpression expression)
@@ -213,7 +299,29 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)
         {
-            throw new NotImplementedException();
+            // TODO take parameter types into consideration as well to support overloading
+            var methodExisting = methodScopes.Peek().TryGetValue(statement.identifier.lexeme, out Method existingMethod);
+
+            if (methodExisting)
+            {
+                throw new CheckException("Function with same name and signature has already been declared inside scope");
+            }
+
+            BeginScope();
+            statement.parameters.Accept(this);
+            statement.blockStatement.Accept(this);
+            EndScope();
+
+            var newMethod = new Method()
+            {
+                Name = statement.identifier.lexeme,
+                Parameters = null, // TODO add this to support overloading
+                ReturnType = statement.returnType,
+            };
+
+            methodScopes.Peek().Add(statement.identifier.lexeme, newMethod);
+
+            return statement.returnType;
         }
 
         public OtherNonTerminals.Type VisitGetFieldExpression(Expression.GetFieldExpression expression)

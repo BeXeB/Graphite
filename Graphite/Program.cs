@@ -81,10 +81,19 @@ using QuikGraphVisualizer;
 //            """;
 
 var code = """
+           test() returns Set<int> {
+                return {1, 2, 3, 4};
+           }
+           test()[1];
+           test2 returns Set<Func<Set<int>>> {
+                return {test};
+           }
+           test2()[0]()[2];
+           # allow this to happen, need to change grammar
+           
            test()();
            asd.test[1].test()()();
            asd[1]()();
-           #test()[1]; allow this to happen, need to change grammar
            asd.test().test().test();
            asd.test[1]();
            test();

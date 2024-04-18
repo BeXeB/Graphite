@@ -362,6 +362,9 @@ namespace Graphite.Checkers
 
         public Type VisitUnaryExpression(Expression.UnaryExpression expression)
         {
+            //TO DO: similarly to binary, go through every possible unary operator and check the possible type usages
+
+
             throw new NotImplementedException();
         }
 
@@ -398,11 +401,18 @@ namespace Graphite.Checkers
 
         public Type VisitVariableExpression(Expression.VariableExpression expression)
         {
+            //TO DO: check that variable is declared
+
+            //TO DO: check that variable type is consistent with what was declared before
+
             throw new NotImplementedException();
         }
 
         public Type VisitWhileStatement(Statement.WhileStatement statement)
         {
+            //TO DO: check that the condition is boolean
+            //TO DO: for checking the body, call accept method
+
             throw new NotImplementedException();
         }
     }

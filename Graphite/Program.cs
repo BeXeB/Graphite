@@ -85,7 +85,7 @@ var code = """
                 return {1, 2, 3, 4};
            }
            test()[1];
-           test2 returns Set<Func<Set<int>>> {
+           test2() returns Set<Func<Set<int>>> {
                 return {test};
            }
            test2()[0]()[2];

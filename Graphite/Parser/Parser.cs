@@ -727,7 +727,14 @@ public class Parser
                 var arguments = Arguments();
                 Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
                 expression = new Expression.CallExpression(expression, arguments);
-            } else if (Match(TokenType.DOT))
+            }
+            else if (Match(TokenType.LEFT_BRACKET))
+            {
+                var index = NonAssignment();
+                Consume(TokenType.RIGHT_BRACKET, "Expect ']' after index.");
+                expression = new Expression.ElementAccessExpression(expression, index);
+            }
+            else if (Match(TokenType.DOT))
             {
                 var field = Call();
                 expression = new Expression.GetFieldExpression(expression, field);
@@ -772,7 +779,8 @@ public class Parser
                 Advance();
                 return new Expression.LiteralExpression(null);
             case TokenType.IDENTIFIER:
-                return ElementAccess();
+                Advance();
+                return new Expression.VariableExpression(token);
             case TokenType.THIS:
                 Advance();
                 return new Expression.ThisExpression();
@@ -799,20 +807,6 @@ public class Parser
         Consume(TokenType.RIGHT_BRACKET, "Expect ']' at the end of the list.");
         return new Expression.ListExpression(elements);
     }
-
-    private Expression ElementAccess()
-    {
-        var token = Consume(TokenType.IDENTIFIER, "Expect identifier.");
-        Expression expression = new Expression.VariableExpression(token);
-        while (Match(TokenType.LEFT_BRACKET))
-        {
-            var index = NonAssignment();
-            Consume(TokenType.RIGHT_BRACKET, "Expect ']' after index.");
-            expression = new Expression.ElementAccessExpression(expression, index);
-        }
-        return expression;
-    }
-
     
     #endregion
 

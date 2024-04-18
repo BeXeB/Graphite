@@ -111,7 +111,29 @@ namespace Graphite.Checkers
 
         public Type VisitCallExpression(Expression.CallExpression expression)
         {
-            throw new NotImplementedException();
+            //Callee should return a function type
+            var functionType = expression.callee.Accept(this);
+            var argumentTypes = expression.arguments.Select(argument => argument.Accept(this)).ToList();
+
+            if (functionType.type.Value.type != TokenType.FUNC_TYPE)
+            {
+                throw new CheckException("Cannot call a non-function.");
+            }
+            
+            if (functionType.typeArguments.Count - 1 != argumentTypes.Count)
+            {
+                throw new CheckException("Number of arguments does not match the number of parameters.");
+            }
+            
+            for (var i = 0; i < argumentTypes.Count; i++)
+            {
+                if (functionType.typeArguments[i + 1] != argumentTypes[i])
+                {
+                    throw new CheckException("Argument type does not match parameter type.");
+                }
+            }
+            
+            return functionType.typeArguments[0];
         }
 
         public Type VisitClassDeclarationStatement(Statement.ClassDeclarationStatement statement)
@@ -179,7 +201,12 @@ namespace Graphite.Checkers
         {
             if (firstPass)
             {
-                return statement.returnType.Accept(this);
+                var returnType = statement.returnType.Accept(this);
+                var parameters = statement.parameters.Accept(this); //this should somehow be a list of types
+                var parameterTypes = parameters.typeArguments.Select(type => type.Accept(this));
+                var typeArguments = new List<Type> {returnType};
+                typeArguments.AddRange(parameterTypes);
+                return new Type(statement.identifier, typeArguments);
             }
 
             variableTable.EnterScope();

@@ -7,7 +7,7 @@ namespace Graphite.Checkers
 {
     internal class SemanticChecker :
         Statement.IStatementVisitor<OtherNonTerminals.Type>,
-        Expression.IExpressionVisitor<OtherNonTerminals.Type>,
+        Graphite.Parser.Expression.IExpressionVisitor<OtherNonTerminals.Type>,
         OtherNonTerminals.IOtherNonTerminalsVisitor<OtherNonTerminals.Type>,
         GraphExpression.IGraphExpressionVisitor<OtherNonTerminals.Type>
     {
@@ -16,18 +16,32 @@ namespace Graphite.Checkers
         private Stack<Dictionary<string, Variable>> variableScopes = new Stack<Dictionary<string, Variable>>();
         private Stack<Dictionary<string, Method>> methodScopes = new Stack<Dictionary<string, Method>>();
         // TODO consider if i should merge method and variable scopes into one
-        public struct Variable
+        public class Variable
         {
             public string Name;
             public OtherNonTerminals.Type Type;
             public bool IsInitialized;
         }
         
-        public struct Method
+        public class Method
         {
             public string Name;
             public List<Variable> Parameters;
             public OtherNonTerminals.Type ReturnType;
+        }
+
+        public class CustomType
+        {
+            public TypeOfType typeType;
+            public string Name;
+            public CustomType? baseType;
+            public List<Method> publicMethods;
+            public List<Variable> publicVariables;
+            public enum TypeOfType
+            {
+                Class,
+                Struct
+            }
         }
 
         private void BeginScope()
@@ -260,6 +274,7 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitCallExpression(Expression.CallExpression expression)
         {
+            //FindClosestMethod(expression.callee); //TODO finnish this when callexpression has been fixed
             throw new NotImplementedException();
         }
 
@@ -326,7 +341,7 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitGetFieldExpression(Expression.GetFieldExpression expression)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); //TODO make when getfieldexpresison is fixed
         }
 
         public OtherNonTerminals.Type VisitGraphAddVertexExpression(GraphExpression.GraphAddVertexExpression expression)
@@ -386,7 +401,25 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitIfStatement(Statement.IfStatement statement)
         {
-            throw new NotImplementedException();
+            var conditionType = statement.condition.Accept(this).type!.Value.lexeme;
+                //expression.condition.Accept(this).type!.Value;
+            if (conditionType.ToString() != "BOOL") // TODO this does not seem like a clean way to do it
+            {
+                throw new CheckException("Expression inside if-statement must evaluate to a boolean value");
+            }
+
+            BeginScope();
+            statement.thenBranch.Accept(this);
+            EndScope();
+
+            if(statement.elseBranch != null)
+            {
+                BeginScope();
+                statement.elseBranch.Accept(this);
+                EndScope();
+            }
+
+            return null;
         }
 
         public OtherNonTerminals.Type VisitInstanceExpression(Expression.InstanceExpression expression)

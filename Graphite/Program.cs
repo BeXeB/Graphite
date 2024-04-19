@@ -68,38 +68,18 @@ using Graphite.Parser;
 //            """;
 
 var code = """
-           public class TestClass {
-               public TestClass(int x, bool b) returns void {
-                   this.x = x;
-                   this.b = b;
-               }
-               
-               public test(int a, bool b, str s, char c) returns int {
-                   return a;
+           public class TestClass 
+           {
+               public int x;
+               public test() returns int 
+               {
+                   return 1;
                }
            }
            
-           Test1 () returns int {
-               return 1;
-           }
+           TestClass obj = new TestClass();
            
-           Test2 () returns int {
-               return Test1();
-           }
-           
-           public class TestClass2 {
-                public int x;
-           
-               public TestClass2(int x, bool b) returns void {
-                   this.x = x;
-                   this.b = b;
-               }
-               
-               public test(int a, bool b, str s, char c) returns int {
-                   return a;
-               }
-           }
-           
+           obj.test();
            """;
 
 var lexer = new Lexer();

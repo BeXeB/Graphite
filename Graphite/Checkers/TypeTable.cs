@@ -16,4 +16,10 @@ internal class TypeTable
     {
         return globalScope.ContainsKey(name);
     }
+    
+    public Type GetType(string name)
+    {
+        if (!globalScope.TryGetValue(name, out var type)) throw new Exception($"Type {name} not declared");
+        return type;
+    }
 }

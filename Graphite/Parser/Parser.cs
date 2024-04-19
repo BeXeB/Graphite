@@ -33,25 +33,39 @@ public class Parser
     private Statement Declaration()
     {
         var token = Peek();
-        return token.type switch
+        switch (token.type)
         {
-            TokenType.INT => VariableDeclarationStatement(),
-            TokenType.DEC => VariableDeclarationStatement(),
-            TokenType.BOOL => VariableDeclarationStatement(),
-            TokenType.STR => VariableDeclarationStatement(),
-            TokenType.CHAR => VariableDeclarationStatement(),
-            TokenType.FUNC_TYPE => VariableDeclarationStatement(),
-            TokenType.SET => VariableDeclarationStatement(),
-            TokenType.LIST => VariableDeclarationStatement(),
-            TokenType.PUBLIC => ClassDeclarationStatement(),
-            TokenType.PRIVATE => ClassDeclarationStatement(),
-            TokenType.IDENTIFIER => Peek(1).type == TokenType.LEFT_PAREN ? 
-                FunctionDeclarationStatement() : 
-                Peek(1).type == TokenType.IDENTIFIER ? 
-                    VariableDeclarationStatement() : 
-                    Statement(),
-            _ => Statement()
-        };
+            case TokenType.INT:
+            case TokenType.DEC:
+            case TokenType.BOOL:
+            case TokenType.STR:
+            case TokenType.CHAR:
+            case TokenType.FUNC_TYPE:
+            case TokenType.SET:
+            case TokenType.LIST:
+                return VariableDeclarationStatement();
+            case TokenType.PUBLIC:
+            case TokenType.PRIVATE:
+                return ClassDeclarationStatement();
+            case TokenType.IDENTIFIER:
+                switch (Peek(1).type)
+                {
+                    case TokenType.LEFT_PAREN:
+                        var i = 1;
+                        while (true)
+                        {
+                            if (Peek(i).type == TokenType.RIGHT_PAREN) break;
+                            i++;
+                        }
+                        return Peek(i + 1).type == TokenType.RETURNS ? FunctionDeclarationStatement() : Statement();
+                    case TokenType.IDENTIFIER:
+                        return VariableDeclarationStatement();
+                    default:
+                        return Statement();
+                }
+            default:
+                return Statement();
+        }
     }
     
     private ClassDeclarationStatement ClassDeclarationStatement()
@@ -714,7 +728,13 @@ public class Parser
                 Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
                 expression = new Expression.CallExpression(expression, arguments);
             }
-            if (Match(TokenType.DOT))
+            else if (Match(TokenType.LEFT_BRACKET))
+            {
+                var index = NonAssignment();
+                Consume(TokenType.RIGHT_BRACKET, "Expect ']' after index.");
+                expression = new Expression.ElementAccessExpression(expression, index);
+            }
+            else if (Match(TokenType.DOT))
             {
                 var field = Call();
                 expression = new Expression.GetFieldExpression(expression, field);
@@ -759,7 +779,8 @@ public class Parser
                 Advance();
                 return new Expression.LiteralExpression(null);
             case TokenType.IDENTIFIER:
-                return ElementAccess();
+                Advance();
+                return new Expression.VariableExpression(token);
             case TokenType.THIS:
                 Advance();
                 return new Expression.ThisExpression();
@@ -786,20 +807,6 @@ public class Parser
         Consume(TokenType.RIGHT_BRACKET, "Expect ']' at the end of the list.");
         return new Expression.ListExpression(elements);
     }
-
-    private Expression ElementAccess()
-    {
-        var token = Consume(TokenType.IDENTIFIER, "Expect identifier.");
-        Expression expression = new Expression.VariableExpression(token);
-        while (Match(TokenType.LEFT_BRACKET))
-        {
-            var index = NonAssignment();
-            Consume(TokenType.RIGHT_BRACKET, "Expect ']' after index.");
-            expression = new Expression.ElementAccessExpression(expression, index);
-        }
-        return expression;
-    }
-
     
     #endregion
 

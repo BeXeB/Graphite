@@ -176,6 +176,9 @@ public abstract class Statement
         {
             return visitor.VisitFunctionDeclarationStatement(this);
         }
+
+        public string[] GetParameterTypes()
+            => parameters.parameters.Select(p => p.Item1.type.Value.lexeme).ToArray();
     }
     public class VariableDeclarationStatement : Statement
     {

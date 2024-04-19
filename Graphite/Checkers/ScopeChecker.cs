@@ -89,9 +89,10 @@ namespace Graphite.Checkers
 
             foreach (var functionDecl in statements.OfType<Statement.FunctionDeclarationStatement>())
             {
-                if (functionTable.IsFunctionDeclared(functionDecl.identifier.lexeme))
+                var parameterTypes = functionDecl.GetParameterTypes();
+                if (functionTable.IsFunctionDeclared(functionDecl.identifier.lexeme, parameterTypes))
                     throw new CheckException("Function already declared.");
-                functionTable.AddFunction(functionDecl.identifier.lexeme, functionDecl.Accept(this));
+                functionTable.AddFunction(functionDecl.identifier.lexeme, functionDecl.Accept(this), parameterTypes);
             }
 
             firstPass = false;
@@ -161,7 +162,7 @@ namespace Graphite.Checkers
                 foreach (var (accessModifier, functionDeclaration) in statement.functionDeclarationStatements)
                 {
                     if (accessModifier.type == TokenType.PRIVATE) continue;
-                    type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this)));
+                    type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this), functionDeclaration.GetParameterTypes()));
                 }
 
                 return type;
@@ -498,7 +499,7 @@ namespace Graphite.Checkers
                         return variableType;
                     }
 
-                    if (currentObjectType.Peek().methods.TryGetValue(expression.name.lexeme, out var functionType))
+                    if (currentObjectType.Peek().TryGetMethod(new(expression.name.lexeme), out var functionType))
                     {
                         return functionType;
                     }

@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Type = Graphite.Parser.OtherNonTerminals.Type;
+﻿using Type = Graphite.Parser.OtherNonTerminals.Type;
+using Method = Graphite.Parser.OtherNonTerminals.Method;
 
 namespace Graphite.Checkers
 {
     internal class FunctionTable
     {
-        private Dictionary<string, Type> globalScope = new Dictionary<string, Type>();
-        private Stack<Dictionary<string, Type>> scopes = new Stack<Dictionary<string, Type>>();
+        private Dictionary<Method, Type> globalScope = [];
+        private Stack<Dictionary<Method, Type>> scopes = new();
 
         public void EnterScope()
         {
-            scopes.Push(new Dictionary<string, Type>());
+            scopes.Push([]);
         }
 
         public void ExitScope()
@@ -22,29 +18,53 @@ namespace Graphite.Checkers
             scopes.Pop();
         }
 
-        public void AddFunction(string name, Type type)
+        public void AddFunction(string name, Type funcType, string[] parameterTypes)
         {
-            scopes.Peek().Add(name, type);
+            scopes.Peek().Add(new(name, parameterTypes), funcType);
+        }
+
+        public bool IsFunctionDeclared(string name, string[] parameterTypes)
+        {
+            var func = new Method(name, parameterTypes);
+            foreach (var scope in scopes)
+            {
+                if (scope.ContainsKey(func))
+                    return true;
+            }
+            return globalScope.ContainsKey(func);
         }
 
         public bool IsFunctionDeclared(string name)
         {
             foreach (var scope in scopes)
             {
-                if (scope.ContainsKey(name))
+                if (scope.Keys.Any(m => m.Name == name))
                     return true;
             }
-            return globalScope.ContainsKey(name);
+            return globalScope.Keys.Any(m => m.Name == name);
+        }
+
+        public Type GetFunctionType(string name, string[] parameterTypes)
+        {
+            var func = new Method(name, parameterTypes);
+            foreach (var scope in scopes)
+            {
+                if (scope.TryGetValue(func, out Type? value))
+                    return value;
+            }
+            return globalScope[func];
         }
 
         public Type GetFunctionType(string name)
         {
             foreach (var scope in scopes)
             {
-                if (scope.ContainsKey(name))
-                    return scope[name];
+                if (scope.Keys.Any(m => m.Name == name))
+                {
+                    return scope.First(m => m.Key.Name == name).Value;
+                }
             }
-            return globalScope[name];
+            return globalScope.FirstOrDefault(g => g.Key.Name == name).Value;
         }
     }
 }

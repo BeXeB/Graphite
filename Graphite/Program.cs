@@ -71,26 +71,64 @@ using QuikGraphVisualizer;
 //            """;
 
 var code = """
-           public class TestClass 
-           {
-               public int x;
-               public test() returns int 
-               {
-                   return 1;
-               }
-               
-               public test2() returns Func<int> 
-               {
-                   return test;
-               }
+           #Func<int, int> test
+           test(int a) returns int {
+               return a;
            }
            
-           TestClass obj = new TestClass();
+           #Func<int, Func<int>, int> test2
+           test2 (Func<int, int> f, int a) returns int {
+               return f(a);
+           }
            
-           obj.test();
+           #Func<Func<int, Func<int, int>, int>>
+           test3 () returns Func<int, Func<int, int>, int> {
+               return test2;
+           }
            
-           obj.test2()();
+           int a = test3()(test, 1);
            """;
+           // public class TestClass 
+           // {
+           //     public int x;
+           //     public test() returns int 
+           //     {
+           //         return 1;
+           //     }
+           //     
+           //     public test2() returns Func<int>
+           //     {
+           //         return test;
+           //     }
+           // }
+           //
+           // public class TestClass2
+           // {
+           //     public TestClass a = new TestClass();
+           // }
+           //
+           // TestClass obj = new TestClass();
+           //
+           // obj.test();
+           //
+           // obj.test2()();
+           //
+           // TestClass2 obj2 = new TestClass2();
+           //
+           // obj2.a.test2()();
+           //
+           // public class TestClass3 extends TestClass
+           // {
+           //     public test3() returns int
+           //     {
+           //         return test();
+           //     }
+           // }
+           //
+           // TestClass3 obj3 = new TestClass3();
+           //
+           // #obj3.test3();
+           // """;
 
 var lexer = new Lexer();
 var parser = new Parser();

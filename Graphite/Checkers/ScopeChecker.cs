@@ -16,9 +16,7 @@ namespace Graphite.Checkers
 
         private bool firstPass;
 
-        private Type currentObjectType = null!;
-        private bool isInGetField = false;
-        private bool isInClassDeclaration = false;
+        private Stack<Type> currentObjectType = new Stack<Type>();
 
         public ScopeChecker()
         {
@@ -133,7 +131,8 @@ namespace Graphite.Checkers
 
             for (var i = 0; i < argumentTypes.Count; i++)
             {
-                if (functionType.typeArguments[i + 1] != argumentTypes[i])
+                //TODO create a method for checking if the types are equal
+                if (!CompareTypes(functionType.typeArguments[i + 1], argumentTypes[i]))
                 {
                     throw new CheckException("Argument type does not match parameter type.");
                 }
@@ -178,21 +177,19 @@ namespace Graphite.Checkers
 
             variableTable.EnterScope();
             functionTable.EnterScope();
-            isInClassDeclaration = true;
-            currentObjectType = typeTable.GetType(statement.identifier.lexeme);
+            currentObjectType.Push(typeTable.GetType(statement.identifier.lexeme));
 
             foreach (var (_, variableDeclaration) in statement.variableDeclarationStatements)
             {
                 variableDeclaration.Accept(this);
             }
 
-            foreach (var (_ ,functionDeclaration) in statement.functionDeclarationStatements)
+            foreach (var (_, functionDeclaration) in statement.functionDeclarationStatements)
             {
                 functionDeclaration.Accept(this);
             }
 
-            currentObjectType = null!;
-            isInClassDeclaration = false;
+            currentObjectType.Pop();
             variableTable.ExitScope();
             functionTable.ExitScope();
 
@@ -257,18 +254,16 @@ namespace Graphite.Checkers
         public Type VisitGetFieldExpression(Expression.GetFieldExpression expression)
         {
             var objectType = expression.obj.Accept(this);
-            isInGetField = true;
-            currentObjectType = objectType;
+            currentObjectType.Push(objectType);
             var fieldType = expression.field.Accept(this);
 
             if (!typeTable.IsTypeDeclared(objectType.type.Value.lexeme))
             {
                 throw new CheckException("Object is not of class type.");
             }
-            
-            currentObjectType = null!;
-            isInGetField = false;
-            
+
+            currentObjectType.Pop();
+
             return fieldType;
         }
 
@@ -380,7 +375,7 @@ namespace Graphite.Checkers
 
             return new Type(new Token
             {
-                type = tokenType, lexeme = "", literal = null
+                type = tokenType
             }, null);
         }
 
@@ -475,7 +470,7 @@ namespace Graphite.Checkers
             if (statement.initializingExpression != null)
             {
                 //Do a type checking whether the initialization matches the declared type
-                if (!type.Equals(initializing))
+                if (!CompareTypes(type, initializing))
                 {
                     throw new CheckException("Type mismatch.");
                 }
@@ -494,29 +489,30 @@ namespace Graphite.Checkers
 
         public Type VisitVariableExpression(Expression.VariableExpression expression)
         {
-            if (isInGetField || isInClassDeclaration)
+            if (currentObjectType.Count > 0)
             {
                 while (true)
                 {
-                    if (currentObjectType.fields.TryGetValue(expression.name.lexeme, out var variableType))
+                    if (currentObjectType.Peek().fields.TryGetValue(expression.name.lexeme, out var variableType))
                     {
                         return variableType;
                     }
 
-                    if (currentObjectType.methods.TryGetValue(expression.name.lexeme, out var functionType))
+                    if (currentObjectType.Peek().methods.TryGetValue(expression.name.lexeme, out var functionType))
                     {
                         return functionType;
                     }
-                    
-                    if (currentObjectType.SuperClass == null)
+
+                    if (currentObjectType.Peek().SuperClass == null)
                     {
                         throw new CheckException("Field or method does not exist.");
                     }
-                    
-                    currentObjectType = typeTable.GetType(currentObjectType.SuperClass.Value.lexeme);
+
+                    currentObjectType.Pop();
+                    currentObjectType.Push(typeTable.GetType(currentObjectType.Peek().SuperClass.Value.lexeme));
                 }
             }
-            
+
             if (variableTable.IsVariableDeclared(expression.name.lexeme))
             {
                 return variableTable.GetVariableType(expression.name.lexeme);
@@ -536,6 +532,33 @@ namespace Graphite.Checkers
             //TO DO: for checking the body, call accept method
 
             throw new NotImplementedException();
+        }
+
+        public bool CompareTypes(OtherNonTerminals.Type type1, OtherNonTerminals.Type type2)
+        {
+            var type1ArgLength = type1.typeArguments?.Count ?? 0;
+            var type2ArgLength = type2.typeArguments?.Count ?? 0;
+
+            if (type1ArgLength == type2ArgLength)
+            {
+                for (int i = 0; i < type1ArgLength; i++)
+                {
+                    if (!CompareTypes(type1.typeArguments![i], type2.typeArguments![i]))
+                    {
+                        return false;
+                    }
+                }
+
+                if (type1.type.Value.type == TokenType.IDENTIFIER && type2.type.Value.type == TokenType.IDENTIFIER)
+                {
+                    return type1.type.Value.lexeme == type2.type.Value.lexeme;
+                }
+                return type1.type.Value.type == type2.type.Value.type;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

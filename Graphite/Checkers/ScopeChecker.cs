@@ -16,6 +16,9 @@ namespace Graphite.Checkers
 
         private bool firstPass;
 
+        private Type currentObjectType = null!;
+        private bool isInGetField = false;
+
         public ScopeChecker()
         {
             variableTable = new VariableTable();
@@ -156,8 +159,7 @@ namespace Graphite.Checkers
 
                 foreach (var functionDeclaration in statement.functionDeclarationStatements)
                 {
-                    type.AddMethod((functionDeclaration.identifier.lexeme,
-                        functionDeclaration.returnType.Accept(this)));
+                    type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this)));
                 }
 
                 return type;
@@ -170,7 +172,7 @@ namespace Graphite.Checkers
                     throw new CheckException("Super class not declared.");
                 }
             }
-            
+
             variableTable.EnterScope();
             functionTable.EnterScope();
 
@@ -183,7 +185,7 @@ namespace Graphite.Checkers
             {
                 functionDeclaration.Accept(this);
             }
-            
+
             variableTable.ExitScope();
             functionTable.ExitScope();
 
@@ -225,7 +227,7 @@ namespace Graphite.Checkers
                 var parameterTypes = parameters.typeArguments.Select(type => type.Accept(this));
                 var typeArguments = new List<Type> { returnType };
                 typeArguments.AddRange(parameterTypes);
-                return new Type(statement.identifier, typeArguments);
+                return new Type(new Token { type = TokenType.FUNC_TYPE }, typeArguments);
             }
 
             variableTable.EnterScope();
@@ -246,26 +248,20 @@ namespace Graphite.Checkers
 
         public Type VisitGetFieldExpression(Expression.GetFieldExpression expression)
         {
-            //TODO: Check if object is of class type
-            //TODO: Check if field exists in class
-            //TODO: Return the type of the field
-
             var objectType = expression.obj.Accept(this);
+            isInGetField = true;
+            currentObjectType = objectType;
             var fieldType = expression.field.Accept(this);
 
             if (!typeTable.IsTypeDeclared(objectType.type.Value.lexeme))
             {
                 throw new CheckException("Object is not of class type.");
             }
-
-            var classType = typeTable.GetType(objectType.type.Value.lexeme);
-            // if (!classType.fields.ContainsKey(expression.field.name.lexeme))
-            // {
-            //     throw new CheckException("Field does not exist in class.");
-            // }
-            //
-            // return classType.fields[expression.field.name.lexeme];
-            throw new NotImplementedException();
+            
+            currentObjectType = null!;
+            isInGetField = false;
+            
+            return fieldType;
         }
 
         public Type VisitGraphAddVertexExpression(GraphExpression.GraphAddVertexExpression expression)
@@ -450,7 +446,6 @@ namespace Graphite.Checkers
             }
 
             return typeTable.GetType(type.type.Value.lexeme);
-
         }
 
         public Type VisitUnaryExpression(Expression.UnaryExpression expression)
@@ -491,6 +486,21 @@ namespace Graphite.Checkers
 
         public Type VisitVariableExpression(Expression.VariableExpression expression)
         {
+            if (isInGetField)
+            {
+                if (currentObjectType.fields.TryGetValue(expression.name.lexeme, out var variableType))
+                {
+                    return variableType;
+                }
+
+                if (currentObjectType.methods.TryGetValue(expression.name.lexeme, out var functionType))
+                {
+                    return functionType;
+                }
+                
+                throw new CheckException("Field or method does not exist.");
+            }
+            
             if (variableTable.IsVariableDeclared(expression.name.lexeme))
             {
                 return variableTable.GetVariableType(expression.name.lexeme);
@@ -500,8 +510,6 @@ namespace Graphite.Checkers
             {
                 return functionTable.GetFunctionType(expression.name.lexeme);
             }
-            
-            
 
             throw new CheckException("Variable has not been declared.");
         }

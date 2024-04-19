@@ -496,17 +496,25 @@ namespace Graphite.Checkers
         {
             if (isInGetField || isInClassDeclaration)
             {
-                if (currentObjectType.fields.TryGetValue(expression.name.lexeme, out var variableType))
+                while (true)
                 {
-                    return variableType;
-                }
+                    if (currentObjectType.fields.TryGetValue(expression.name.lexeme, out var variableType))
+                    {
+                        return variableType;
+                    }
 
-                if (currentObjectType.methods.TryGetValue(expression.name.lexeme, out var functionType))
-                {
-                    return functionType;
+                    if (currentObjectType.methods.TryGetValue(expression.name.lexeme, out var functionType))
+                    {
+                        return functionType;
+                    }
+                    
+                    if (currentObjectType.SuperClass == null)
+                    {
+                        throw new CheckException("Field or method does not exist.");
+                    }
+                    
+                    currentObjectType = typeTable.GetType(currentObjectType.SuperClass.Value.lexeme);
                 }
-                
-                throw new CheckException("Field or method does not exist.");
             }
             
             if (variableTable.IsVariableDeclared(expression.name.lexeme))

@@ -18,6 +18,7 @@ namespace Graphite.Checkers
 
         private Type currentObjectType = null!;
         private bool isInGetField = false;
+        private bool isInClassDeclaration = false;
 
         public ScopeChecker()
         {
@@ -177,6 +178,8 @@ namespace Graphite.Checkers
 
             variableTable.EnterScope();
             functionTable.EnterScope();
+            isInClassDeclaration = true;
+            currentObjectType = typeTable.GetType(statement.identifier.lexeme);
 
             foreach (var (_, variableDeclaration) in statement.variableDeclarationStatements)
             {
@@ -188,6 +191,8 @@ namespace Graphite.Checkers
                 functionDeclaration.Accept(this);
             }
 
+            currentObjectType = null!;
+            isInClassDeclaration = false;
             variableTable.ExitScope();
             functionTable.ExitScope();
 
@@ -230,7 +235,6 @@ namespace Graphite.Checkers
                 var typeArguments = new List<Type> { returnType };
                 typeArguments.AddRange(parameterTypes);
                 var funcType = new Type(new Token { type = TokenType.FUNC_TYPE }, typeArguments);
-                functionTable.AddFunction(statement.identifier.lexeme, funcType);
                 return funcType;
             }
 
@@ -490,7 +494,7 @@ namespace Graphite.Checkers
 
         public Type VisitVariableExpression(Expression.VariableExpression expression)
         {
-            if (isInGetField)
+            if (isInGetField || isInClassDeclaration)
             {
                 if (currentObjectType.fields.TryGetValue(expression.name.lexeme, out var variableType))
                 {

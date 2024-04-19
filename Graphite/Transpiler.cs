@@ -77,25 +77,22 @@ public class Transpiler :
         }
 
         string identifier = statement.identifier.lexeme;
-
-        string extends = statement.extends?.lexeme ?? "";
-        string extendsIdentifier = statement.extends?.lexeme ?? "";
-
+        
         string variableDeclarations = "";
 
         foreach(var currVarDeclaration in statement.variableDeclarationStatements)
         {
-            variableDeclarations += VisitVariableDeclarationStatement(currVarDeclaration);
+            variableDeclarations += VisitVariableDeclarationStatement(currVarDeclaration.statement);
         }
 
         string functionDeclarations = "";
 
         foreach(var currFuncDeclaration in statement.functionDeclarationStatements)
         {
-            functionDeclarations += VisitFunctionDeclarationStatement(currFuncDeclaration);
+            functionDeclarations += VisitFunctionDeclarationStatement(currFuncDeclaration.statement);
         }
 
-        return $"{accessModifier} {identifier} {extends} {extendsIdentifier} {{ {variableDeclarations} {functionDeclarations} }}";
+        return $"{accessModifier} {identifier} {{ {variableDeclarations} {functionDeclarations} }}";
     }
 
     public string VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)

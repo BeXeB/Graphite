@@ -1,9 +1,12 @@
-﻿//args[0] name of the input file
+//args[0] name of the input file
 //args[1] name of the output file
 
 using Graphite.Checkers;
 using Graphite.Lexer;
 using Graphite.Parser;
+using Domain;
+using Graphite;
+using QuikGraphVisualizer;
 
 // var code = """
 //            public class TestClass {
@@ -91,3 +94,29 @@ var statements = parser.Parse(tokens);
 checker.Check(statements);
 
 Console.ReadKey();
+
+var dgraph = new DGraph();
+dgraph.AddVertex(["a", "b"]);
+dgraph.AddVertex(["c", "d"]);
+dgraph.AddVertices([["f", "g"], ["h", "i"]]);
+dgraph.Retag("a", "e");
+dgraph.AddTags(v => v.Contains("e") || v.Contains("h"), ["j", "i"]);
+dgraph.RemoveTags(v => v.Contains("j") || v.Contains("e"), ["j", "b"]);
+dgraph.Connect(v => v.Contains("e"), v => v.Contains("c"));
+dgraph.Connect(v => v.Contains("f"), v => v.Contains("h"));
+dgraph.Connect(v => v.Contains("e"), v => v.Contains("h"));
+
+var ugraph = new UGraph();
+ugraph.AddVertex(["a", "b"]);
+ugraph.AddVertex(["c", "d"]);
+ugraph.AddVertices([["f", "g"], ["h", "i"]]);
+ugraph.Retag("a", "e");
+ugraph.AddTags(v => v.Contains("e") || v.Contains("h"), ["j", "i"]);
+ugraph.RemoveTags(v => v.Contains("j") || v.Contains("e"), ["j", "b"]);
+ugraph.Connect(v => v.Contains("e"), v => v.Contains("c"));
+
+dgraph.PrintGraphInfo();
+ugraph.PrintGraphInfo();
+
+/// Uncomment to visualize the graph in the browser
+//GraphVisualizer<bool>.VisualizeInBrowser(dgraph);

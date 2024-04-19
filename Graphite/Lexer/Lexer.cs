@@ -32,7 +32,9 @@ public class Lexer
         {"Func", TokenType.FUNC_TYPE},
         {"V", TokenType.V},
         {"and", TokenType.AND},
-        {"or", TokenType.OR}
+        {"or", TokenType.OR},
+        {"Set", TokenType.SET},
+        {"List", TokenType.LIST}
     };
     
     private int line = 1;

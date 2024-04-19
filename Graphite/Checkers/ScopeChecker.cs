@@ -152,13 +152,15 @@ namespace Graphite.Checkers
                     type.SetSuperClass(statement.extendsIdentifier.Value);
                 }
 
-                foreach (var variableDeclaration in statement.variableDeclarationStatements)
+                foreach (var (accessModifier, variableDeclaration) in statement.variableDeclarationStatements)
                 {
+                    if (accessModifier.type == TokenType.PRIVATE) continue;
                     type.AddField((variableDeclaration.identifier.lexeme, variableDeclaration.type.Accept(this)));
                 }
 
-                foreach (var functionDeclaration in statement.functionDeclarationStatements)
+                foreach (var (accessModifier, functionDeclaration) in statement.functionDeclarationStatements)
                 {
+                    if (accessModifier.type == TokenType.PRIVATE) continue;
                     type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this)));
                 }
 
@@ -176,12 +178,12 @@ namespace Graphite.Checkers
             variableTable.EnterScope();
             functionTable.EnterScope();
 
-            foreach (var variableDeclaration in statement.variableDeclarationStatements)
+            foreach (var (_, variableDeclaration) in statement.variableDeclarationStatements)
             {
                 variableDeclaration.Accept(this);
             }
 
-            foreach (var functionDeclaration in statement.functionDeclarationStatements)
+            foreach (var (_ ,functionDeclaration) in statement.functionDeclarationStatements)
             {
                 functionDeclaration.Accept(this);
             }

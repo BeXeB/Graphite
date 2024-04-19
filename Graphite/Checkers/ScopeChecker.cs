@@ -229,7 +229,9 @@ namespace Graphite.Checkers
                 var parameterTypes = parameters.typeArguments.Select(type => type.Accept(this));
                 var typeArguments = new List<Type> { returnType };
                 typeArguments.AddRange(parameterTypes);
-                return new Type(new Token { type = TokenType.FUNC_TYPE }, typeArguments);
+                var funcType = new Type(new Token { type = TokenType.FUNC_TYPE }, typeArguments);
+                functionTable.AddFunction(statement.identifier.lexeme, funcType);
+                return funcType;
             }
 
             variableTable.EnterScope();

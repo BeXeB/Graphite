@@ -78,11 +78,18 @@ var code = """
                {
                    return 1;
                }
+               
+               public test2() returns Func<int> 
+               {
+                   return test;
+               }
            }
            
            TestClass obj = new TestClass();
            
            obj.test();
+           
+           obj.test2()();
            """;
 
 var lexer = new Lexer();

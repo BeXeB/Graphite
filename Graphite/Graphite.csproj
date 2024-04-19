@@ -7,4 +7,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\QuickGraph\QuikGraphVisualizer.csproj" />
+    </ItemGroup>
+
 </Project>

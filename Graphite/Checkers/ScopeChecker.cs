@@ -169,7 +169,7 @@ namespace Graphite.Checkers
                 }
                 catch (ArgumentException)
                 {
-                    throw new CheckException("Field already declared. Name: " + identifier + " At line: " +
+                    throw new CheckException("Field or Method already declared. Name: " + identifier + " At line: " +
                                              statement.identifier.line);
                 }
 

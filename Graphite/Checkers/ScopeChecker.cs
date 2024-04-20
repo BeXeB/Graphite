@@ -10,20 +10,13 @@ namespace Graphite.Checkers
         OtherNonTerminals.IOtherNonTerminalsVisitor<Type>,
         GraphExpression.IGraphExpressionVisitor<Type>
     {
-        private VariableTable variableTable;
-        private FunctionTable functionTable;
-        private TypeTable typeTable;
+        private readonly VariableTable variableTable = new();
+        private readonly FunctionTable functionTable = new();
+        private readonly TypeTable typeTable = new();
 
         private bool firstPass;
 
-        private Stack<Type> currentObjectType = new Stack<Type>();
-
-        public ScopeChecker()
-        {
-            variableTable = new VariableTable();
-            functionTable = new FunctionTable();
-            typeTable = new TypeTable();
-        }
+        private readonly Stack<Type> currentObjectType = new();
 
         public void Check(List<Statement> statements)
         {
@@ -46,7 +39,8 @@ namespace Graphite.Checkers
         {
             if (!variableTable.IsVariableDeclared(expression.name.lexeme))
             {
-                throw new CheckException("Variable has not been declared.");
+                throw new CheckException("Variable has not been declared. Name: " + expression.name.lexeme +
+                                         " At line: " + expression.name.line);
             }
 
             var valueType = expression.value.Accept(this);
@@ -54,7 +48,8 @@ namespace Graphite.Checkers
 
             if (valueType != variableType)
             {
-                throw new CheckException($"Cannot convert {valueType} to {variableType}.");
+                throw new CheckException(
+                    $"Cannot convert {valueType} to {variableType}. At line: {expression.name.line}");
             }
 
             //TO DO: create a check also for the name
@@ -83,14 +78,16 @@ namespace Graphite.Checkers
             foreach (var classDecl in statements.OfType<Statement.ClassDeclarationStatement>())
             {
                 if (typeTable.IsTypeDeclared(classDecl.identifier.lexeme))
-                    throw new CheckException("Class already declared.");
+                    throw new CheckException("Class already declared. Name: " + classDecl.identifier.lexeme +
+                                             " At line: " + classDecl.identifier.line);
                 typeTable.AddType(classDecl.identifier.lexeme, classDecl.Accept(this));
             }
 
             foreach (var functionDecl in statements.OfType<Statement.FunctionDeclarationStatement>())
             {
                 if (functionTable.IsFunctionDeclared(functionDecl.identifier.lexeme))
-                    throw new CheckException("Function already declared.");
+                    throw new CheckException("Function already declared. Name: " + functionDecl.identifier.lexeme +
+                                             " At line: " + functionDecl.identifier.line);
                 functionTable.AddFunction(functionDecl.identifier.lexeme, functionDecl.Accept(this));
             }
 
@@ -119,22 +116,23 @@ namespace Graphite.Checkers
             var functionType = expression.callee.Accept(this);
             var argumentTypes = expression.arguments.Select(argument => argument.Accept(this)).ToList();
 
-            if (functionType.type.Value.type != TokenType.FUNC_TYPE)
+            if (functionType.type!.Value.type != TokenType.FUNC_TYPE)
             {
                 throw new CheckException("Cannot call a non-function.");
             }
 
-            if (functionType.typeArguments.Count - 1 != argumentTypes.Count)
+            if (functionType.typeArguments!.Count - 1 != argumentTypes.Count)
             {
                 throw new CheckException("Number of arguments does not match the number of parameters.");
             }
 
             for (var i = 0; i < argumentTypes.Count; i++)
             {
-                //TODO create a method for checking if the types are equal
                 if (!CompareTypes(functionType.typeArguments[i + 1], argumentTypes[i]))
                 {
-                    throw new CheckException("Argument type does not match parameter type.");
+                    throw new CheckException("Argument type does not match parameter type. Expected: " +
+                                             functionType.typeArguments[i + 1].type!.Value.type + " Got: " +
+                                             argumentTypes[i].type!.Value.type);
                 }
             }
 
@@ -152,16 +150,27 @@ namespace Graphite.Checkers
                     type.SetSuperClass(statement.extendsIdentifier.Value);
                 }
 
-                foreach (var (accessModifier, variableDeclaration) in statement.variableDeclarationStatements)
+                var identifier = "";
+                try
                 {
-                    if (accessModifier.type == TokenType.PRIVATE) continue;
-                    type.AddField((variableDeclaration.identifier.lexeme, variableDeclaration.type.Accept(this)));
-                }
+                    foreach (var (accessModifier, variableDeclaration) in statement.variableDeclarationStatements)
+                    {
+                        if (accessModifier.type == TokenType.PRIVATE) continue;
+                        identifier = variableDeclaration.identifier.lexeme;
+                        type.AddField((variableDeclaration.identifier.lexeme, variableDeclaration.type.Accept(this)));
+                    }
 
-                foreach (var (accessModifier, functionDeclaration) in statement.functionDeclarationStatements)
+                    foreach (var (accessModifier, functionDeclaration) in statement.functionDeclarationStatements)
+                    {
+                        if (accessModifier.type == TokenType.PRIVATE) continue;
+                        identifier = functionDeclaration.identifier.lexeme;
+                        type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this)));
+                    }
+                }
+                catch (ArgumentException)
                 {
-                    if (accessModifier.type == TokenType.PRIVATE) continue;
-                    type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this)));
+                    throw new CheckException("Field already declared. Name: " + identifier + " At line: " +
+                                             statement.identifier.line);
                 }
 
                 return type;
@@ -171,7 +180,9 @@ namespace Graphite.Checkers
             {
                 if (!typeTable.IsTypeDeclared(statement.extendsIdentifier.Value.lexeme))
                 {
-                    throw new CheckException("Super class not declared.");
+                    throw new CheckException("Super class not declared. Name: " +
+                                             statement.extendsIdentifier.Value.lexeme + " At line: " +
+                                             statement.extendsIdentifier.Value.line);
                 }
             }
 
@@ -206,14 +217,17 @@ namespace Graphite.Checkers
             var collectionType = expression.obj.Accept(this);
             var indexType = expression.index.Accept(this);
 
-            if (indexType.type.Value.type != TokenType.INT)
+            if (indexType.type!.Value.type != TokenType.INT)
             {
                 throw new CheckException("Index must be of type int.");
             }
 
-            //TODO: check if the collection type is a SET or LIST
+            if (collectionType.type!.Value.type != TokenType.SET && collectionType.type!.Value.type != TokenType.LIST)
+            {
+                throw new CheckException("Element access can only be used on a set or list.");
+            }
 
-            return collectionType.typeArguments[0].Accept(this);
+            return collectionType.typeArguments![0].Accept(this);
         }
 
         public Type VisitExpressionStatement(Statement.ExpressionStatement statement)
@@ -228,7 +242,7 @@ namespace Graphite.Checkers
             {
                 var returnType = statement.returnType.Accept(this);
                 var parameters = statement.parameters.Accept(this);
-                var parameterTypes = parameters.typeArguments.Select(type => type.Accept(this));
+                var parameterTypes = parameters.typeArguments!.Select(type => type.Accept(this));
                 var typeArguments = new List<Type> { returnType };
                 typeArguments.AddRange(parameterTypes);
                 var funcType = new Type(new Token { type = TokenType.FUNC_TYPE }, typeArguments);
@@ -257,7 +271,7 @@ namespace Graphite.Checkers
             currentObjectType.Push(objectType);
             var fieldType = expression.field.Accept(this);
 
-            if (!typeTable.IsTypeDeclared(objectType.type.Value.lexeme))
+            if (!typeTable.IsTypeDeclared(objectType.type!.Value.lexeme))
             {
                 throw new CheckException("Object is not of class type.");
             }
@@ -325,7 +339,7 @@ namespace Graphite.Checkers
         public Type VisitIfStatement(Statement.IfStatement statement)
         {
             // Check if the condition expression is a boolean expression
-            TokenType conditionType = statement.condition.Accept(this).type.Value.type;
+            var conditionType = statement.condition.Accept(this).type!.Value.type;
             if (conditionType != TokenType.BOOL)
             {
                 throw new CheckException("Condition expression in if statement must be of type boolean.");
@@ -334,21 +348,18 @@ namespace Graphite.Checkers
             // Type-check the then branch of the if statement
             statement.thenBranch.Accept(this);
 
-            //Checking whether there is an else branch
-            if (statement.elseBranch != null)
-            {
-                // Type-check the else branch of the if statement
-                statement.elseBranch.Accept(this);
-            }
+            //Type-check the else branch of the if statement
+            statement.elseBranch?.Accept(this);
 
-            throw new NotImplementedException();
+            return null!;
         }
 
         public Type VisitInstanceExpression(Expression.InstanceExpression expression)
         {
             if (!typeTable.IsTypeDeclared(expression.className.lexeme))
             {
-                throw new CheckException("Type has not been declared.");
+                throw new CheckException("Type has not been declared. Name: " + expression.className.lexeme +
+                                         " At line: " + expression.className.line);
             }
 
             return typeTable.GetType(expression.className.lexeme);
@@ -370,7 +381,7 @@ namespace Graphite.Checkers
                 TokenType.TRUE => TokenType.BOOL,
                 TokenType.FALSE => TokenType.BOOL,
                 TokenType.NULL => TokenType.NULL,
-                _ => throw new CheckException("Invalid literal type.")
+                _ => throw new CheckException("Invalid literal type. At line: " + expression.token.line)
             };
 
             return new Type(new Token
@@ -440,12 +451,13 @@ namespace Graphite.Checkers
             throw new NotImplementedException();
         }
 
-        public Type VisitType(OtherNonTerminals.Type type)
+        public Type VisitType(Type type)
         {
-            if (type.type.Value.type != TokenType.IDENTIFIER) return type;
+            if (type.type!.Value.type != TokenType.IDENTIFIER) return type;
             if (!typeTable.IsTypeDeclared(type.type.Value.lexeme))
             {
-                throw new CheckException("Type has not been declared.");
+                throw new CheckException("Type has not been declared. Name: " + type.type.Value.lexeme + " At line: " +
+                                         type.type.Value.line);
             }
 
             return typeTable.GetType(type.type.Value.lexeme);
@@ -462,27 +474,29 @@ namespace Graphite.Checkers
         public Type VisitVariableDeclarationStatement(Statement.VariableDeclarationStatement statement)
         {
             var type = statement.type.Accept(this);
-            var identifier = statement.type.Accept(this);
-            Type? initializing = null;
-            if (statement.initializingExpression != null)
-                initializing = statement.initializingExpression.Accept(this);
+            var initializing = statement.initializingExpression?.Accept(this);
 
-            if (statement.initializingExpression != null)
+            if (initializing != null)
             {
                 //Do a type checking whether the initialization matches the declared type
                 if (!CompareTypes(type, initializing))
                 {
-                    throw new CheckException("Type mismatch.");
+                    throw new CheckException("Type mismatch. At line: " + statement.identifier.line);
                 }
+            }
+
+            if (currentObjectType.Count > 0)
+            {
+                return null!;
             }
 
             if (variableTable.IsVariableDeclared(statement.identifier.lexeme))
             {
-                throw new CheckException("Variable already declared.");
+                throw new CheckException("Variable already declared. Name: " + statement.identifier.lexeme +
+                                         " At line: " + statement.identifier.line);
             }
 
             variableTable.AddVariable(statement.identifier.lexeme, statement.type.Accept(this));
-
 
             return null!;
         }
@@ -505,11 +519,12 @@ namespace Graphite.Checkers
 
                     if (currentObjectType.Peek().SuperClass == null)
                     {
-                        throw new CheckException("Field or method does not exist.");
+                        throw new CheckException("Field or method does not exist. Name: " + expression.name.lexeme +
+                                                 " At line: " + expression.name.line);
                     }
 
-                    currentObjectType.Pop();
-                    currentObjectType.Push(typeTable.GetType(currentObjectType.Peek().SuperClass.Value.lexeme));
+                    var type = currentObjectType.Pop();
+                    currentObjectType.Push(typeTable.GetType(type.SuperClass!.Value.lexeme));
                 }
             }
 
@@ -523,7 +538,8 @@ namespace Graphite.Checkers
                 return functionTable.GetFunctionType(expression.name.lexeme);
             }
 
-            throw new CheckException("Variable has not been declared.");
+            throw new CheckException("Variable has not been declared. Name: " + expression.name.lexeme + " At line: " +
+                                     expression.name.line);
         }
 
         public Type VisitWhileStatement(Statement.WhileStatement statement)
@@ -534,31 +550,27 @@ namespace Graphite.Checkers
             throw new NotImplementedException();
         }
 
-        public bool CompareTypes(OtherNonTerminals.Type type1, OtherNonTerminals.Type type2)
+        private static bool CompareTypes(Type type1, Type type2)
         {
             var type1ArgLength = type1.typeArguments?.Count ?? 0;
             var type2ArgLength = type2.typeArguments?.Count ?? 0;
 
-            if (type1ArgLength == type2ArgLength)
-            {
-                for (int i = 0; i < type1ArgLength; i++)
-                {
-                    if (!CompareTypes(type1.typeArguments![i], type2.typeArguments![i]))
-                    {
-                        return false;
-                    }
-                }
+            if (type1ArgLength != type2ArgLength) return false;
 
-                if (type1.type.Value.type == TokenType.IDENTIFIER && type2.type.Value.type == TokenType.IDENTIFIER)
-                {
-                    return type1.type.Value.lexeme == type2.type.Value.lexeme;
-                }
-                return type1.type.Value.type == type2.type.Value.type;
-            }
-            else
+            for (var i = 0; i < type1ArgLength; i++)
             {
-                return false;
+                if (!CompareTypes(type1.typeArguments![i], type2.typeArguments![i]))
+                {
+                    return false;
+                }
             }
+
+            if (type1.type!.Value.type == TokenType.IDENTIFIER && type2.type!.Value.type == TokenType.IDENTIFIER)
+            {
+                return type1.type.Value.lexeme == type2.type.Value.lexeme;
+            }
+
+            return type1.type.Value.type == type2.type!.Value.type;
         }
     }
 }

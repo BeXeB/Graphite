@@ -46,7 +46,7 @@ namespace Graphite.Checkers
             var valueType = expression.value.Accept(this);
             var variableType = variableTable.GetVariableType(expression.name.lexeme);
 
-            if (valueType != variableType)
+            if (!CompareTypes(variableType, valueType))
             {
                 throw new CheckException(
                     $"Cannot convert {valueType} to {variableType}. At line: {expression.name.line}");
@@ -398,7 +398,7 @@ namespace Graphite.Checkers
         public Type VisitParameters(OtherNonTerminals.Parameters parameters)
         {
             var types = parameters.parameters.Select(parameter => parameter.Item1.Accept(this)).ToList();
-            return new Type(new(), types);
+            return new Type(new Token(), types);
         }
 
         public Type VisitPredicateAndExpression(GraphExpression.PredicateAndExpression expression)

@@ -98,22 +98,56 @@ public class Transpiler :
         }
 
         string identifier = statement.identifier.lexeme;
-        
+
+        string extends = "";
+        if (!(statement.extendsIdentifier is null))
+        {
+            extends = $" : {statement.extendsIdentifier?.lexeme}" ?? "";
+        }
+
         string variableDeclarations = "";
 
         foreach(var currVarDeclaration in statement.variableDeclarationStatements)
         {
-            variableDeclarations += VisitVariableDeclarationStatement(currVarDeclaration.statement);
+            var declaration = VisitVariableDeclarationStatement(currVarDeclaration.Item2);
+            string varAccessModifier;
+
+            switch (currVarDeclaration.Item1.lexeme)
+            {
+                case "public":
+                    varAccessModifier = "public";
+                    break;
+                case "private":
+                    varAccessModifier = "private";
+                    break;
+                default:
+                    throw new InvalidTokenException("Invalid or missing accessModifier");
+            }
+            variableDeclarations += $"{varAccessModifier} {declaration}";
         }
 
         string functionDeclarations = "";
 
         foreach(var currFuncDeclaration in statement.functionDeclarationStatements)
         {
-            functionDeclarations += VisitFunctionDeclarationStatement(currFuncDeclaration.statement);
+            var declaration = VisitFunctionDeclarationStatement(currFuncDeclaration.Item2);
+            string funcAccessModifier;
+
+            switch (currFuncDeclaration.Item1.lexeme)
+            {
+                case "public":
+                    funcAccessModifier = "public";
+                    break;
+                case "private":
+                    funcAccessModifier = "private";
+                    break;
+                default:
+                    throw new InvalidTokenException("Invalid or missing accessModifier");
+            }
+            functionDeclarations += $"{funcAccessModifier} {declaration}";
         }
 
-        return $"{accessModifier} {identifier} {{ {variableDeclarations} {functionDeclarations} }}";
+        return $"{accessModifier} {identifier} {extends} {{ {variableDeclarations} {functionDeclarations} }}";
     }
 
     public string VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)
@@ -287,8 +321,7 @@ public class Transpiler :
 
     public string VisitType(OtherNonTerminals.Type type)
     {
-        if (type.type is null) return "";
-        switch (type.type.Value.type)
+        switch (type.type.type)
         {
             case TokenType.INT:
                 return "int";
@@ -313,7 +346,7 @@ public class Transpiler :
                 var parameters = String.Join(',', type.typeArguments.Skip(1).Select(t => t.Accept(this)));
                 return returnType.Equals("void") ? $"Action<{parameters}>" : $"Func<{parameters}, {returnType}>";
             default:
-                throw new TranspileException("Invalid type in transpiler. At: " + type.type.Value.line);
+                throw new TranspileException("Invalid type in transpiler. At: " + type.type.line);
         }
     }
 

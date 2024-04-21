@@ -102,9 +102,11 @@ var code = """
 
 var lexer = new Lexer();
 var parser = new Parser();
+var transpiler = new Transpiler();
 
 var tokens = lexer.ScanCode(code);
 var statements = parser.Parse(tokens);
+var cscode = transpiler.Transpile(statements);
 
 // Console.ReadKey();
 

@@ -1,4 +1,4 @@
-﻿using Graphite.Lexer;
+using Graphite.Lexer;
 using Graphite.Parser;
 
 namespace Graphite;
@@ -24,37 +24,49 @@ public class Transpiler :
     
     public string VisitBlockStatement(Statement.BlockStatement statement)
     {
-        throw new NotImplementedException();
+        var statements = statement.statements.Select(s => s.Accept(this));
+        return "{" + $"{String.Join(' ', statements)}" + "}";
     }
 
     public string VisitExpressionStatement(Statement.ExpressionStatement statement)
     {
-        throw new NotImplementedException();
+        var expression = statement.expression.Accept(this);
+        return $"{expression};";
     }
 
     public string VisitIfStatement(Statement.IfStatement statement)
     {
-        throw new NotImplementedException();
+        var condition = statement.condition.Accept(this);
+        var thenBranch = statement.thenBranch.Accept(this);
+        if (statement.elseBranch is null)
+        {
+            return $"if({condition}) {thenBranch}";
+        }
+        var elseBranch = statement.elseBranch.Accept(this);
+        return $"if({condition}) {thenBranch} else {elseBranch}";
     }
 
     public string VisitWhileStatement(Statement.WhileStatement statement)
     {
-        throw new NotImplementedException();
+        var condition = statement.condition.Accept(this);
+        var body = statement.body.Accept(this);
+        return $"while({condition}) {body}";
     }
 
     public string VisitReturnStatement(Statement.ReturnStatement statement)
     {
-        throw new NotImplementedException();
+        var expression = statement.expression.Accept(this);
+        return $"return {expression};";
     }
 
     public string VisitBreakStatement(Statement.BreakStatement statement)
     {
-        throw new NotImplementedException();
+        return "break;";
     }
 
     public string VisitContinueStatement(Statement.ContinueStatement statement)
     {
-        throw new NotImplementedException();
+        return "continue;";
     }
 
     public string VisitGraphStatement(Statement.GraphStatement statement)
@@ -82,39 +94,83 @@ public class Transpiler :
                 accessModifier = "private";
                 break;
             default:
-                throw new InvalidTokenException("Invalid or missing accessmodifier");
+                throw new InvalidTokenException("Invalid or missing accessModifier");
         }
 
         string identifier = statement.identifier.lexeme;
 
-        string extends = statement.extends?.lexeme ?? "";
-        string extendsIdentifier = statement.extends?.lexeme ?? "";
+        string extends = "";
+        if (!(statement.extendsIdentifier is null))
+        {
+            extends = $" : {statement.extendsIdentifier?.lexeme}" ?? "";
+        }
 
         string variableDeclarations = "";
 
         foreach(var currVarDeclaration in statement.variableDeclarationStatements)
         {
-            variableDeclarations += VisitVariableDeclarationStatement(currVarDeclaration);
+            var declaration = VisitVariableDeclarationStatement(currVarDeclaration.Item2);
+            string varAccessModifier;
+
+            switch (currVarDeclaration.Item1.lexeme)
+            {
+                case "public":
+                    varAccessModifier = "public";
+                    break;
+                case "private":
+                    varAccessModifier = "private";
+                    break;
+                default:
+                    throw new InvalidTokenException("Invalid or missing accessModifier");
+            }
+            variableDeclarations += $"{varAccessModifier} {declaration}";
         }
 
         string functionDeclarations = "";
 
         foreach(var currFuncDeclaration in statement.functionDeclarationStatements)
         {
-            functionDeclarations += VisitFunctionDeclarationStatement(currFuncDeclaration);
+            var declaration = VisitFunctionDeclarationStatement(currFuncDeclaration.Item2);
+            string funcAccessModifier;
+
+            switch (currFuncDeclaration.Item1.lexeme)
+            {
+                case "public":
+                    funcAccessModifier = "public";
+                    break;
+                case "private":
+                    funcAccessModifier = "private";
+                    break;
+                default:
+                    throw new InvalidTokenException("Invalid or missing accessModifier");
+            }
+            functionDeclarations += $"{funcAccessModifier} {declaration}";
         }
 
-        return $"{accessModifier} {identifier} {extends} {extendsIdentifier} {{ {variableDeclarations} {functionDeclarations} }}";
+        return $"{accessModifier} {identifier} {extends} {{ {variableDeclarations} {functionDeclarations} }}";
     }
 
     public string VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)
     {
-        throw new NotImplementedException();
+        var identifier = statement.identifier.lexeme;
+        var parameters = statement.parameters.Accept(this);
+        var block = statement.blockStatement.Accept(this);
+        var returnType = statement.returnType.Accept(this);
+        
+        return $"{returnType} {identifier}({parameters}) {block}";
     }
 
     public string VisitVariableDeclarationStatement(Statement.VariableDeclarationStatement statement)
     {
-        throw new NotImplementedException();
+        var type = statement.type.Accept(this);
+        var identifier = statement.identifier.lexeme;
+        if (statement.initializingExpression is null)
+        {
+            return $"{type} {identifier};";
+        }
+        var expression = statement.initializingExpression.Accept(this);
+        
+        return $"{type} {identifier} = {expression};";
     }
 
     public string VisitBinaryExpression(Expression.BinaryExpression expression)
@@ -265,8 +321,7 @@ public class Transpiler :
 
     public string VisitType(OtherNonTerminals.Type type)
     {
-        if (type.type is null) return "";
-        switch (type.type.Value.type)
+        switch (type.type.type)
         {
             case TokenType.INT:
                 return "int";
@@ -288,27 +343,17 @@ public class Transpiler :
                 return $"List<{listType}>";
             case TokenType.FUNC_TYPE:
                 var returnType = type.typeArguments[0].Accept(this);
-                var parameters = "";
-                for (var i = 1; i < type.typeArguments.Count; i++)
-                {
-                    parameters += type.typeArguments[i].Accept(this) + ", ";
-                }
-                parameters = parameters.Remove(parameters.Length - 2);
+                var parameters = String.Join(',', type.typeArguments.Skip(1).Select(t => t.Accept(this)));
                 return returnType.Equals("void") ? $"Action<{parameters}>" : $"Func<{parameters}, {returnType}>";
             default:
-                throw new TranspileException("Invalid type in transpiler. At: " + type.type.Value.line);
+                throw new TranspileException("Invalid type in transpiler. At: " + type.type.line);
         }
     }
 
     public string VisitParameters(OtherNonTerminals.Parameters parameters)
     {
-        var code = "";
-        foreach (var (type, name) in parameters.parameters)
-        {
-            code += type.Accept(this) + " " + name.lexeme + ", ";
-        }
-        code = code.Remove(code.Length - 2);
-        return code;
+        var parameter = parameters.parameters.Select((t) => $"{t.Item1.Accept(this)} {t.Item2.lexeme}");
+        return String.Join(',', parameter);
     }
 
     #region GraphStatement
@@ -318,7 +363,6 @@ public class Transpiler :
         var leftPredicate = $"v => {expression.leftPredicate.Accept(this)}"; 
         var rightPredicate = $"v => {expression.rightPredicate.Accept(this)}";
         var weight = expression.weight.Accept(this);
-        //TODO: Implement weight in Graph Classes
         switch (expression.@operator.type)
         {
             case TokenType.ARROW:

@@ -9,14 +9,18 @@ internal class TypeTable
 
     public void AddType(string name, Type type)
     {
-        if (!globalScope.TryAdd(name, type)) throw new Exception($"Type {name} already declared"); 
+        if (globalScope.TryAdd(name, type)) return;
+        
+        globalScope[name] = type;
     }
 
     public bool IsTypeDeclared(string name)
     {
-        return globalScope.ContainsKey(name);
+        return globalScope
+            .Where(t => t.Value.IsDummyType == false)
+            .Any(t => t.Key == name);
     }
-    
+
     public Type GetType(string name)
     {
         if (!globalScope.TryGetValue(name, out var type)) throw new Exception($"Type {name} not declared");

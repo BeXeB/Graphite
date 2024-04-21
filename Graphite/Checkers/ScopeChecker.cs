@@ -45,16 +45,14 @@ namespace Graphite.Checkers
 
             var valueType = expression.value.Accept(this);
             var variableType = variableTable.GetVariableType(expression.name.lexeme);
-
+            
             if (!CompareTypes(variableType, valueType))
             {
                 throw new CheckException(
                     $"Cannot convert {valueType} to {variableType}. At line: {expression.name.line}");
             }
 
-            //TO DO: create a check also for the name
-
-            throw new NotImplementedException();
+            return null!;
         }
 
         public Type VisitBinaryExpression(Expression.BinaryExpression expression)
@@ -107,7 +105,7 @@ namespace Graphite.Checkers
 
         public Type VisitBreakStatement(Statement.BreakStatement statement)
         {
-            throw new NotImplementedException();
+            return null!;
         }
 
         public Type VisitCallExpression(Expression.CallExpression expression)
@@ -116,7 +114,7 @@ namespace Graphite.Checkers
             var functionType = expression.callee.Accept(this);
             var argumentTypes = expression.arguments.Select(argument => argument.Accept(this)).ToList();
 
-            if (functionType.type!.Value.type != TokenType.FUNC_TYPE)
+            if (functionType.type.type != TokenType.FUNC_TYPE)
             {
                 throw new CheckException("Cannot call a non-function.");
             }
@@ -131,8 +129,8 @@ namespace Graphite.Checkers
                 if (!CompareTypes(functionType.typeArguments[i + 1], argumentTypes[i]))
                 {
                     throw new CheckException("Argument type does not match parameter type. Expected: " +
-                                             functionType.typeArguments[i + 1].type!.Value.type + " Got: " +
-                                             argumentTypes[i].type!.Value.type);
+                                             functionType.typeArguments[i + 1].type.type + " Got: " +
+                                             argumentTypes[i].type.type);
                 }
             }
 
@@ -209,7 +207,7 @@ namespace Graphite.Checkers
 
         public Type VisitContinueStatement(Statement.ContinueStatement statement)
         {
-            throw new NotImplementedException();
+            return null!;
         }
 
         public Type VisitElementAccessExpression(Expression.ElementAccessExpression expression)
@@ -217,12 +215,12 @@ namespace Graphite.Checkers
             var collectionType = expression.obj.Accept(this);
             var indexType = expression.index.Accept(this);
 
-            if (indexType.type!.Value.type != TokenType.INT)
+            if (indexType.type.type != TokenType.INT)
             {
                 throw new CheckException("Index must be of type int.");
             }
 
-            if (collectionType.type!.Value.type != TokenType.SET && collectionType.type!.Value.type != TokenType.LIST)
+            if (collectionType.type.type != TokenType.SET && collectionType.type.type != TokenType.LIST)
             {
                 throw new CheckException("Element access can only be used on a set or list.");
             }
@@ -271,7 +269,7 @@ namespace Graphite.Checkers
             currentObjectType.Push(objectType);
             var fieldType = expression.field.Accept(this);
 
-            if (!typeTable.IsTypeDeclared(objectType.type!.Value.lexeme))
+            if (!typeTable.IsTypeDeclared(objectType.type.lexeme))
             {
                 throw new CheckException("Object is not of class type.");
             }
@@ -339,7 +337,7 @@ namespace Graphite.Checkers
         public Type VisitIfStatement(Statement.IfStatement statement)
         {
             // Check if the condition expression is a boolean expression
-            var conditionType = statement.condition.Accept(this).type!.Value.type;
+            var conditionType = statement.condition.Accept(this).type.type;
             if (conditionType != TokenType.BOOL)
             {
                 throw new CheckException("Condition expression in if statement must be of type boolean.");
@@ -453,14 +451,16 @@ namespace Graphite.Checkers
 
         public Type VisitType(Type type)
         {
-            if (type.type!.Value.type != TokenType.IDENTIFIER) return type;
-            if (!typeTable.IsTypeDeclared(type.type.Value.lexeme))
+            if (type.type.type != TokenType.IDENTIFIER) return type;
+            if (typeTable.IsTypeDeclared(type.type.lexeme)) return typeTable.GetType(type.type.lexeme);
+            if (firstPass)
             {
-                throw new CheckException("Type has not been declared. Name: " + type.type.Value.lexeme + " At line: " +
-                                         type.type.Value.line);
+                var dummyType = new Type(type.type, null, true);
+                typeTable.AddType(type.type.lexeme, dummyType);
+                return type;
             }
-
-            return typeTable.GetType(type.type.Value.lexeme);
+            throw new CheckException("Type has not been declared. Name: " + type.type.lexeme + 
+                                     " At line: " + type.type.line);
         }
 
         public Type VisitUnaryExpression(Expression.UnaryExpression expression)
@@ -509,7 +509,7 @@ namespace Graphite.Checkers
                 {
                     if (currentObjectType.Peek().fields.TryGetValue(expression.name.lexeme, out var variableType))
                     {
-                        return variableType;
+                        return typeTable.GetType(variableType.type.lexeme);
                     }
 
                     if (currentObjectType.Peek().methods.TryGetValue(expression.name.lexeme, out var functionType))
@@ -565,12 +565,12 @@ namespace Graphite.Checkers
                 }
             }
 
-            if (type1.type!.Value.type == TokenType.IDENTIFIER && type2.type!.Value.type == TokenType.IDENTIFIER)
+            if (type1.type.type == TokenType.IDENTIFIER && type2.type.type == TokenType.IDENTIFIER)
             {
-                return type1.type.Value.lexeme == type2.type.Value.lexeme;
+                return type1.type.lexeme == type2.type.lexeme;
             }
 
-            return type1.type.Value.type == type2.type!.Value.type;
+            return type1.type.type == type2.type.type;
         }
     }
 }

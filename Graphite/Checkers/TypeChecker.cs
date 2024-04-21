@@ -16,12 +16,7 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitAssignmentExpression(Expression.AssignmentExpression expression)
         {
-            var valueTypeNullable = expression.value.Accept(this).type?.type;
-            if (valueTypeNullable == null)
-            {
-                throw new NotImplementedException();
-            }
-            var valueType = valueTypeNullable.Value;
+            var valueType = expression.value.Accept(this).type.type;
             var nameType = expression.name.type;
 
 
@@ -33,16 +28,8 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitBinaryExpression(Expression.BinaryExpression expression)
         {
-            var leftTypeNullable = expression.left.Accept(this).type?.type;
-            var rightTypeNullable = expression.right.Accept(this).type?.type;
-            if (leftTypeNullable == null || rightTypeNullable == null)
-            {
-                // If 'type' token is null here, it means its a type of Set<> or List<> and we do not
-                // allow binary operations on these. TODO should we?
-                throw new CheckException("Attempted to do binary operation on non-eligible type");
-            }
-            var leftType = leftTypeNullable.Value;
-            var rightType = rightTypeNullable.Value;
+            var leftType = expression.left.Accept(this).type.type;
+            var rightType = expression.right.Accept(this).type.type;
             var @operatorType = expression.@operator.type;
 
             TokenType tokenType;
@@ -87,7 +74,7 @@ namespace Graphite.Checkers
 
             List<TokenType> allowedOperators = new List<TokenType>()
             // TODO should we have XOR?
-            {TokenType.AND, TokenType.OR, TokenType.EQUAL_EQUAL, TokenType.SLASHED_EQUAL};
+            {TokenType.AND, TokenType.OR, TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL};
 
             if (allowedOperators.Contains(@operator))
             {
@@ -390,12 +377,7 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitWhileStatement(Statement.WhileStatement statement)
         {
-            var conditionTypeNullable = statement.condition.Accept(this).type?.type;
-            if (conditionTypeNullable == null)
-            {
-                throw new CheckException("");
-            }
-            var valueType = conditionTypeNullable.Value;
+            var valueType = statement.condition.Accept(this).type.type;
                         
             if (valueType == TokenType.BOOL)
             {

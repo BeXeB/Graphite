@@ -320,7 +320,19 @@ namespace Graphite.Checkers
 
         public Type VisitGraphAddVertexExpression(GraphExpression.GraphAddVertexExpression expression)
         {
-            throw new NotImplementedException();
+            var tags = expression.tags.Accept(this).type;
+            if (tags.type != TokenType.SET)
+            {
+                throw new CheckException("Tags argument must be of type set.");
+            }
+
+            var times = expression.times.Accept(this).type;
+            if (times.type != TokenType.INT)
+            {
+                throw new CheckException("Times argument must be of type int.");
+            }
+
+            return null!;
         }
 
         public Type VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
@@ -330,12 +342,22 @@ namespace Graphite.Checkers
 
         public Type VisitGraphEdgeExpression(GraphExpression.GraphEdgeExpression expression)
         {
-            throw new NotImplementedException();
+            expression.leftPredicate.Accept(this);
+            expression.rightPredicate.Accept(this);
+            var weight = expression.weight.Accept(this);
+
+            if (weight.type.type != TokenType.INT && weight.type.type != TokenType.DEC)
+            {
+                throw new CheckException("Weight must be of type int or dec.");
+            }
+
+            return null!;
         }
 
         public Type VisitGraphExpressionStmt(GraphExpression.GraphExpressionStatement expression)
         {
-            throw new NotImplementedException();
+            expression.statement.Accept(this);
+            return null!;
         }
 
         public Type VisitGraphIfStmt(GraphExpression.GraphIfStatement expression)
@@ -345,27 +367,69 @@ namespace Graphite.Checkers
 
         public Type VisitGraphRemoveVertexExpression(GraphExpression.GraphRemoveVertexExpression expression)
         {
-            throw new NotImplementedException();
+            expression.predicate.Accept(this);
+            return null!;
         }
 
         public Type VisitGraphReTagExpression(GraphExpression.GraphReTagExpression expression)
         {
-            throw new NotImplementedException();
+            var oldTag = expression.oldTag.type;
+            var newTag = expression.newTag.type;
+
+            if (oldTag != TokenType.STRING_LITERAL || (newTag != TokenType.STRING_LITERAL && newTag != TokenType.NULL))
+            {
+                throw new CheckException("Tags must be of type string.");
+            }
+
+            return null!;
         }
 
         public Type VisitGraphStatement(Statement.GraphStatement statement)
         {
-            throw new NotImplementedException();
+            var identifier = statement.identifier;
+
+            if (!variableTable.IsVariableDeclared(identifier.lexeme))
+            {
+                throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme +
+                                                            " At line: " + identifier.line);
+            }
+
+
+            // TODO check if the variable type is a graph type
+            //var variableType = variableTable.GetVariableType(identifier.lexeme);
+            //if (variableType.type.type)
+
+            statement.expressions.ForEach(expression => expression.Accept(this));
+
+            return null!;
         }
 
         public Type VisitGraphTagExpression(GraphExpression.GraphTagExpression expression)
         {
-            throw new NotImplementedException();
+            var tags = expression.tags.Accept(this).type;
+
+            if (tags.type != TokenType.SET)
+            {
+                throw new CheckException("Tags argument must be of type set.");
+            }
+
+            expression.predicate.Accept(this);
+
+            return null!;
         }
 
         public Type VisitGraphWhileStmt(GraphExpression.GraphWhileStatement expression)
         {
-            throw new NotImplementedException();
+            var condition = expression.condition.Accept(this).type;
+
+            if (condition.type != TokenType.BOOL)
+            {
+                throw new CheckException("Condition must be of type boolean.");
+            }
+
+            expression.body.Accept(this);
+
+            return null!;
         }
 
         public Type VisitGroupingExpression(Expression.GroupingExpression expression)
@@ -463,27 +527,86 @@ namespace Graphite.Checkers
 
         public Type VisitPredicateAndExpression(GraphExpression.PredicateAndExpression expression)
         {
-            throw new NotImplementedException();
+            var leftType = expression.left.Accept(this).type.type;
+            var rightType = expression.right.Accept(this).type.type;
+
+            if (leftType == TokenType.BOOL && rightType == TokenType.BOOL)
+            {
+                return new Type(new Token { type = TokenType.BOOL }, null);
+            }
+            else
+            {
+                throw new CheckException("Both sides of the AND expression must be of type boolean.");
+            }
         }
 
         public Type VisitPredicateGroupingExpression(GraphExpression.PredicateGroupingExpression expression)
         {
-            throw new NotImplementedException();
+            return expression.expression.Accept(this);
         }
 
         public Type VisitPredicateLiteralExpression(GraphExpression.PredicateLiteralExpression expression)
         {
-            throw new NotImplementedException();
+            var tokenType = expression.expression.Accept(this).type.type;
+
+            var predicateTypes = new List<TokenType>
+            {
+                TokenType.STR, TokenType.STRING_LITERAL
+            };
+
+            if (!predicateTypes.Contains(tokenType))
+            {
+                throw new CheckException("Predicate must be of type string.");
+            }
+
+            return new Type(new Token { type = TokenType.BOOL }, null);
         }
 
         public Type VisitPredicateOrExpression(GraphExpression.PredicateOrExpression expression)
         {
-            throw new NotImplementedException();
+            var leftType = expression.left.Accept(this).type.type;
+            var rightType = expression.right.Accept(this).type.type;
+
+            if (leftType != TokenType.BOOL || rightType != TokenType.BOOL)
+            {
+                throw new CheckException("Both sides of the OR expression must be of type boolean.");
+            }
+
+            return new Type(new Token { type = TokenType.BOOL }, null);
         }
 
         public Type VisitPredicateUnaryExpression(GraphExpression.PredicateUnaryExpression expression)
         {
-            throw new NotImplementedException();
+            var rightType = expression.right.Accept(this).type.type;
+            var @operatorType = expression.@operator.type;
+
+            switch (operatorType)
+            {
+                case TokenType.MINUS:
+                    if (rightType == TokenType.INT_LITERAL)
+                    {
+                        return new Type(new Token { type = TokenType.INT }, null);
+                    }
+                    else if (rightType != TokenType.DECIMAL_LITERAL)
+                    {
+                        return new Type(new Token { type = TokenType.DEC }, null);
+                    }
+                    else
+                    {
+                        throw new CheckException("The right hand side of the minus must be of type int or decimal.");
+                    }
+                case TokenType.BANG:
+                    if (rightType == TokenType.BOOL)
+                    {
+                        return new Type(new Token { type = TokenType.BOOL }, null);
+                    }
+                    else
+                    {
+                        throw new CheckException("The right side of the NOT expression must be of type boolean.");
+                    }
+                default:
+                    throw new CheckException("Trying to perform unary operation on non-eligible type");
+            }
         }
 
         public Type VisitReturnStatement(Statement.ReturnStatement statement)

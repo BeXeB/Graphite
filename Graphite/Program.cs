@@ -13,7 +13,7 @@ var code = File.ReadAllText(path);
 
 var lexer = new Lexer();
 var parser = new Parser();
-var checker = new ScopeChecker();
+var checker = new SemanticChecker();
 
 var tokens = lexer.ScanCode(code);
 var statements = parser.Parse(tokens);

@@ -52,8 +52,6 @@ obj2.a.test2()();
 
 int x = obj2.b.test3();
 
-#y = 123;
-
 TestClass3 obj4 = obj2.test3();
 
 public class TestClass3 extends TestClass

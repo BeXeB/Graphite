@@ -18,8 +18,8 @@ namespace Graphite.Parser
             
             //for class types
             public Token? SuperClass { get; private set; }
-            public Dictionary<string, Type> fields;
-            public Dictionary<string, Type> methods;
+            public readonly Dictionary<string, Type> fields;
+            public readonly Dictionary<string, Type> methods;
             public bool IsDummyType { get; private set; }
 
             public Type(Token type, List<Type>? typeArguments, bool isDummyType = false)
@@ -29,7 +29,7 @@ namespace Graphite.Parser
                 fields = new Dictionary<string, Type>();
                 methods = new Dictionary<string, Type>();
                 SuperClass = null;
-                this.IsDummyType = isDummyType;
+                IsDummyType = isDummyType;
             }
             
             public void AddField((string name, Type type) fields)

@@ -22,7 +22,7 @@ public class Parser
             catch (ParseException e)
             {
                 Console.WriteLine(e.Message);
-                Synchronize();
+                return statements;
             }
         }
 
@@ -869,35 +869,6 @@ public class Parser
     {
         return tokens[current + steps];
     }
-
-    private void Synchronize()
-    {
-        Advance();
-        while (!IsAtEnd())
-        {
-            if (Previous().type == TokenType.SEMICOLON) return;
-            switch (Peek().type)
-            {
-                case TokenType.INT:
-                case TokenType.DEC:
-                case TokenType.BOOL:
-                case TokenType.FUNC_TYPE:
-                case TokenType.STR:
-                case TokenType.CHAR:
-                case TokenType.BREAK:
-                case TokenType.CONTINUE:
-                case TokenType.PRIVATE:
-                case TokenType.PUBLIC:
-                case TokenType.IF:
-                case TokenType.WHILE:
-                case TokenType.RETURN:
-                case TokenType.IDENTIFIER:
-                    return;
-            }
-
-            Advance();
-        }
-    }
-
+    
     #endregion
 }

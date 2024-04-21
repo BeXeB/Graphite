@@ -4,7 +4,7 @@ using Graphite.Lexer;
 
 namespace Graphite.Checkers
 {
-    internal class ScopeChecker :
+    internal class SemanticChecker :
         Statement.IStatementVisitor<Type>,
         Expression.IExpressionVisitor<Type>,
         OtherNonTerminals.IOtherNonTerminalsVisitor<Type>,
@@ -16,7 +16,7 @@ namespace Graphite.Checkers
         
         private bool firstPass;
         
-        public ScopeChecker()
+        public SemanticChecker()
         {
             variableTable = new VariableTable();
             functionTable = new FunctionTable();
@@ -363,6 +363,32 @@ namespace Graphite.Checkers
         public Type VisitUnaryExpression(Expression.UnaryExpression expression)
         {
             //TO DO: similarly to binary, go through every possible unary operator and check the possible type usages
+            var rightType = expression.right.Accept(this).type.Value.type;
+            var @operatorType = expression.@operator.type;
+
+            TokenType tokenType;
+
+            switch (operatorType)
+            {
+                case TokenType.MINUS:
+                    if(rightType != TokenType.INT_LITERAL | rightType != TokenType.DECIMAL_LITERAL)
+                    {
+                        throw new CheckException("");
+                    }
+                    break;
+                case TokenType.BANG:
+                    if (rightType != TokenType.BOOL)
+                    {
+                        throw new CheckException("");
+                    }
+                    break;
+                default:
+                    throw new CheckException("Trying to perform binary operation on non-eligible type");
+            }
+
+
+            var resultToken = new Token();
+            resultToken.type = tokenType;
 
 
             throw new NotImplementedException();
@@ -401,17 +427,26 @@ namespace Graphite.Checkers
 
         public Type VisitVariableExpression(Expression.VariableExpression expression)
         {
-            //TO DO: check that variable is declared
+            var variableName = expression.name.lexeme;
 
-            //TO DO: check that variable type is consistent with what was declared before
+            if (!variableTable.IsVariableDeclared(variableName))
+            {
+                throw new CheckException("Variable has not been declared.");
+            }
 
-            throw new NotImplementedException();
+            var variableType = variableTable.GetVariableType(variableName);
+
+            return variableType;
         }
 
         public Type VisitWhileStatement(Statement.WhileStatement statement)
         {
-            //TO DO: check that the condition is boolean
-            //TO DO: for checking the body, call accept method
+            if(statement.condition.Accept(this).type.Value.type != TokenType.BOOL)
+            {
+                throw new CheckException("Condition expression in if statement must be of type boolean.");
+            }
+
+            statement.body.Accept(this);
 
             throw new NotImplementedException();
         }

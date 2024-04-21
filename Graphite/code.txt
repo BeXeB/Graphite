@@ -1,19 +1,19 @@
 ﻿#Func<int, int> test
-test(int a) returns int {
-    return a;
-}
+#test(int a) returns int {
+#    return a;
+#}
 
 #Func<int, Func<int>, int> test2
-test2 (Func<int, int> f, int a) returns int {
-    return f(a);
-}
+#test2 (Func<int, int> f, int a) returns int {
+#    return f(a);
+#}
 
 #Func<Func<int, Func<int, int>, int>>
-test3 () returns Func<int, Func<int, int>, int> {
-    return test2;
-}
+#test3 () returns Func<int, Func<int, int>, int> {
+#    return test2;
+#}
 
-int a = test3()(test, 1);
+#int a = test3()(test, 1);
 
 public class TestClass
 {
@@ -23,50 +23,65 @@ public class TestClass
         return 1;
     }
     
-    public test2() returns Func<int>
-    {
-        return test1;
-    }
+#    public test2() returns Func<int>
+#    {
+#        return test1;
+#    }
 }
 
-public class TestClass2
-{
-    public TestClass a = new TestClass();
-    public TestClass3 b = new TestClass3();
-    
-    public test3() returns TestClass3
-    {
-        return b;
-    }
-}
+#public class TestClass2
+#{
+#    public TestClass a = new TestClass();
+#    public TestClass3 b = new TestClass3();
+#    
+#    public test3() returns TestClass3
+#    {
+#        return b;
+#    }
+#}
 
-TestClass obj = new TestClass();
+#TestClass obj = new TestClass();
 
-obj.test1();
+#obj.test1();
 
-obj.test2()();
+#obj.test2()();
 
-TestClass2 obj2 = new TestClass2();
+#TestClass2 obj2 = new TestClass2();
 
-obj2.a.test2()();
+#obj2.a.test2()();
 
-int x = obj2.b.test3();
+#int x = obj2.b.test3();
 
-TestClass3 obj4 = obj2.test3();
+#TestClass3 obj4 = obj2.test3();
+
+#obj4.x = test3()(test, 1);
 
 public class TestClass3 extends TestClass
 {
-    public int x;
     public test3() returns int
     {
         return test1();
+    }
+    
+    public test4() returns int
+    {
+        return super.x;
     }
 }
 
 TestClass3 obj3 = new TestClass3();
 
-obj3.test3();
+#obj3.test3();
 
-obj3.test1();
+#obj3.test1();
 
-obj3 = new TestClass3();
+#obj3 = new TestClass3();
+
+#Set<int> set = {1,2,3,4,5};
+#List<int> list = [1,2,3,4,5];
+
+#test4 () returns Set<Func<Func<int, Func<int, int>, int>>> {
+#    return {test3, test3};
+#}
+
+#int y = test4()[0]()(test, 1);

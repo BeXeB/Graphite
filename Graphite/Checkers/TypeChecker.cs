@@ -225,7 +225,7 @@ namespace Graphite.Checkers
             throw new NotImplementedException();
         }
 
-        public OtherNonTerminals.Type VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
+        public OtherNonTerminals.Type VisitGraphBlockStatement(GraphExpression.GraphBlockStatement expression)
         {
             throw new NotImplementedException();
         }

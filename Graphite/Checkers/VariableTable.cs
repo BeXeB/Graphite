@@ -23,8 +23,10 @@ namespace Graphite.Checkers
             scopes.Peek().Add(name, type);
         }
 
-        public bool IsVariableDeclared(string name)
+        public bool IsVariableDeclared(string name, bool inCurrentScope = false)
         {
+            if (inCurrentScope)
+                return scopes.Peek().ContainsKey(name);
             foreach (var scope in scopes)
             {
                 if (scope.ContainsKey(name))

@@ -4,15 +4,20 @@ using Type = Graphite.Parser.OtherNonTerminals.Type;
 
 namespace Graphite.Checkers
 {
-    internal class SemanticChecker : Statement.IStatementVisitor<Type>, Expression.IExpressionVisitor<Type>, OtherNonTerminals.IOtherNonTerminalsVisitor<Type>, GraphExpression.IGraphExpressionVisitor<Type>
+    internal class SemanticChecker :
+        Statement.IStatementVisitor<Type>,
+        Expression.IExpressionVisitor<Type>,
+        OtherNonTerminals.IOtherNonTerminalsVisitor<Type>,
+        GraphExpression.IGraphExpressionVisitor<Type>
     {
         private readonly VariableTable variableTable = new();
         private readonly FunctionTable functionTable = new();
         private readonly TypeTable typeTable = new();
-
-        private bool firstPass;
-
         private readonly Stack<Type> currentObjectType = new();
+        private readonly Stack<string> inFunction = new();
+            
+        private bool firstPass;
+        private bool isFunctionBlock;
 
         public void Check(List<Statement> statements)
         {
@@ -96,13 +101,19 @@ namespace Graphite.Checkers
 
         private Type BlockStatementImplementation(List<Statement> statements)
         {
-            variableTable.EnterScope();
-            functionTable.EnterScope();
+            var localIsFunctionBlock = isFunctionBlock;
+            isFunctionBlock = false;
+            if (!localIsFunctionBlock)
+            {
+                variableTable.EnterScope();
+                functionTable.EnterScope();
+            }
 
             firstPass = true;
 
             foreach (var classDecl in statements.OfType<Statement.ClassDeclarationStatement>())
             {
+                if (inFunction.Count > 0) throw new CheckException("Cannot declare a class inside a function.");
                 if (typeTable.IsTypeDeclared(classDecl.identifier.lexeme))
                     throw new CheckException("Class already declared. Name: " + classDecl.identifier.lexeme +
                                              " At line: " + classDecl.identifier.line);
@@ -123,13 +134,19 @@ namespace Graphite.Checkers
             {
                 var result = singleStatement.Accept(this);
                 if (singleStatement is not Statement.ReturnStatement) continue;
-                variableTable.ExitScope();
-                functionTable.ExitScope();
+                if (!localIsFunctionBlock)
+                {
+                    variableTable.ExitScope();
+                    functionTable.ExitScope();
+                }
                 return result;
             }
             
-            variableTable.ExitScope();
-            functionTable.ExitScope();
+            if (!localIsFunctionBlock)
+            {
+                variableTable.ExitScope();
+                functionTable.ExitScope();
+            }
 
             return null!;
         }
@@ -267,29 +284,31 @@ namespace Graphite.Checkers
 
         public Type VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)
         {
+            inFunction.Push(statement.identifier.lexeme);
             var expectedReturnType = statement.returnType.Accept(this);
             var parameters = statement.parameters.Accept(this);
-            
+
             if (firstPass)
             {
-                
                 var parameterTypes = parameters.typeArguments!.Select(type => type.Accept(this));
                 var typeArguments = new List<Type> { expectedReturnType };
                 typeArguments.AddRange(parameterTypes);
                 var funcType = new Type(new Token { type = TokenType.FUNC_TYPE }, typeArguments);
+                inFunction.Pop();
                 return funcType;
             }
 
             variableTable.EnterScope();
             functionTable.EnterScope();
-            
+            isFunctionBlock = true;
+
             foreach (var (parameterType, parameterToken) in statement.parameters.parameters)
             {
                 variableTable.AddVariable(parameterToken.lexeme, parameterType.Accept(this));
             }
-            
+
             var actualReturnType = statement.blockStatement.Accept(this);
-            
+
             if (!CompareTypes(expectedReturnType, actualReturnType))
             {
                 throw new CheckException("Return type does not match the declared return type. Expected: " +
@@ -298,7 +317,8 @@ namespace Graphite.Checkers
 
             variableTable.ExitScope();
             functionTable.ExitScope();
-
+            inFunction.Pop();
+            
             return null!;
         }
 
@@ -323,7 +343,7 @@ namespace Graphite.Checkers
             throw new NotImplementedException();
         }
 
-        public Type VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
+        public Type VisitGraphBlockStatement(GraphExpression.GraphBlockStatement expression)
         {
             throw new NotImplementedException();
         }
@@ -405,13 +425,13 @@ namespace Graphite.Checkers
         public Type VisitListExpression(Expression.ListExpression expression)
         {
             var types = expression.elements.Select(element => element.Accept(this)).ToList();
-            
+
             var firstType = types[0];
             if (types.Any(type => type.type.type != firstType.type.type))
             {
                 throw new CheckException("List elements must be of the same type.");
             }
-            
+
             return new Type(new Token
             {
                 type = TokenType.LIST
@@ -494,13 +514,13 @@ namespace Graphite.Checkers
         public Type VisitSetExpression(Expression.SetExpression expression)
         {
             var types = expression.elements.Select(element => element.Accept(this)).ToList();
-            
+
             var firstType = types[0];
             if (types.Any(type => !CompareTypes(type, firstType)))
             {
                 throw new CheckException("Set elements must be of the same type.");
             }
-            
+
             return new Type(new Token
             {
                 type = TokenType.SET
@@ -619,7 +639,7 @@ namespace Graphite.Checkers
                 return null!;
             }
 
-            if (variableTable.IsVariableDeclared(statement.identifier.lexeme))
+            if (variableTable.IsVariableDeclared(statement.identifier.lexeme, inFunction.Count > 0))
             {
                 throw new CheckException("Variable already declared. Name: " + statement.identifier.lexeme +
                                          " At line: " + statement.identifier.line);
@@ -743,7 +763,8 @@ namespace Graphite.Checkers
                 throw new BinaryOperationTypeException(TokenType.DEC, @operator, otherType);
             }
 
-            List<TokenType> decimalOperators = new List<TokenType> { TokenType.PLUS, TokenType.MINUS, TokenType.SLASH, TokenType.STAR, TokenType.MOD, };
+            List<TokenType> decimalOperators = new List<TokenType>
+                { TokenType.PLUS, TokenType.MINUS, TokenType.SLASH, TokenType.STAR, TokenType.MOD, };
             List<TokenType> boolOperators = new List<TokenType>
             {
                 TokenType.EQUAL_EQUAL, TokenType.GREATER_EQUAL, TokenType.GREATER, TokenType.LESS,
@@ -775,7 +796,8 @@ namespace Graphite.Checkers
                 throw new BinaryOperationTypeException(TokenType.INT, @operator, otherType);
             }
 
-            List<TokenType> numberOperators = new List<TokenType> { TokenType.PLUS, TokenType.MINUS, TokenType.SLASH, TokenType.STAR, TokenType.MOD, };
+            List<TokenType> numberOperators = new List<TokenType>
+                { TokenType.PLUS, TokenType.MINUS, TokenType.SLASH, TokenType.STAR, TokenType.MOD, };
             List<TokenType> boolOperators = new List<TokenType>
             {
                 TokenType.EQUAL_EQUAL, TokenType.GREATER_EQUAL, TokenType.GREATER, TokenType.LESS,

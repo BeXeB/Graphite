@@ -250,7 +250,7 @@ public class Transpiler :
         throw new NotImplementedException();
     }
 
-    public string VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
+    public string VisitGraphBlockStatement(GraphExpression.GraphBlockStatement expression)
     {
         throw new NotImplementedException();
     }

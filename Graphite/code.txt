@@ -1,7 +1,15 @@
-﻿#Func<int, int> test
-#test(int a) returns int {
-#    return a;
-#}
+﻿int z = 1;
+
+#Func<int, int> test
+test(int a) returns int {
+    int z = 2;
+    return testtest() + a + z;
+    
+    testtest () returns int {
+        int z = 3;
+        return z;
+    }
+}
 
 #Func<int, Func<int>, int> test2
 #test2 (Func<int, int> f, int a) returns int {
@@ -18,9 +26,9 @@
 public class TestClass
 {
     public int x;
-    public test1() returns int
+    public test1(int x) returns int
     {
-        return 1;
+        return x;
     }
     
 #    public test2() returns Func<int>
@@ -58,7 +66,11 @@ public class TestClass
 
 public class TestClass3 extends TestClass
 {
-    public test3() returns int
+    public test1() returns List<int>
+    {
+        return [super.test1(1)];
+    }
+    public test3() returns List<int>
     {
         return test1();
     }

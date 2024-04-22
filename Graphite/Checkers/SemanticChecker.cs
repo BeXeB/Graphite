@@ -567,7 +567,12 @@ namespace Graphite.Checkers
 
         public Type VisitThisExpression(Expression.ThisExpression expression)
         {
-            throw new NotImplementedException();
+            if (currentObjectType.Count == 0)
+            {
+                throw new CheckException("Cannot use this outside of a class.");
+            }
+
+            return currentObjectType.Peek();
         }
 
         public Type VisitType(Type type)

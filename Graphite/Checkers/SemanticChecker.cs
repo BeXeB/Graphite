@@ -337,7 +337,8 @@ namespace Graphite.Checkers
 
         public Type VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
         {
-            throw new NotImplementedException();
+            expression.statements.ForEach(statement => statement.Accept(this));
+            return null!;
         }
 
         public Type VisitGraphEdgeExpression(GraphExpression.GraphEdgeExpression expression)
@@ -362,7 +363,18 @@ namespace Graphite.Checkers
 
         public Type VisitGraphIfStmt(GraphExpression.GraphIfStatement expression)
         {
-            throw new NotImplementedException();
+            var conditionType = expression.condition.Accept(this).type.type;
+
+            if (conditionType != TokenType.BOOL)
+            {
+                throw new CheckException("Condition expression in if statement must be of type boolean.");
+            }
+
+            expression.thenBranch.Accept(this);
+
+            expression.elseBranch?.Accept(this);
+
+            return null!;
         }
 
         public Type VisitGraphRemoveVertexExpression(GraphExpression.GraphRemoveVertexExpression expression)

@@ -1,6 +1,7 @@
 ﻿using Type = Graphite.Parser.OtherNonTerminals.Type;
 using Graphite.Parser;
 using Graphite.Lexer;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Graphite.Checkers
 {
@@ -37,6 +38,32 @@ namespace Graphite.Checkers
 
         public Type VisitAnonFunctionExpression(Expression.AnonFunctionExpression expression)
         {
+            // Enter a new scope for the anonymous function
+            variableTable.EnterScope();
+            functionTable.EnterScope();
+
+            // Define the function signature (parameters and return type)
+            var parameters = expression.parameters.parameters;
+
+            // Add parameters to the symbol table
+            foreach (var parameter in parameters)
+            {
+                if (!variableTable.IsVariableDeclared(parameter.Item2.lexeme))
+                {
+                    variableTable.AddVariable(parameter.Item2.lexeme, parameter.Item1);
+                } else
+                {
+                    throw new CheckException("");
+                }
+            }
+
+            // Type-check and scope-check the function body
+            expression.Accept(this);
+
+            // Exit the scope after checking the function bodyS
+            variableTable.ExitScope();
+            functionTable.ExitScope();
+
             throw new NotImplementedException();
         }
 
@@ -352,6 +379,7 @@ namespace Graphite.Checkers
 
         public Type VisitThisExpression(Expression.ThisExpression expression)
         {
+
             throw new NotImplementedException();
         }
 
@@ -362,36 +390,28 @@ namespace Graphite.Checkers
 
         public Type VisitUnaryExpression(Expression.UnaryExpression expression)
         {
-            //TO DO: similarly to binary, go through every possible unary operator and check the possible type usages
             var rightType = expression.right.Accept(this).type.Value.type;
             var @operatorType = expression.@operator.type;
 
-            TokenType tokenType;
+            var resultToken = new Token();
 
-            switch (operatorType)
+            if(operatorType == TokenType.MINUS)
             {
-                case TokenType.MINUS:
-                    if(rightType != TokenType.INT_LITERAL | rightType != TokenType.DECIMAL_LITERAL)
-                    {
-                        throw new CheckException("");
-                    }
-                    break;
-                case TokenType.BANG:
-                    if (rightType != TokenType.BOOL)
-                    {
-                        throw new CheckException("");
-                    }
-                    break;
-                default:
-                    throw new CheckException("Trying to perform binary operation on non-eligible type");
+                if (rightType == TokenType.INT_LITERAL | rightType == TokenType.DECIMAL_LITERAL)
+                {
+                    resultToken.type = rightType;
+                }
+                else throw new CheckException("");
+            } else if (operatorType == TokenType.BANG)
+            {
+                if (rightType == TokenType.BOOL)
+                {
+                    resultToken.type = rightType;
+                }
+                else throw new CheckException("");
             }
 
-
-            var resultToken = new Token();
-            resultToken.type = tokenType;
-
-
-            throw new NotImplementedException();
+            return new Type(resultToken, null);
         }
 
         public Type VisitVariableDeclarationStatement(Statement.VariableDeclarationStatement statement)

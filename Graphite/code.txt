@@ -117,4 +117,39 @@ test4 () returns Set<Func<Func<int, Func<int, int>, int>>> {
     return {test3, test3};
 }
 
-int y = test4()[0]()(test, 1);
+#int y = test4()[0]()(test, 1);
+
+
+
+int d = 4;
+int a = 2;
+
+JustReturn(int a) returns int {
+                return a;
+            }
+
+public class DGraph{}
+DGraph G;
+
+            G{
+                [("tag1" and "tag2") or "tag3"] => ["tag4"] d;
+                [("tag1" and !"tag2") or "tag3"] <=> ["tag4"] 2.2;
+                [!("tag1" and "tag2") or "tag3"] <=> ["tag4"];
+                [("tag1" and "tag2") or "tag3"] =/= ["tag4"];
+                V - ["tag1"];
+                V + {"tag1", "tag2"} 12;
+                ["tag3"] ++ {"tag4"};
+                ["tag4"] -- {"tag3"};
+                "tag1" << null;
+                "tag2" << "tag1";
+                a = 1;
+                while (a < 10) {
+                     V + {"tag1", "tag2"};
+                     a = a + JustReturn(1);
+                }
+                if (a == 10) {
+                     V + {"tag1", "tag2"};
+                } else {
+                     V - ["tag1"];
+                }
+};

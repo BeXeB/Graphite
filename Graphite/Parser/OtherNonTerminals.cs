@@ -32,14 +32,19 @@ namespace Graphite.Parser
                 IsDummyType = isDummyType;
             }
             
-            public void AddField((string name, Type type) fields)
+            public void AddField((string name, Type type) field)
             {
-                this.fields.Add(fields.name, fields.type);
+                fields.Add(field.name, field.type);
             }
             
-            public void AddMethod((string name, Type type) methods)
+            public void AddMethod((string name, Type type) method)
             {
-                this.methods.Add(methods.name, methods.type);
+                methods.Add(method.name, method.type);
+            }
+            
+            public bool HasMember(string memberName)
+            {
+                return fields.ContainsKey(memberName) || methods.ContainsKey(memberName);
             }
             
             public void SetSuperClass(Token superClass)

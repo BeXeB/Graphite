@@ -23,6 +23,28 @@ test3 () returns Func<int, Func<int, int>, int> {
 
 int a = test3()(test, 1);
 
+Func<int,int> thisIsAFunction = (int a) => {
+    return a;
+};
+
+Func<Set<int>, Func<int,int>> thisIsAFunction2 = (Func<int,int> f) => {
+    return {f(1)};
+};
+
+int ce = -123;
+
+bool boo = !true;
+
+Func<Func<int, int>> test5 = () => {
+    return thisIsAFunction;
+};
+
+Func<int, int> f = thisIsAFunction;
+
+Set<Func<int,int>> set2 = {f, thisIsAFunction, test, test5()};
+
+Set<int> set = thisIsAFunction2(f);
+
 public class TestClass
 {
     public int x;
@@ -89,7 +111,6 @@ obj3.test1();
 
 obj3 = new TestClass3();
 
-Set<int> set = {1,2,3,4,5};
 List<int> list = [1,2,3,4,5];
 
 test4 () returns Set<Func<Func<int, Func<int, int>, int>>> {

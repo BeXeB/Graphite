@@ -22,8 +22,10 @@ namespace Graphite.Checkers
             scopes.Peek().Add(name, type);
         }
 
-        public bool IsFunctionDeclared(string name)
+        public bool IsFunctionDeclared(string name, bool inCurrentScope = false)
         {
+            if (inCurrentScope)
+                return scopes.Peek().ContainsKey(name);
             foreach (var scope in scopes)
             {
                 if (scope.ContainsKey(name))

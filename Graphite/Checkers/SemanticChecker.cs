@@ -15,7 +15,7 @@ namespace Graphite.Checkers
         private readonly TypeTable typeTable = new();
         private readonly Stack<Type> currentObjectType = new();
         private readonly Stack<string> inFunction = new();
-            
+
         private bool firstPass;
         private bool isFunctionBlock;
 
@@ -36,6 +36,7 @@ namespace Graphite.Checkers
             // Enter a new scope for the anonymous function
             variableTable.EnterScope();
             functionTable.EnterScope();
+            isFunctionBlock = true;
 
             // Define the function signature (parameters and return type)
             var parameters = expression.parameters.parameters;
@@ -43,23 +44,29 @@ namespace Graphite.Checkers
             // Add parameters to the symbol table
             foreach (var parameter in parameters)
             {
-                if (!variableTable.IsVariableDeclared(parameter.Item2.lexeme))
+                if (!variableTable.IsVariableDeclared(parameter.Item2.lexeme, true))
                 {
                     variableTable.AddVariable(parameter.Item2.lexeme, parameter.Item1);
-                } else
+                }
+                else
                 {
                     throw new CheckException("");
                 }
             }
 
             // Type-check and scope-check the function body
-            expression.Accept(this);
+            var returnType = expression.body.Accept(this);
 
             // Exit the scope after checking the function bodyS
             variableTable.ExitScope();
             functionTable.ExitScope();
 
-            throw new NotImplementedException();
+            // Define the function type
+            var funcTypeArguments = new List<Type> { returnType };
+            funcTypeArguments.AddRange(parameters.Select(parameter => parameter.Item1));
+            var funcType = new Type(new Token { type = TokenType.FUNC_TYPE }, funcTypeArguments);
+
+            return funcType;
         }
 
         public Type VisitAssignmentExpression(Expression.AssignmentExpression expression)
@@ -148,7 +155,8 @@ namespace Graphite.Checkers
 
             foreach (var functionDecl in statements.OfType<Statement.FunctionDeclarationStatement>())
             {
-                if (functionTable.IsFunctionDeclared(functionDecl.identifier.lexeme))
+                if (functionTable.IsFunctionDeclared(functionDecl.identifier.lexeme) ||
+                    variableTable.IsVariableDeclared(functionDecl.identifier.lexeme))
                     throw new CheckException("Function already declared. Name: " + functionDecl.identifier.lexeme +
                                              " At line: " + functionDecl.identifier.line);
                 functionTable.AddFunction(functionDecl.identifier.lexeme, functionDecl.Accept(this));
@@ -165,9 +173,10 @@ namespace Graphite.Checkers
                     variableTable.ExitScope();
                     functionTable.ExitScope();
                 }
+
                 return result;
             }
-            
+
             if (!localIsFunctionBlock)
             {
                 variableTable.ExitScope();
@@ -222,27 +231,32 @@ namespace Graphite.Checkers
                     type.SetSuperClass(statement.extendsIdentifier.Value);
                 }
 
-                var identifier = "";
-                try
+                foreach (var (accessModifier, variableDeclaration) in statement.variableDeclarationStatements)
                 {
-                    foreach (var (accessModifier, variableDeclaration) in statement.variableDeclarationStatements)
+                    if (accessModifier.type == TokenType.PRIVATE) continue;
+
+                    if (type.HasMember(variableDeclaration.identifier.lexeme))
                     {
-                        if (accessModifier.type == TokenType.PRIVATE) continue;
-                        identifier = variableDeclaration.identifier.lexeme;
-                        type.AddField((variableDeclaration.identifier.lexeme, variableDeclaration.type.Accept(this)));
+                        throw new CheckException("Field or Method already declared. Name: " +
+                                                 variableDeclaration.identifier.lexeme + " At line: " +
+                                                 statement.identifier.line);
                     }
 
-                    foreach (var (accessModifier, functionDeclaration) in statement.functionDeclarationStatements)
-                    {
-                        if (accessModifier.type == TokenType.PRIVATE) continue;
-                        identifier = functionDeclaration.identifier.lexeme;
-                        type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this)));
-                    }
+                    type.AddField((variableDeclaration.identifier.lexeme, variableDeclaration.type.Accept(this)));
                 }
-                catch (ArgumentException)
+
+                foreach (var (accessModifier, functionDeclaration) in statement.functionDeclarationStatements)
                 {
-                    throw new CheckException("Field or Method already declared. Name: " + identifier + " At line: " +
-                                             statement.identifier.line);
+                    if (accessModifier.type == TokenType.PRIVATE) continue;
+
+                    if (type.HasMember(functionDeclaration.identifier.lexeme))
+                    {
+                        throw new CheckException("Field or Method already declared. Name: " +
+                                                 functionDeclaration.identifier.lexeme + " At line: " +
+                                                 statement.identifier.line);
+                    }
+
+                    type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this)));
                 }
 
                 return type;
@@ -344,7 +358,7 @@ namespace Graphite.Checkers
             variableTable.ExitScope();
             functionTable.ExitScope();
             inFunction.Pop();
-            
+
             return null!;
         }
 
@@ -618,19 +632,20 @@ namespace Graphite.Checkers
 
         public Type VisitUnaryExpression(Expression.UnaryExpression expression)
         {
-            var rightType = expression.right.Accept(this).type.Value.type;
+            var rightType = expression.right.Accept(this).type.type;
             var @operatorType = expression.@operator.type;
 
             var resultToken = new Token();
 
-            if(operatorType == TokenType.MINUS)
+            if (operatorType == TokenType.MINUS)
             {
-                if (rightType == TokenType.INT_LITERAL | rightType == TokenType.DECIMAL_LITERAL)
+                if (rightType == TokenType.INT | rightType == TokenType.DEC)
                 {
                     resultToken.type = rightType;
                 }
                 else throw new CheckException("");
-            } else if (operatorType == TokenType.BANG)
+            }
+            else if (operatorType == TokenType.BANG)
             {
                 if (rightType == TokenType.BOOL)
                 {
@@ -661,9 +676,11 @@ namespace Graphite.Checkers
                 return null!;
             }
 
-            if (variableTable.IsVariableDeclared(statement.identifier.lexeme, inFunction.Count > 0))
+            if (variableTable.IsVariableDeclared(statement.identifier.lexeme, inFunction.Count > 0) ||
+                functionTable.IsFunctionDeclared(statement.identifier.lexeme, inFunction.Count > 0))
             {
-                throw new CheckException("Variable already declared. Name: " + statement.identifier.lexeme +
+                throw new CheckException("Member with same name already declared. Name: " +
+                                         statement.identifier.lexeme +
                                          " At line: " + statement.identifier.line);
             }
 
@@ -694,7 +711,6 @@ namespace Graphite.Checkers
                                              " At line: " + expression.name.line);
                 }
 
-                //var type = currentObjectType.Pop();
                 currentObjectType.Push(typeTable.GetType(currentObjectType.Peek().SuperClass!.Value.lexeme));
                 var result = expression.Accept(this);
                 currentObjectType.Pop();
@@ -867,37 +883,6 @@ namespace Graphite.Checkers
             }
 
             throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType);
-        }
-
-        public record Variable
-        {
-            public string Name { get; set; }
-            public GraphiteType Type { get; set; }
-            public bool IsInitialized { get; set; }
-        }
-
-        public record Method
-        {
-            public string Name { get; set; }
-            public GraphiteType ReturnType { get; set; }
-            public List<Variable> Parameters { get; set; }
-        }
-
-        public record GraphiteType
-        {
-            // Primitive types
-            public TokenType Type { get; set; }
-
-            // List and Set types
-            public GraphiteType ElementType { get; set; }
-
-            public record ClassType
-            {
-                public string Name { get; set; }
-                public List<Variable> Fields { get; set; }
-                public List<Method> Methods { get; set; }
-                public GraphiteType SuperClass { get; set; }
-            }
         }
     }
 }

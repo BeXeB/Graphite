@@ -466,10 +466,17 @@ namespace Graphite.Checkers
                                                             " At line: " + identifier.line);
             }
 
+            var graphTypes = new List<string>
+            {
+                "DGraph", "UGraph"
+            };
 
-            // TODO check if the variable type is a graph type
-            //var variableType = variableTable.GetVariableType(identifier.lexeme);
-            //if (variableType.type.type)
+            var variableType = variableTable.GetVariableType(identifier.lexeme).type.lexeme;
+
+            if (!graphTypes.Contains(variableType))
+            {
+                throw new CheckException("Graph expressions are only allowed on objects of type DGraph or UGraph.");
+            }
 
             statement.expressions.ForEach(expression => expression.Accept(this));
 

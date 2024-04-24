@@ -122,13 +122,12 @@ test4 () returns Set<Func<Func<int, Func<int, int>, int>>> {
 
 
 int d = 4;
-int a = 2;
+int aaa = 2;
 
 JustReturn(int a) returns int {
                 return a;
             }
 
-public class DGraph{}
 DGraph G;
 
             G{
@@ -142,12 +141,12 @@ DGraph G;
                 ["tag4"] -- {"tag3"};
                 "tag1" << null;
                 "tag2" << "tag1";
-                a = 1;
-                while (a < 10) {
+                aaa = 1;
+                while (aaa < 10) {
                      V + {"tag1", "tag2"};
-                     a = a + JustReturn(1);
+                     aaa = aaa + JustReturn(1);
                 }
-                if (a == 10) {
+                if (aaa == 10) {
                      V + {"tag1", "tag2"};
                 } else {
                      V - ["tag1"];

@@ -13,11 +13,20 @@ public class Transpiler :
     
     public string Transpile(List<Statement> statements)
     {
-        var code = "";
+        var code = "using Domain; class Program { static void Main(string[] args) {";
+        var classDeclarations = "";
         foreach (var statement in statements)
         {
-            code += statement.Accept(this);
+            if(statement is Statement.ClassDeclarationStatement)
+            {
+                classDeclarations += statement.Accept(this);
+            }
+            else
+            {
+                code += statement.Accept(this);
+            }
         }
+        code += $"}} {classDeclarations} }}";
 
         return code;
     }
@@ -147,7 +156,7 @@ public class Transpiler :
             functionDeclarations += $"{funcAccessModifier} {declaration}";
         }
 
-        return $"{accessModifier} {identifier} {extends} {{ {variableDeclarations} {functionDeclarations} }}";
+        return $"{accessModifier} class {identifier} {extends} {{ {variableDeclarations} {functionDeclarations} }}";
     }
 
     public string VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)
@@ -323,6 +332,8 @@ public class Transpiler :
     {
         switch (type.type.type)
         {
+            case TokenType.IDENTIFIER:
+                return type.type.lexeme;
             case TokenType.INT:
                 return "int";
             case TokenType.DEC:

@@ -332,6 +332,8 @@ public class Transpiler :
     {
         switch (type.type.type)
         {
+            case TokenType.IDENTIFIER:
+                return type.type.lexeme;
             case TokenType.INT:
                 return "int";
             case TokenType.DEC:

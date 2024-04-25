@@ -3,21 +3,21 @@ using Graphite.Parser;
 
 namespace Graphite;
 
-public class Transpiler : 
-    Statement.IStatementVisitor<string>, 
-    Expression.IExpressionVisitor<string>, 
-    OtherNonTerminals.IOtherNonTerminalsVisitor<string>, 
+public class Transpiler :
+    Statement.IStatementVisitor<string>,
+    Expression.IExpressionVisitor<string>,
+    OtherNonTerminals.IOtherNonTerminalsVisitor<string>,
     GraphExpression.IGraphExpressionVisitor<string>
 {
     private string graphIdentifier = "";
-    
+
     public string Transpile(List<Statement> statements)
     {
         var code = "using Domain; class Program { static void Main(string[] args) {";
         var classDeclarations = "";
         foreach (var statement in statements)
         {
-            if(statement is Statement.ClassDeclarationStatement)
+            if (statement is Statement.ClassDeclarationStatement)
             {
                 classDeclarations += statement.Accept(this);
             }
@@ -26,11 +26,12 @@ public class Transpiler :
                 code += statement.Accept(this);
             }
         }
+
         code += $"}} {classDeclarations} }}";
 
         return code;
     }
-    
+
     public string VisitBlockStatement(Statement.BlockStatement statement)
     {
         var statements = statement.statements.Select(s => s.Accept(this));
@@ -51,6 +52,7 @@ public class Transpiler :
         {
             return $"if({condition}) {thenBranch}";
         }
+
         var elseBranch = statement.elseBranch.Accept(this);
         return $"if({condition}) {thenBranch} else {elseBranch}";
     }
@@ -86,6 +88,7 @@ public class Transpiler :
         {
             code += graphExpression.Accept(this);
         }
+
         graphIdentifier = "";
         return code;
     }
@@ -116,7 +119,7 @@ public class Transpiler :
 
         string variableDeclarations = "";
 
-        foreach(var currVarDeclaration in statement.variableDeclarationStatements)
+        foreach (var currVarDeclaration in statement.variableDeclarationStatements)
         {
             var declaration = VisitVariableDeclarationStatement(currVarDeclaration.Item2);
             string varAccessModifier;
@@ -132,12 +135,13 @@ public class Transpiler :
                 default:
                     throw new InvalidTokenException("Invalid or missing accessModifier");
             }
+
             variableDeclarations += $"{varAccessModifier} {declaration}";
         }
 
         string functionDeclarations = "";
 
-        foreach(var currFuncDeclaration in statement.functionDeclarationStatements)
+        foreach (var currFuncDeclaration in statement.functionDeclarationStatements)
         {
             var declaration = VisitFunctionDeclarationStatement(currFuncDeclaration.Item2);
             string funcAccessModifier;
@@ -153,6 +157,7 @@ public class Transpiler :
                 default:
                     throw new InvalidTokenException("Invalid or missing accessModifier");
             }
+
             functionDeclarations += $"{funcAccessModifier} {declaration}";
         }
 
@@ -165,7 +170,7 @@ public class Transpiler :
         var parameters = statement.parameters.Accept(this);
         var block = statement.blockStatement.Accept(this);
         var returnType = statement.returnType.Accept(this);
-        
+
         return $"{returnType} {identifier}({parameters}) {block}";
     }
 
@@ -177,8 +182,9 @@ public class Transpiler :
         {
             return $"{type} {identifier};";
         }
+
         var expression = statement.initializingExpression.Accept(this);
-        
+
         return $"{type} {identifier} = {expression};";
     }
 
@@ -186,7 +192,7 @@ public class Transpiler :
     {
         var left = expression.left.Accept(this);
         var right = expression.right.Accept(this);
-        
+
         var @operator = expression.@operator.type switch
         {
             TokenType.EQUAL_EQUAL => "==",
@@ -202,7 +208,7 @@ public class Transpiler :
             TokenType.MOD => "%",
             _ => throw new Exception("Invalid operator")
         };
-        
+
         return $"{left} {@operator} {right}";
     }
 
@@ -214,7 +220,21 @@ public class Transpiler :
 
     public string VisitLiteralExpression(Expression.LiteralExpression expression)
     {
-        return $"{expression.value}";
+        var a = $"{expression.value}";
+        switch (expression.value)
+        {
+            case string:
+                a = $"\"{a}\"";
+                break;
+            case char:
+                a = $"'{a}'";
+                break;
+            case bool:
+                a = a.ToLower();
+                break;
+        }
+
+        return a;
     }
 
     public string VisitUnaryExpression(Expression.UnaryExpression expression)
@@ -355,7 +375,8 @@ public class Transpiler :
             case TokenType.FUNC_TYPE:
                 var returnType = type.typeArguments[0].Accept(this);
                 var parameters = String.Join(',', type.typeArguments.Skip(1).Select(t => t.Accept(this)));
-                return returnType.Equals("void") ? $"Action<{parameters}>" : $"Func<{parameters}, {returnType}>";
+                return returnType.Equals("void") ? $"Action<{parameters}>" :
+                    parameters.Length > 0 ? $"Func<{parameters}, {returnType}>" : $"Func<{returnType}>";
             default:
                 throw new TranspileException("Invalid type in transpiler. At: " + type.type.line);
         }
@@ -368,10 +389,10 @@ public class Transpiler :
     }
 
     #region GraphStatement
-    
+
     public string VisitGraphEdgeExpression(GraphExpression.GraphEdgeExpression expression)
     {
-        var leftPredicate = $"v => {expression.leftPredicate.Accept(this)}"; 
+        var leftPredicate = $"v => {expression.leftPredicate.Accept(this)}";
         var rightPredicate = $"v => {expression.rightPredicate.Accept(this)}";
         var weight = expression.weight.Accept(this);
         switch (expression.@operator.type)
@@ -379,12 +400,12 @@ public class Transpiler :
             case TokenType.ARROW:
                 return $"{graphIdentifier}.Connect({leftPredicate}, {rightPredicate}, {weight});";
             case TokenType.DOUBLE_ARROW:
-                return $"{graphIdentifier}.Connect({leftPredicate}, {rightPredicate}, {weight});" + 
+                return $"{graphIdentifier}.Connect({leftPredicate}, {rightPredicate}, {weight});" +
                        $"{graphIdentifier}.Connect({rightPredicate}, {leftPredicate}, {weight});";
             case TokenType.SLASHED_EQUAL:
                 return $"{graphIdentifier}.Disconnect({leftPredicate}, {rightPredicate});";
             default:
-                throw new TranspileException("Invalid operator in graph edge expression. At: " 
+                throw new TranspileException("Invalid operator in graph edge expression. At: "
                                              + expression.@operator.line);
         }
     }
@@ -413,7 +434,7 @@ public class Transpiler :
             case TokenType.MINUS_MINUS:
                 return $"{graphIdentifier}.RemoveTags({predicate}, {tags});";
             default:
-                throw new TranspileException("Invalid operator in graph tag expression. At: " 
+                throw new TranspileException("Invalid operator in graph tag expression. At: "
                                              + expression.@operator.line);
         }
     }
@@ -456,6 +477,7 @@ public class Transpiler :
         {
             code += graphExpression.Accept(this);
         }
+
         code += "}";
         return code;
     }

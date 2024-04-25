@@ -1,0 +1,156 @@
+﻿int z = 1;
+
+#Func<int, int> test
+test(int a) returns int {
+    int z = 2;
+    return testtest() + a + z;
+    
+    testtest () returns int {
+        int z = 3;
+        return z;
+    }
+}
+
+#Func<int, Func<int>, int> test2
+test2 (Func<int, int> f, int a) returns int {
+    return f(a);
+}
+
+#Func<Func<int, Func<int, int>, int>>
+test3 () returns Func<int, Func<int, int>, int> {
+    return test2;
+}
+
+int a = test3()(test, 1);
+
+Func<int,int> thisIsAFunction = (int a) => {
+    return a;
+};
+
+Func<Set<int>, Func<int,int>> thisIsAFunction2 = (Func<int,int> f) => {
+    return {f(1)};
+};
+
+int ce = -123;
+
+bool boo = !true;
+
+Func<Func<int, int>> test5 = () => {
+    return thisIsAFunction;
+};
+
+Func<int, int> f = thisIsAFunction;
+
+Set<Func<int,int>> set2 = {f, thisIsAFunction, test, test5()};
+
+Set<int> set = thisIsAFunction2(f);
+
+public class TestClass
+{
+    public int x;
+    public test1(int x) returns int
+    {
+        return this.x;
+    }
+   
+    public test2() returns Func<int,int>
+    {
+        return test1;
+    }
+}
+
+public class TestClass2
+{
+    public TestClass a = new TestClass();
+    public TestClass3 b = new TestClass3();
+    
+    public test3() returns TestClass3
+    {
+        return b;
+    }
+}
+
+TestClass obj = new TestClass();
+
+obj.test1(1);
+
+obj.test2()(1);
+
+TestClass2 obj2 = new TestClass2();
+
+obj2.a.test2()(1);
+
+List<int> x = obj2.b.test3();
+
+TestClass3 obj4 = obj2.test3();
+
+obj4.x = test3()(test, 1);
+
+public class TestClass3 extends TestClass
+{
+    public test1() returns List<int>
+    {
+        return [super.test1(1)];
+    }
+    public test3() returns List<int>
+    {
+        return test1();
+    }
+    
+    public test4() returns int
+    {
+        return super.x;
+    }
+}
+
+TestClass3 obj3 = new TestClass3();
+
+obj3.test3();
+
+obj3.test1();
+
+obj3 = new TestClass3();
+
+List<int> list = [1,2,3,4,5];
+
+test4 () returns Set<Func<Func<int, Func<int, int>, int>>> {
+    return {test3, test3};
+}
+
+#int y = test4()[0]()(test, 1);
+
+
+
+int d = 4;
+int aaa = 2;
+
+JustReturn(int a) returns int {
+    return a;
+}
+
+DGraph G = new DGraph();
+
+G{
+    [("tag1" and "tag2") or "tag3"] => ["tag4"] d;
+    [("tag1" and !"tag2") or "tag3"] <=> ["tag4"] 2.2;
+    [!("tag1" and "tag2") or "tag3"] <=> ["tag4"];
+    [("tag1" and "tag2") or "tag3"] =/= ["tag4"];
+    V - ["tag1"];
+    V + {"tag1", "tag2"} 12;
+    ["tag3"] ++ {"tag4"};
+    ["tag4"] -- {"tag3"};
+    "tag1" << null;
+    "tag2" << "tag1";
+    aaa = 1;
+    while (aaa < 10) {
+         V + {"tag1", "tag2"};
+         aaa = aaa + JustReturn(1);
+    }
+    if (aaa == 10) {
+         V + {"tag1", "tag2"};
+    } else {
+         V - ["tag1"];
+    }
+};
+
+G.PrintGraphInfo();

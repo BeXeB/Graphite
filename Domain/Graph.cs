@@ -3,7 +3,7 @@
     public abstract class Graph<T> : IGraph
     {
         public int NoOfVertices => Tags.Count;
-        public List<List<string>> Tags { get; protected set; } = []; //tags[n] is an array of the tags of the n-th vertex
+        public List<List<string?>> Tags { get; protected set; } = []; //tags[n] is an array of the tags of the n-th vertex
         public List<List<T>> AdjMatrix { get; } = [];
 
         public abstract void AddVertex(string[] vertexTags);
@@ -23,9 +23,17 @@
             }
         }
 
-        public void Retag(string from, string to)
+        public void Retag(string from, string? to)
         {
             var newTags = new List<List<string>>();
+
+            if (to is null)
+            {
+                foreach (var vertex in Tags)
+                {
+                    vertex.RemoveAll(t => t == from);
+                }
+            }
 
             foreach (var vertex in Tags)
             {
@@ -34,11 +42,11 @@
                 {
                     if (tag == from)
                     {
-                        newVertex.Add(to);
+                        newVertex.Add(to!);
                     }
                     else
                     {
-                        newVertex.Add(tag);
+                        newVertex.Add(tag!);
                     }
                 }
                 newTags.Add(newVertex);
@@ -46,7 +54,7 @@
             Tags = newTags;
         }
 
-        public void AddTags(Predicate<List<string>> pred, List<string> tags)
+        public void AddTags(Predicate<List<string>> pred, List<string?> tags)
         {
             var indexes = GetVertices(pred);
 
@@ -127,8 +135,8 @@
         public void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred, object weight);
         public void Disconnect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
         public void RemoveVertex(Predicate<List<string>> pred);
-        public void AddTags(Predicate<List<string>> pred, List<string> tags);
+        public void AddTags(Predicate<List<string>> pred, List<string?> tags);
         public void RemoveTags(Predicate<List<string>> pred, List<string> tags);
-        public void Retag(string from, string to);
+        public void Retag(string from, string? to);
     }
 }

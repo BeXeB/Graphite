@@ -445,10 +445,10 @@ namespace Graphite.Checkers
 
         public Type VisitGraphReTagExpression(GraphExpression.GraphReTagExpression expression)
         {
-            var oldTag = expression.oldTag.type;
-            var newTag = expression.newTag.type;
+            var oldTag = expression.oldTag.Accept(this).type.type;
+            var newTag = expression.newTag.Accept(this).type.type;
 
-            if (oldTag != TokenType.STRING_LITERAL || (newTag != TokenType.STRING_LITERAL && newTag != TokenType.NULL))
+            if (oldTag != TokenType.STR || (newTag != TokenType.STR && newTag != TokenType.NULL))
             {
                 throw new CheckException("Tags must be of type string.");
             }

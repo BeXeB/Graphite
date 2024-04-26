@@ -98,10 +98,10 @@ public abstract class GraphExpression
     
     public class GraphReTagExpression : GraphExpression
     {
-        public readonly Token oldTag;
-        public readonly Token newTag;
+        public readonly Expression oldTag;
+        public readonly Expression newTag;
         
-        public GraphReTagExpression (Token oldTag, Token newTag)
+        public GraphReTagExpression (Expression oldTag, Expression newTag)
         {
             this.oldTag = oldTag;
             this.newTag = newTag;

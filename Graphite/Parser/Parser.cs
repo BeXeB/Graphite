@@ -367,14 +367,19 @@ public class Parser
                 return VertexOperation();
             case TokenType.LEFT_BRACKET:
                 return PredOperation();
-            case TokenType.STRING_LITERAL:
-                return RetagOperation();
             case TokenType.WHILE:
                 return GraphWhileStatement();
             case TokenType.IF:
                 return GraphIfStatement();
             default:
-                return GraphExpressionStatement();
+                var i = 1;
+                while (true)
+                {
+                    var peekType = Peek(i).type;
+                    if (peekType is TokenType.LEFT_LEFT or TokenType.SEMICOLON) break;
+                    i++;
+                }
+                return Peek(i).type == TokenType.LEFT_LEFT ? RetagOperation() : GraphExpressionStatement();
         }
     }
 
@@ -498,14 +503,11 @@ public class Parser
 
     private GraphExpression.GraphReTagExpression RetagOperation()
     {
-        var oldTag = Consume(TokenType.STRING_LITERAL, "Expect string literal.");
+        var oldTag = NonAssignment();
         Consume(TokenType.LEFT_LEFT, "Expect '<<' after string literal.");
-        var token = Peek();
-        if (token.type is not (TokenType.STRING_LITERAL or TokenType.NULL))
-            throw new ParseException("Expect string literal or 'null' after '<<'. At line: " + token.line);
-        Advance();
+        var newTag = NonAssignment();
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
-        return new GraphExpression.GraphReTagExpression(oldTag, token);
+        return new GraphExpression.GraphReTagExpression(oldTag, newTag);
     }
 
     private GraphExpression.GraphWhileStatement GraphWhileStatement()

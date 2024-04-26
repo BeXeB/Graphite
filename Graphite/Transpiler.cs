@@ -66,7 +66,7 @@ public class Transpiler :
 
     public string VisitReturnStatement(Statement.ReturnStatement statement)
     {
-        var expression = statement.expression.Accept(this);
+        var expression = statement.expression?.Accept(this);
         return $"return {expression};";
     }
 

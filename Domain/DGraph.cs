@@ -40,7 +40,6 @@ namespace Domain
                 foreach (var to in toIndexes)
                 {
                     AdjMatrix[from][to] = weightBool;
-                    AdjMatrix[to][from] = weightBool;
                 }
             }
         }

@@ -274,6 +274,20 @@ namespace Graphite.Checkers
 
         public OtherNonTerminals.Type VisitCallExpression(Expression.CallExpression expression)
         {
+            var functionType = expression.callee.Accept(this);
+
+            var arguments = expression.arguments.Select(x =>
+            {
+                return x.Accept(this);
+            });
+
+            int i = 1; // because the 1st argument type (0th index) is the return type
+            foreach(var currArg in arguments)
+            {
+                Compare(currArg.type, functionType.typeArguments[i]);
+                i++;
+            }
+
             //FindClosestMethod(expression.callee); //TODO finnish this when callexpression has been fixed
             throw new NotImplementedException();
         }
@@ -520,6 +534,34 @@ namespace Graphite.Checkers
         public OtherNonTerminals.Type VisitWhileStatement(Statement.WhileStatement statement)
         {
             throw new NotImplementedException();
+        }
+
+        public bool CompareTypes(OtherNonTerminals.Type type1, OtherNonTerminals.Type type2) {
+            var type1ArgLength = type1.typeArguments != null ? type1.typeArguments.Count : 0;
+            var type2ArgLength = type2.typeArguments != null ? type2.typeArguments.Count : 0;
+
+            if (type1ArgLength == type2ArgLength)
+            {
+                for(int i = 0; i < type1ArgLength; i++)
+                {
+                    if (!CompareTypes(type1.typeArguments![i], type2.typeArguments![i]))
+                    {
+                        return false;
+                    }
+                }
+                if (type1.type.Value.type == TokenType.IDENTIFIER && type2.type.Value.type == TokenType.IDENTIFIER)
+                {
+                    return type1.type.Value.type == type2.type.Value.type;
+                }
+                else
+                {
+                    return type1.type.Value.lexeme == type2.type.Value.lexeme;
+                }
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

@@ -380,10 +380,10 @@ namespace Graphite.Checkers
 
         public Type VisitGraphAddVertexExpression(GraphExpression.GraphAddVertexExpression expression)
         {
-            var tags = expression.tags.Accept(this).type;
-            if (tags.type != TokenType.SET)
+            var tags = expression.tags.Accept(this);
+            if (tags.type.type != TokenType.SET || tags.typeArguments![0].type.type != TokenType.STR)
             {
-                throw new CheckException("Tags argument must be of type set.");
+                throw new CheckException("Tags argument must be of type string set.");
             }
 
             var times = expression.times.Accept(this).type;
@@ -485,11 +485,11 @@ namespace Graphite.Checkers
 
         public Type VisitGraphTagExpression(GraphExpression.GraphTagExpression expression)
         {
-            var tags = expression.tags.Accept(this).type;
+            var tags = expression.tags.Accept(this);
 
-            if (tags.type != TokenType.SET)
+            if (tags.type.type != TokenType.SET || tags.typeArguments![0].type.type != TokenType.STR)
             {
-                throw new CheckException("Tags argument must be of type set.");
+                throw new CheckException("Tags argument must be of type string set.");
             }
 
             expression.predicate.Accept(this);
@@ -657,35 +657,20 @@ namespace Graphite.Checkers
         public Type VisitPredicateUnaryExpression(GraphExpression.PredicateUnaryExpression expression)
         {
             var rightType = expression.right.Accept(this).type.type;
-            var @operatorType = expression.@operator.type;
+            var operatorType = expression.@operator.type;
 
-            switch (operatorType)
+            // No Reason to check for - operator, as we can only have ! operators in predicates
+            if (operatorType != TokenType.BANG)
             {
-                case TokenType.MINUS:
-                    if (rightType == TokenType.INT_LITERAL)
-                    {
-                        return new Type(new Token { type = TokenType.INT }, null);
-                    }
-                    else if (rightType != TokenType.DECIMAL_LITERAL)
-                    {
-                        return new Type(new Token { type = TokenType.DEC }, null);
-                    }
-                    else
-                    {
-                        throw new CheckException("The right hand side of the minus must be of type int or decimal.");
-                    }
-                case TokenType.BANG:
-                    if (rightType == TokenType.BOOL)
-                    {
-                        return new Type(new Token { type = TokenType.BOOL }, null);
-                    }
-                    else
-                    {
-                        throw new CheckException("The right side of the NOT expression must be of type boolean.");
-                    }
-                default:
-                    throw new CheckException("Trying to perform unary operation on non-eligible type");
+                throw new CheckException("Trying to perform unary operation on non-eligible type");
             }
+
+            if (rightType != TokenType.BOOL)
+            {
+                throw new CheckException("The right side of the NOT expression must be of type boolean.");
+            }
+            
+            return new Type(new Token { type = TokenType.BOOL }, null);
         }
 
         public Type VisitReturnStatement(Statement.ReturnStatement statement)

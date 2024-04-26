@@ -75,7 +75,8 @@ additive		→ multiplicative (("+" | "-") multiplicative)*
 multiplicative		→ unary (("*"| "/" | "mod") unary)*  
 unary			→ ("-" | "!") unary
 			| call   
-call 			→ primary ("(" arguments ")" | "") ("." call)*  
+call 			→ primary (elementAccess | "(" arguments ")")* ("." call)*
+elementAccess		→ "[" nonAssignment "]"
 arguments		→ nonAssignment ("," nonAssignment)* 
 			| ""  
 primary 		→ "(" expression ")" 
@@ -85,7 +86,7 @@ primary 		→ "(" expression ")"
 			| DECIMAL
 			| "true" 
 			| "false" 
-			| elementAccess
+			| IDENTIFIER
 			| set 
 			| list
 			| "null"
@@ -93,7 +94,6 @@ primary 		→ "(" expression ")"
 			| "super"  
 set			→ "{" arguments "}"  
 list			→ "[" arguments "]"  
-elementAccess		→ IDENTIFIER ("[" nonAssignment "]" | "")
 ```
 
 

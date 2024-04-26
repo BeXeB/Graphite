@@ -1,4 +1,4 @@
-﻿using Graphite.Lexer;
+using Graphite.Lexer;
 using Graphite.Parser;
 
 namespace Graphite;
@@ -132,26 +132,24 @@ public abstract class Statement
     {
         public readonly Token accessModifier;
         public readonly Token identifier;
-        public readonly Token? extends;
         public readonly Token? extendsIdentifier;
 
-        public readonly List<VariableDeclarationStatement> variableDeclarationStatements;
-        public readonly List <FunctionDeclarationStatement> functionDeclarationStatements;
+        public readonly List<(Token accesModifier, VariableDeclarationStatement statement)> variableDeclarationStatements;
+        public readonly List<(Token accesModifier, FunctionDeclarationStatement statement)> functionDeclarationStatements;
 
         public ClassDeclarationStatement(
             Token accessModifier, 
             Token identifier, 
-            Token? extends, 
-            Token? extendsIdentifier, 
-            List<VariableDeclarationStatement> variableDeclarationStatements, 
-            List<FunctionDeclarationStatement> functionDeclarationStatements)
+            Token? extendsIdentifier,
+            List<(Token accesModifier, VariableDeclarationStatement statement)> variableDeclarationStatements,
+            List<(Token accesModifier, FunctionDeclarationStatement statement)> functionDeclarationStatements
+            )
         {
             this.accessModifier = accessModifier;
             this.identifier = identifier;
-            this.extends = extends;
             this.extendsIdentifier = extendsIdentifier;
-            this.variableDeclarationStatements = variableDeclarationStatements ?? new List<VariableDeclarationStatement>();
-            this.functionDeclarationStatements = functionDeclarationStatements ?? new List<FunctionDeclarationStatement>();
+            this.variableDeclarationStatements = variableDeclarationStatements ?? [];
+            this.functionDeclarationStatements = functionDeclarationStatements ?? [];
         }
 
         public override T Accept<T>(IStatementVisitor<T> visitor)
@@ -161,10 +159,10 @@ public abstract class Statement
     }
     public class FunctionDeclarationStatement : Statement
     {
-        private Token identifier;
-        readonly OtherNonTerminals.Parameters parameters;
-        readonly BlockStatement blockStatement;
-        readonly OtherNonTerminals.Type returnType;
+        public readonly Token identifier;
+        public readonly OtherNonTerminals.Parameters parameters;
+        public readonly BlockStatement blockStatement;
+        public readonly OtherNonTerminals.Type returnType;
         
         public FunctionDeclarationStatement(Token identifier, OtherNonTerminals.Parameters parameters, BlockStatement blockStatement, OtherNonTerminals.Type returnType)
         {

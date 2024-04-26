@@ -14,7 +14,7 @@ public abstract class GraphExpression
         T VisitGraphWhileStmt (GraphWhileStatement expression);
         T VisitGraphIfStmt (GraphIfStatement expression);
         T VisitGraphExpressionStmt (GraphExpressionStatement expression);
-        T VisitGraphBlockStmt (GraphBlockStatement expression);
+        T VisitGraphBlockStatement (GraphBlockStatement expression);
         T VisitPredicateOrExpression (PredicateOrExpression expression);
         T VisitPredicateAndExpression (PredicateAndExpression expression);
         T VisitPredicateGroupingExpression (PredicateGroupingExpression expression);
@@ -174,7 +174,7 @@ public abstract class GraphExpression
         
         public override T Accept<T> (IGraphExpressionVisitor<T> visitor)
         {
-            return visitor.VisitGraphBlockStmt(this);
+            return visitor.VisitGraphBlockStatement(this);
         }
     }
     

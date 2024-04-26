@@ -220,6 +220,8 @@ public class Transpiler :
 
     public string VisitLiteralExpression(Expression.LiteralExpression expression)
     {
+        if (expression.value is null) return "null";
+        
         var a = $"{expression.value}";
         switch (expression.value)
         {
@@ -441,8 +443,8 @@ public class Transpiler :
 
     public string VisitGraphReTagExpression(GraphExpression.GraphReTagExpression expression)
     {
-        var oldTag = expression.oldTag.lexeme;
-        var newTag = expression.newTag.lexeme;
+        var oldTag = expression.oldTag.Accept(this);
+        var newTag = expression.newTag.Accept(this);
         return $"{graphIdentifier}.Retag({oldTag}, {newTag});";
     }
 

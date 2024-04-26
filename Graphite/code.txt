@@ -57,13 +57,13 @@ testFunction(DGraph g, str rootTag, int currentDepth) returns void
         V + {leaf1tag};
         V + {leaf2tag};
         ["Root"] => [leaf1tag or leaf2tag];
-        rootTag << null;
+        "Root" << null;
+        currentDepth = currentDepth + 1;    
+        testFunction(g, leaf1tag, currentDepth);
+        leaf1tag << null;
+        testFunction(g, leaf2tag, currentDepth);
+        leaf2tag << null;
     };
-    
-    currentDepth = currentDepth + 1;
-    
-    testFunction(g, leaf1tag, currentDepth);
-    testFunction(g, leaf2tag, currentDepth);
 }
 
 g{

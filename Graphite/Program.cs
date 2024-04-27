@@ -1,112 +1,23 @@
 //args[0] name of the input file
 //args[1] name of the output file
 
+using System.Reflection;
+using Graphite.Checkers;
 using Graphite.Lexer;
 using Graphite.Parser;
 using Domain;
-using Graphite;
-using QuikGraphVisualizer;
 
-// var code = """
-//            public class TestClass {
-//                public int x;
-//                private bool b;
-//                
-//                public TestClass(int x, bool b) returns void {
-//                    this.x = x;
-//                    this.b = b;
-//                }
-//                
-//                public test(int a, bool b, str s, char c) returns int {
-//                    return a;
-//                }
-//            }
-//            
-//            dec x = 1.2;
-//            bool b = true;
-//            int a = 0;
-//            str s = "Hello World";
-//            char c = 'c';
-//            Set<int> set = {1, 2, 3, 4};
-//            List<int> list = [1, 2, 3, 4];
-//            
-//            test(int a, bool b, str s, char c) returns int {
-//                return a;
-//            }
-//            
-//            Func<int, int, bool, str, char> f = test;
-//            
-//            G{
-//                [("tag1" and "tag2") or "tag3"] => ["tag4"] d;
-//                [("tag1" and !"tag2") or "tag3"] <=> ["tag4"] 2;
-//                [!("tag1" and "tag2") or "tag3"] <=> ["tag4"];
-//                [("tag1" and "tag2") or "tag3"] =/= ["tag4"];
-//                V - ["tag1"];
-//                V + {"tag1", "tag2"} 12;
-//                ["tag3"] ++ {"tag4"};
-//                ["tag4"] -- {"tag3"};
-//                "tag1" << null;
-//                "tag2" << "tag1";
-//                a = 1;
-//                while (a < 10) {
-//                     V + {"tag1", "tag2"};
-//                     a = a + 1;
-//                }
-//                if (a == 10) {
-//                     V + {"tag1", "tag2"};
-//                } else {
-//                     V - ["tag1"];
-//                }
-//            };
-//            
-//            Func<void, int> a = () => {
-//                return 1;
-//            };
-//            
-//            test();
-//            
-//            asd.test().test().test();
-//            
-//            asd.asd.test();
-//            
-//            TestClass obj = new TestClass(1, true);
-//            
-//            obj.test(1, true, "Hello World", 'c');
-//            
-//            test[123].test(1, true, "Hello World", 'c');
-//            
-//            b = (3 + 3) * 3 > 10;
-//            
-//            c = test();
-//            """;
-
-var code = """
-           test() returns Set<int> {
-                return {1, 2, 3, 4};
-           }
-           test()[1];
-           test2() returns Set<Func<Set<int>>> {
-                return {test};
-           }
-           test2()[0]()[2];
-           # allow this to happen, need to change grammar
-           
-           test()();
-           asd.test[1].test()()();
-           asd[1]()();
-           asd.test().test().test();
-           asd.test[1]();
-           test();
-           asd.asd.test();
-           """;
+var basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
+var path = basePath.Remove(basePath.IndexOf("Graphite", StringComparison.Ordinal)) + @"Graphite\Graphite\code.txt";
+var code = File.ReadAllText(path);
 
 var lexer = new Lexer();
 var parser = new Parser();
+var checker = new SemanticChecker();
 
 var tokens = lexer.ScanCode(code);
 var statements = parser.Parse(tokens);
-
-Console.ReadKey();
+checker.Check(statements);
 
 var dgraph = new DGraph();
 dgraph.AddVertex(["a", "b"]);
@@ -128,8 +39,8 @@ ugraph.AddTags(v => v.Contains("e") || v.Contains("h"), ["j", "i"]);
 ugraph.RemoveTags(v => v.Contains("j") || v.Contains("e"), ["j", "b"]);
 ugraph.Connect(v => v.Contains("e"), v => v.Contains("c"));
 
-dgraph.PrintGraphInfo();
-ugraph.PrintGraphInfo();
+// dgraph.PrintGraphInfo();
+// ugraph.PrintGraphInfo();
 
-/// Uncomment to visualize the graph in the browser
+// Uncomment to visualize the graph in the browser
 //GraphVisualizer<bool>.VisualizeInBrowser(dgraph);

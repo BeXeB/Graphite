@@ -42,7 +42,7 @@ expressionStatement	→ expression";"
 graphStatement		→ IDENTIFIER "{" graphOperation* "}"";"  
 graphOperation		→ predicateOperation
 			| "V" vertexOperation
-			| STRING "<<" (STRING | "null");
+			| nonAssignment "<<" (nonAssignment | "null");
 			| expressionStatement
 			| graphWhile
 			| graphIf  

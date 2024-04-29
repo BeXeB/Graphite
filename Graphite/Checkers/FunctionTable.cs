@@ -45,6 +45,7 @@ namespace Graphite.Checkers
 
         public Type GetFunctionType(string name)
         {
+            //TODO return Function type instead of return type
             foreach (var scope in scopes)
             {
                 if (scope.ContainsKey(name))

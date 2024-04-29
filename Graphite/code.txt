@@ -1,4 +1,4 @@
-﻿# Example for creating graph:
+# Example for creating graph:
 # o -> o -> o -> o -> o -> o
 # |    |    |    |    |    |
 # v    v    v    v    v    v

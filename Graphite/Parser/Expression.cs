@@ -64,10 +64,12 @@ public abstract class Expression
     public class LiteralExpression : Expression
     {
         public readonly object? value;
+        public readonly Token token;
 
-        public LiteralExpression(object? value)
+        public LiteralExpression(object? value, Token token)
         {
             this.value = value;
+            this.token = token;
         }
 
         public override T Accept<T> (IExpressionVisitor<T> visitor)

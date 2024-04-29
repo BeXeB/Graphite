@@ -472,7 +472,7 @@ public class Transpiler :
         return expression.statement.Accept(this);
     }
 
-    public string VisitGraphBlockStmt(GraphExpression.GraphBlockStatement expression)
+    public string VisitGraphBlockStatement(GraphExpression.GraphBlockStatement expression)
     {
         var code = "{";
         foreach (var graphExpression in expression.statements)

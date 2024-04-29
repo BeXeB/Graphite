@@ -5,8 +5,6 @@ using System.Reflection;
 using Graphite.Lexer;
 using Graphite.Parser;
 using Domain;
-using Graphite;
-using QuikGraphVisualizer;
 
 // internal class Program
 // {

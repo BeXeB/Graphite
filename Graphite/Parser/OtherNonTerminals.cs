@@ -1,4 +1,4 @@
-﻿using Graphite.Lexer;
+using Graphite.Lexer;
 
 namespace Graphite.Parser
 {
@@ -14,12 +14,42 @@ namespace Graphite.Parser
         public class Type : OtherNonTerminals
         {
             public readonly Token type;
-            public readonly List<Type> typeArguments;
+            public readonly List<Type>? typeArguments;
+            
+            //for class types
+            public Token? SuperClass { get; private set; }
+            public readonly Dictionary<string, Type> fields;
+            public readonly Dictionary<string, Type> methods;
+            public bool IsDummyType { get; private set; }
 
-            public Type(Token type, List<Type> typeArguments)
+            public Type(Token type, List<Type>? typeArguments, bool isDummyType = false)
             {
                 this.type = type;
                 this.typeArguments = typeArguments;
+                fields = new Dictionary<string, Type>();
+                methods = new Dictionary<string, Type>();
+                SuperClass = null;
+                IsDummyType = isDummyType;
+            }
+            
+            public void AddField((string name, Type type) field)
+            {
+                fields.Add(field.name, field.type);
+            }
+            
+            public void AddMethod((string name, Type type) method)
+            {
+                methods.Add(method.name, method.type);
+            }
+            
+            public bool HasMember(string memberName)
+            {
+                return fields.ContainsKey(memberName) || methods.ContainsKey(memberName);
+            }
+            
+            public void SetSuperClass(Token superClass)
+            {
+                SuperClass = superClass;
             }
 
             public override T Accept<T>(IOtherNonTerminalsVisitor<T> visitor)

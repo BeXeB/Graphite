@@ -7,6 +7,7 @@
         public List<List<T>> AdjMatrix { get; set; } = [];
 
         public abstract void AddVertex(string[] vertexTags);
+        public abstract void AddGraph(Graph<T> graph);
         public abstract void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
         public abstract void Disconnect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred);
 

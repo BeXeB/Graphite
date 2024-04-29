@@ -6,6 +6,17 @@ namespace Graphite.Checkers;
 internal class TypeTable
 {
     private Dictionary<string, Type> globalScope = new Dictionary<string, Type>();
+    private Stack<Dictionary<string, Type>> scopes = new Stack<Dictionary<string, Type>>();
+
+    public void EnterScope()
+    {
+        scopes.Push(new Dictionary<string, Type>());
+    }
+
+    public void ExitScope()
+    {
+        scopes.Pop();
+    }
 
     public TypeTable()
     {

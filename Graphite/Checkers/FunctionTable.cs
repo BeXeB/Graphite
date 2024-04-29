@@ -1,15 +1,24 @@
-﻿using Type = Graphite.Parser.OtherNonTerminals.Type;
+﻿using Graphite.Parser;
+using static Graphite.Checkers.VariableTable;
+using Type = Graphite.Parser.OtherNonTerminals.Type;
 
 namespace Graphite.Checkers
 {
     internal class FunctionTable
     {
-        private Dictionary<string, Type> globalScope = new Dictionary<string, Type>();
-        private Stack<Dictionary<string, Type>> scopes = new Stack<Dictionary<string, Type>>();
+        private Dictionary<string, Function> globalScope = new Dictionary<string, Function>();
+        private Stack<Dictionary<string, Function>> scopes = new Stack<Dictionary<string, Function>>();
+
+        public class Function
+        {
+            public string Name;
+            public List<Variable> Parameters;
+            public OtherNonTerminals.Type ReturnType;
+        }
 
         public void EnterScope()
         {
-            scopes.Push(new Dictionary<string, Type>());
+            scopes.Push(new Dictionary<string, Function>());
         }
 
         public void ExitScope()
@@ -17,9 +26,9 @@ namespace Graphite.Checkers
             scopes.Pop();
         }
 
-        public void AddFunction(string name, Type type)
+        public void AddFunction(string name, Function function)
         {
-            scopes.Peek().Add(name, type);
+            scopes.Peek().Add(name, function);
         }
 
         public bool IsFunctionDeclared(string name, bool inCurrentScope = false)
@@ -36,12 +45,13 @@ namespace Graphite.Checkers
 
         public Type GetFunctionType(string name)
         {
+            //TODO return Function type instead of return type
             foreach (var scope in scopes)
             {
                 if (scope.ContainsKey(name))
-                    return scope[name];
+                    return scope[name].ReturnType;
             }
-            return globalScope[name];
+            return globalScope[name].ReturnType;
         }
     }
 }

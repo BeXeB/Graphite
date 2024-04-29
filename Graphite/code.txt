@@ -7,28 +7,27 @@
 # v    v    v    v    v    v
 # o -> o -> o -> o -> o -> o
 
-#DGraph g = new DGraph();
+DGraph g1 = new DGraph();
 
-#int x = 3;
-#int y = 3;
+int x = 5;
+int y = 10;
+int currentX = 1;
+int currentY = 1;
 
-#int currentX = 1;
-#int currentY = 1;
+g1 {
+    while (currentX <= x) {
+        while (currentY <= y) {
+            V + {"X" + currentX, "Y" + currentY};
+            ["X" + currentX and "Y" + (currentY - 1)] => ["X" + currentX and "Y" + currentY];
+            ["X" + (currentX - 1) and "Y" + currentY] => ["X" + currentX and "Y" + currentY];
+            currentY = currentY + 1;
+        }
+        currentY = 1;
+        currentX = currentX + 1;
+    }
+};
 
-#g {
-#    while (currentX <= x) {
-#        while (currentY <= y) {
-#            V + {"X" + currentX, "Y" + currentY};
-#            ["X" + currentX and "Y" + currentY] => ["X" + currentX and "Y" + (currentY - 1)];
-#            ["X" + currentX and "Y" + currentY] => ["X" + (currentX - 1) and "Y" + currentY];
-#            currentY = currentY + 1;
-#        }
-#        currentY = 1;
-#        currentX = currentX + 1;
-#    }
-#};
-#
-#g.PrintGraphInfo();
+g1.PrintGraphInfo();
 
 # Example for creating graph:
 #             o
@@ -42,7 +41,7 @@
 
 DGraph g = new DGraph();
 
-int depth = 3;
+int depth = 4;
 
 testFunction(DGraph g, str rootTag, int currentDepth) returns void 
 {

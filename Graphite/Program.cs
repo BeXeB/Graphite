@@ -23,7 +23,7 @@ internal class Program
 
         var tokens = lexer.ScanCode(code);
         var statements = parser.Parse(tokens);
-        // checker.Check(statements);
+        checker.Check(statements);
         var cscode = transpiler.Transpile(statements);
 
         var outputPath = basePath.Remove(basePath.IndexOf("Graphite", StringComparison.Ordinal)) +
@@ -32,4 +32,4 @@ internal class Program
     }
 }
 
-//GraphVisualizer<bool>.VisualizeInBrowser(dgraph);
+// GraphVisualizer<bool>.VisualizeInBrowser(dgraph);

@@ -347,13 +347,13 @@ namespace Graphite.Checkers
                 variableTable.AddVariable(parameterToken.lexeme, parameterType.Accept(this));
             }
 
-            var actualReturnType = statement.blockStatement.Accept(this);
+            statement.blockStatement.Accept(this);
 
-            if (!CompareTypes(expectedReturnType, actualReturnType))
-            {
-                throw new CheckException("Return type does not match the declared return type. Expected: " +
-                                         expectedReturnType.type.type + " Got: " + actualReturnType.type.type);
-            }
+            // if (!CompareTypes(expectedReturnType, actualReturnType))
+            // {
+            //     throw new CheckException("Return type does not match the declared return type. Expected: " +
+            //                              expectedReturnType.type.type + " Got: " + actualReturnType.type.type);
+            // }
 
             variableTable.ExitScope();
             functionTable.ExitScope();
@@ -532,7 +532,7 @@ namespace Graphite.Checkers
             statement.elseBranch?.Accept(this);
 
             //TODO if the blocks had a return check if both are the same type and we are in a function and return that type
-            
+
             return null!;
         }
 
@@ -677,12 +677,27 @@ namespace Graphite.Checkers
 
         public Type VisitReturnStatement(Statement.ReturnStatement statement)
         {
+            Type returnType;
             if (statement.expression is null)
             {
-                return new Type(new Token { type = TokenType.VOID }, null);
+                returnType = new Type(new Token { type = TokenType.VOID }, null);
             }
-
-            return statement.expression.Accept(this);
+            else
+            {
+                returnType = statement.expression.Accept(this);
+            }
+            
+            if (inFunction.Count > 0)
+            {
+                var functionType = functionTable.GetFunctionType(inFunction.Peek());
+                if (!CompareTypes(functionType.typeArguments![0], returnType))
+                {
+                    throw new CheckException("Return type does not match the declared return type. Expected: " +
+                                             functionType.type.type + " Got: " + returnType.type.type);
+                }
+            }
+            
+            return null!;
         }
 
         public Type VisitSetExpression(Expression.SetExpression expression)

@@ -255,6 +255,11 @@ public class Transpiler :
         throw new NotImplementedException();
     }
 
+    public string VisitAddGraphExpression(GraphExpression.AddGraphExpression expression)
+    {
+        throw new NotImplementedException();
+    }
+
     public string VisitPredicateOrExpression(GraphExpression.PredicateOrExpression expression)
     {
         throw new NotImplementedException();

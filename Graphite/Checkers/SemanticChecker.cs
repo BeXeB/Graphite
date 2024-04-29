@@ -401,6 +401,31 @@ namespace Graphite.Checkers
             return null!;
         }
 
+        public Type VisitAddGraphExpression(GraphExpression.AddGraphExpression expression)
+        {
+            var identifier = expression.otherGraph;
+
+            if (!variableTable.IsVariableDeclared(identifier.lexeme))
+            {
+                throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme +
+                                         " At line: " + identifier.line);
+            }
+
+            var graphTypes = new List<string>
+            {
+                "DGraph", "UGraph"
+            };
+
+            var variableType = variableTable.GetVariableType(identifier.lexeme).type.lexeme;
+
+            if (!graphTypes.Contains(variableType))
+            {
+                throw new CheckException("Graph expressions are only allowed on objects of type DGraph or UGraph.");
+            }
+            
+            return null!;
+        }
+
         public Type VisitGraphEdgeExpression(GraphExpression.GraphEdgeExpression expression)
         {
             expression.leftPredicate.Accept(this);

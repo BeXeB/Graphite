@@ -463,7 +463,7 @@ namespace Graphite.Checkers
             if (!variableTable.IsVariableDeclared(identifier.lexeme))
             {
                 throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme +
-                                                            " At line: " + identifier.line);
+                                         " At line: " + identifier.line);
             }
 
             var graphTypes = new List<string>
@@ -531,6 +531,8 @@ namespace Graphite.Checkers
             //Type-check the else branch of the if statement
             statement.elseBranch?.Accept(this);
 
+            //TODO if the blocks had a return check if both are the same type and we are in a function and return that type
+            
             return null!;
         }
 
@@ -669,12 +671,17 @@ namespace Graphite.Checkers
             {
                 throw new CheckException("The right side of the NOT expression must be of type boolean.");
             }
-            
+
             return new Type(new Token { type = TokenType.BOOL }, null);
         }
 
         public Type VisitReturnStatement(Statement.ReturnStatement statement)
         {
+            if (statement.expression is null)
+            {
+                return new Type(new Token { type = TokenType.VOID }, null);
+            }
+
             return statement.expression.Accept(this);
         }
 

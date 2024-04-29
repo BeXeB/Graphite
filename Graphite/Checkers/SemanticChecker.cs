@@ -139,7 +139,7 @@ namespace Graphite.Checkers
 
         public Type VisitBlockStatement(Statement.BlockStatement statement)
         {
-            return BlockStatementImplementation(statement.statements); //REVIEW why this method?
+            return BlockStatementImplementation(statement.statements);
         }
 
         private Type BlockStatementImplementation(List<Statement> statements)
@@ -148,8 +148,7 @@ namespace Graphite.Checkers
             isFunctionBlock = false;
             if (!localIsFunctionBlock)
             {
-                variableTable.EnterScope();
-                functionTable.EnterScope();
+                EnterScope();
             }
 
             firstPass = true;
@@ -186,8 +185,7 @@ namespace Graphite.Checkers
                 if (singleStatement is not Statement.ReturnStatement) continue;
                 if (!localIsFunctionBlock)
                 {
-                    variableTable.ExitScope();
-                    functionTable.ExitScope();
+                    ExitScope();
                 }
 
                 return result;
@@ -195,8 +193,7 @@ namespace Graphite.Checkers
 
             if (!localIsFunctionBlock)
             {
-                variableTable.ExitScope();
-                functionTable.ExitScope();
+                ExitScope();
             }
 
             return null!;
@@ -482,7 +479,7 @@ namespace Graphite.Checkers
             if (!variableTable.IsVariableDeclared(identifier.lexeme))
             {
                 throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme +
-                                                            " At line: " + identifier.line);
+                                         " At line: " + identifier.line);
             }
 
             var graphTypes = new List<string>
@@ -543,8 +540,6 @@ namespace Graphite.Checkers
             {
                 throw new CheckException("Condition expression in if statement must be of type boolean.");
             }
-            
-            //REVIEW should we not begin and exit scopes before and after each branch?
 
             // Type-check the then branch of the if statement
             statement.thenBranch.Accept(this);
@@ -690,7 +685,7 @@ namespace Graphite.Checkers
             {
                 throw new CheckException("The right side of the NOT expression must be of type boolean.");
             }
-            
+
             return new Type(new Token { type = TokenType.BOOL }, null);
         }
 
@@ -831,6 +826,7 @@ namespace Graphite.Checkers
                                          statement.identifier.lexeme +
                                          " At line: " + statement.identifier.line);
             }
+
             var newVariable = new Variable()
             {
                 IsInitialized = statement.initializingExpression != null,
@@ -1053,5 +1049,11 @@ namespace Graphite.Checkers
             typeTable.ExitScope();
         }
 
+        private void EnterScope()
+        {
+            variableTable.EnterScope();
+            functionTable.EnterScope();
+            typeTable.EnterScope();
+        }
     }
 }

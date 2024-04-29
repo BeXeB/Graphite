@@ -17,9 +17,9 @@ namespace Graphite.Parser
             public readonly List<Type>? typeArguments;
             
             //for class types
-            public Token? SuperClass { get; private set; } //REVIEW why is this a token and not a type?
-            public readonly Dictionary<string, Type> fields;
-            public readonly Dictionary<string, Type> methods;
+            public Token? SuperClass { get; private set; } //TODO Change to Type
+            public readonly Dictionary<string, Type> fields; //TODO use variable type here
+            public readonly Dictionary<string, Type> methods; //TODO use function type here
             public bool IsDummyType { get; private set; }
 
             public Type(Token type, List<Type>? typeArguments, bool isDummyType = false)

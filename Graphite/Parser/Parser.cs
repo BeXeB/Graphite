@@ -457,6 +457,7 @@ public class Parser
     {
         Consume(TokenType.PLUS_PLUS, "Expect '++' at the beginning of the expression.");
         var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier after '++'.");
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
         return new GraphExpression.AddGraphExpression(identifier);
     }
 

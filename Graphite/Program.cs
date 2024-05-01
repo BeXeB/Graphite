@@ -39,6 +39,15 @@ ugraph.AddTags(v => v.Contains("e") || v.Contains("h"), ["j", "i"]);
 ugraph.RemoveTags(v => v.Contains("j") || v.Contains("e"), ["j", "b"]);
 ugraph.Connect(v => v.Contains("e"), v => v.Contains("c"));
 
+var ugraph2 = new UGraph();
+ugraph2.AddVertex(["a", "b"]);
+ugraph2.AddVertex(["c", "d"]);
+ugraph2.AddVertices([["f", "g"], ["h", "i"]]);
+ugraph2.Connect(v => v.Contains("a"), v => v.Contains("c"));
+ugraph2.Connect(v => v.Contains("f"), v => v.Contains("i"));
+
+ugraph.AddGraph(ugraph2);
+
 // dgraph.PrintGraphInfo();
 // ugraph.PrintGraphInfo();
 

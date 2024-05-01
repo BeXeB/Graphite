@@ -377,6 +377,8 @@ public class Parser
                 return GraphWhileStatement();
             case TokenType.IF:
                 return GraphIfStatement();
+            case TokenType.PLUS_PLUS:
+                return AddGraph();
             default:
                 var i = 1;
                 while (true)
@@ -451,6 +453,14 @@ public class Parser
                 throw new ParseException("Expect '=>', '<=>', '=/=', '++' or '--' after predicate. At line: " +
                                          token.line);
         }
+    }
+
+    private GraphExpression AddGraph()
+    {
+        Consume(TokenType.PLUS_PLUS, "Expect '++' at the beginning of the expression.");
+        var identifier = Consume(TokenType.IDENTIFIER, "Expect identifier after '++'.");
+        Consume(TokenType.SEMICOLON, "Expect ';' at the end of the expression.");
+        return new GraphExpression.AddGraphExpression(identifier);
     }
 
     private GraphExpression Predicate()

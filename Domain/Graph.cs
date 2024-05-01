@@ -1,4 +1,4 @@
-﻿namespace Domain
+namespace Domain
 {
     public abstract class Graph<T> : IGraph
     {
@@ -14,6 +14,22 @@
 
         public int[] GetVertices(Predicate<List<string>> pred)
             => Enumerable.Range(0, Tags.Count).Where(i => pred(Tags[i])).ToArray();
+
+        public void AddGraph(Graph<T> graphToAdd)
+        {
+            var oldVertexCount = this.NoOfVertices;
+            foreach (var tag in graphToAdd.Tags)
+            {
+                AddVertex(tag.ToArray());
+            }
+            for (int i = oldVertexCount; i < (oldVertexCount + graphToAdd.NoOfVertices); i++)
+            {
+                for (int j = oldVertexCount; j < (oldVertexCount + graphToAdd.NoOfVertices); j++)
+                {
+                    AdjMatrix[i][j] = graphToAdd.AdjMatrix[i - oldVertexCount][j - oldVertexCount];
+                }
+            }
+        }
 
         public void AddVertex(string[] vertexTags, int amount)
         {

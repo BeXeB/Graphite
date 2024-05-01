@@ -43,6 +43,7 @@ graphStatement		→ IDENTIFIER "{" graphOperation* "}"";"
 graphOperation		→ predicateOperation
 			| "V" vertexOperation
 			| nonAssignment "<<" (nonAssignment | "null");
+			| addGraph
 			| expressionStatement
 			| graphWhile
 			| graphIf  
@@ -50,7 +51,8 @@ predicateOperation	→ predicate ("=>" | "<=>") predicate (nonAssignment | "") "
 			| predicate "=/=" predicate";"
 			| predicate ("++"|"--") set";"  
 vertexOperation 	→ "-" predicate ";"
-			| "+" set (nonAssignment | "") ";"  
+			| "+" set (nonAssignment | "") ";"
+addGraph		→ "++" IDENTIFIER ";"
 graphWhile		→ "while" "("expression")" graphBlock  
 graphIf			→ "if" "("expression")" graphBlock "else" graphBlock   
 graphBlock		→ "{" (graphOperation | expressionStatement)*  "}"  

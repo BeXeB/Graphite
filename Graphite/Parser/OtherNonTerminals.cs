@@ -2,8 +2,9 @@ using Graphite.Lexer;
 
 namespace Graphite.Parser
 {
-    public abstract class OtherNonTerminals
+    public abstract class OtherNonTerminals : ILanguageConstruct
     {
+        public int Line { get; set; }
         public interface IOtherNonTerminalsVisitor<T>
         {
             T VisitType(Type type);
@@ -22,7 +23,7 @@ namespace Graphite.Parser
             public readonly Dictionary<string, Type> methods; //TODO use function type here
             public bool IsDummyType { get; private set; }
 
-            public Type(Token type, List<Type>? typeArguments, bool isDummyType = false)
+            public Type(Token type, List<Type>? typeArguments, bool isDummyType = false, int line = 0)
             {
                 this.type = type;
                 this.typeArguments = typeArguments;
@@ -30,6 +31,7 @@ namespace Graphite.Parser
                 methods = new Dictionary<string, Type>(); //TODO use function type here
                 SuperClass = null;
                 IsDummyType = isDummyType;
+                Line = line;
             }
             
             public void AddField((string name, Type type) field)
@@ -62,9 +64,10 @@ namespace Graphite.Parser
         {
             public readonly List<(Type, Token)> parameters;
 
-            public Parameters(List<(Type, Token)> parameters)
+            public Parameters(List<(Type, Token)> parameters, int line)
             {
                 this.parameters = parameters;
+                Line = line;
             }
 
             public override T Accept<T>(IOtherNonTerminalsVisitor<T> visitor)

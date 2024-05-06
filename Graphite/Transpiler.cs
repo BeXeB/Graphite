@@ -106,7 +106,7 @@ public class Transpiler :
                 accessModifier = "private";
                 break;
             default:
-                throw new InvalidTokenException("Invalid or missing accessModifier");
+                throw new TranspileException("Invalid or missing accessModifier", statement);
         }
 
         string identifier = statement.identifier.lexeme;
@@ -133,7 +133,7 @@ public class Transpiler :
                     varAccessModifier = "private";
                     break;
                 default:
-                    throw new InvalidTokenException("Invalid or missing accessModifier");
+                    throw new TranspileException("Invalid or missing accessModifier", currVarDeclaration.statement);
             }
 
             variableDeclarations += $"{varAccessModifier} {declaration}";
@@ -155,7 +155,7 @@ public class Transpiler :
                     funcAccessModifier = "private";
                     break;
                 default:
-                    throw new InvalidTokenException("Invalid or missing accessModifier");
+                    throw new TranspileException("Invalid or missing accessModifier", currFuncDeclaration.statement);
             }
 
             functionDeclarations += $"{funcAccessModifier} {declaration}";
@@ -380,7 +380,7 @@ public class Transpiler :
                 return returnType.Equals("void") ? $"Action<{parameters}>" :
                     parameters.Length > 0 ? $"Func<{parameters}, {returnType}>" : $"Func<{returnType}>";
             default:
-                throw new TranspileException("Invalid type in transpiler. At: " + type.type.line);
+                throw new TranspileException("Invalid type in transpiler.", type);
         }
     }
 
@@ -407,8 +407,7 @@ public class Transpiler :
             case TokenType.SLASHED_EQUAL:
                 return $"{graphIdentifier}.Disconnect({leftPredicate}, {rightPredicate});";
             default:
-                throw new TranspileException("Invalid operator in graph edge expression. At: "
-                                             + expression.@operator.line);
+                throw new TranspileException("Invalid operator in graph edge expression.", expression);
         }
     }
 
@@ -436,8 +435,7 @@ public class Transpiler :
             case TokenType.MINUS_MINUS:
                 return $"{graphIdentifier}.RemoveTags({predicate}, {tags});";
             default:
-                throw new TranspileException("Invalid operator in graph tag expression. At: "
-                                             + expression.@operator.line);
+                throw new TranspileException("Invalid operator in graph tag expression.", expression);
         }
     }
 

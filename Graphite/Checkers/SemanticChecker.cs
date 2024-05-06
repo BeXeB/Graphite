@@ -566,8 +566,6 @@ namespace Graphite.Checkers
             //Type-check the else branch of the if statement
             statement.elseBranch?.Accept(this);
 
-            //TODO if the blocks had a return check if both are the same type and we are in a function and return that type
-
             return null!;
         }
 

@@ -9,7 +9,7 @@ namespace Graphite
 {
     public class GraphiteLanguageException : Exception
     {
-        public GraphiteLanguageException(string errorMessage, Token token) : base(errorMessage + ". At line: " + token.line)
+        public GraphiteLanguageException(string errorMessage, int line) : base(errorMessage + ". At line: " + line)
         {
         }
     }

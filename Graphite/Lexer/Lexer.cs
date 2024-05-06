@@ -104,7 +104,7 @@ public class Lexer
                     }
                     else
                     {
-                        throw new InvalidTokenException(line + " : Expected: =");
+                        throw new InvalidTokenException("Expected: =", line);
                     
                     }
                 }
@@ -201,12 +201,12 @@ public class Lexer
                     }
                     else
                     {
-                        throw new InvalidTokenException(line + " : Expected: '");
+                        throw new InvalidTokenException("Expected: '", line);
                     }
                 }
                 else
                 {
-                    throw new InvalidTokenException(line + " : Expected a character");
+                    throw new InvalidTokenException("Expected a character", line);
                 }
 
                 break;
@@ -219,7 +219,7 @@ public class Lexer
                 }
                 if (Peek() == '\n')
                 {
-                    throw new InvalidTokenException(line + " : Expected: \"");
+                    throw new InvalidTokenException("Expected: \"", line);
                 }
                 Advance();
                 AddToken(TokenType.STRING_LITERAL, code.Substring(tokenStartIndex + 1, currentIndex - tokenStartIndex - 2));
@@ -242,7 +242,7 @@ public class Lexer
                 }
                 else
                 {
-                    throw new InvalidTokenException(line + " : Unexpected character: " + c);
+                    throw new InvalidTokenException("Unexpected character: " + c, line);
                 }
                 break;
         }

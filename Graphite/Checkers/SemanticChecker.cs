@@ -54,7 +54,7 @@ namespace Graphite.Checkers
                     {
                         IsInitialized = true,
                         Name = parameter.Item2.lexeme,
-                        Type = parameter.Item1
+                        Type = parameter.Item1.Accept(this)
                     };
                     variableTable.AddVariable(parameter.Item2.lexeme, newVariable);
                 }
@@ -350,7 +350,7 @@ namespace Graphite.Checkers
                 {
                     IsInitialized = true,
                     Name = parameterToken.lexeme,
-                    Type = parameterType
+                    Type = parameterType.Accept(this)
                 };
                 variableTable.AddVariable(parameterToken.lexeme, newVariable);
             }
@@ -858,7 +858,7 @@ namespace Graphite.Checkers
             {
                 IsInitialized = statement.initializingExpression != null,
                 Name = statement.identifier.lexeme,
-                Type = statement.type
+                Type = type
             };
             variableTable.AddVariable(statement.identifier.lexeme, newVariable);
 

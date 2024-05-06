@@ -1,4 +1,4 @@
-﻿using Graphite.Lexer;
+using Graphite.Lexer;
 
 namespace Graphite.Parser
 {

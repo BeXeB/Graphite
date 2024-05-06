@@ -303,6 +303,8 @@ public class Parser
     private ReturnStatement ReturnStatement()
     {
         Consume(TokenType.RETURN, "Expect 'return' at the beginning of the statement.");
+        if (Match(TokenType.SEMICOLON))
+            return new ReturnStatement(null);
         var value = Expression();
         Consume(TokenType.SEMICOLON, "Expect ';' at the end of the statement.");
         return new ReturnStatement(value);

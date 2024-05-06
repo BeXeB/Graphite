@@ -1,5 +1,9 @@
 using Graphite.Lexer;
 using Graphite.Parser;
+using System.Reflection;
+using static Graphite.Checkers.FunctionTable;
+using static Graphite.Checkers.VariableTable;
+using static System.Formats.Asn1.AsnWriter;
 using Type = Graphite.Parser.OtherNonTerminals.Type;
 
 namespace Graphite.Checkers
@@ -46,7 +50,13 @@ namespace Graphite.Checkers
             {
                 if (!variableTable.IsVariableDeclared(parameter.Item2.lexeme, true))
                 {
-                    variableTable.AddVariable(parameter.Item2.lexeme, parameter.Item1);
+                    var newVariable = new Variable()
+                    {
+                        IsInitialized = true,
+                        Name = parameter.Item2.lexeme,
+                        Type = parameter.Item1
+                    };
+                    variableTable.AddVariable(parameter.Item2.lexeme, newVariable);
                 }
                 else
                 {
@@ -138,8 +148,7 @@ namespace Graphite.Checkers
             isFunctionBlock = false;
             if (!localIsFunctionBlock)
             {
-                variableTable.EnterScope();
-                functionTable.EnterScope();
+                EnterScope();
             }
 
             firstPass = true;
@@ -159,7 +168,13 @@ namespace Graphite.Checkers
                     variableTable.IsVariableDeclared(functionDecl.identifier.lexeme))
                     throw new CheckException("Function already declared. Name: " + functionDecl.identifier.lexeme +
                                              " At line: " + functionDecl.identifier.line);
-                functionTable.AddFunction(functionDecl.identifier.lexeme, functionDecl.Accept(this));
+                var newFunction = new Function()
+                {
+                    Name = functionDecl.identifier.lexeme,
+                    Parameters = null, // TODO FIX THIS!!!!!
+                    ReturnType = functionDecl.returnType
+                };
+                functionTable.AddFunction(functionDecl.identifier.lexeme, newFunction);
             }
 
             firstPass = false;
@@ -170,8 +185,7 @@ namespace Graphite.Checkers
                 if (singleStatement is not Statement.ReturnStatement) continue;
                 if (!localIsFunctionBlock)
                 {
-                    variableTable.ExitScope();
-                    functionTable.ExitScope();
+                    ExitScope();
                 }
 
                 return result;
@@ -179,20 +193,15 @@ namespace Graphite.Checkers
 
             if (!localIsFunctionBlock)
             {
-                variableTable.ExitScope();
-                functionTable.ExitScope();
+                ExitScope();
             }
 
             return null!;
         }
 
-        public Type VisitBreakStatement(Statement.BreakStatement statement)
-        {
-            return null!;
-        }
-
         public Type VisitCallExpression(Expression.CallExpression expression)
         {
+            // REVIEW. Yes i think it should return a Function, instead of a Type
             //Callee should return a function type
             var functionType = expression.callee.Accept(this);
             var argumentTypes = expression.arguments.Select(argument => argument.Accept(this)).ToList();
@@ -222,6 +231,7 @@ namespace Graphite.Checkers
 
         public Type VisitClassDeclarationStatement(Statement.ClassDeclarationStatement statement)
         {
+            // TODO handle accessmodifier making things available outside scope
             if (firstPass)
             {
                 var type = new Type(statement.identifier, null);
@@ -344,7 +354,13 @@ namespace Graphite.Checkers
 
             foreach (var (parameterType, parameterToken) in statement.parameters.parameters)
             {
-                variableTable.AddVariable(parameterToken.lexeme, parameterType.Accept(this));
+                var newVariable = new Variable()
+                {
+                    IsInitialized = true,
+                    Name = parameterToken.lexeme,
+                    Type = parameterType
+                };
+                variableTable.AddVariable(parameterToken.lexeme, newVariable);
             }
 
             var actualReturnType = statement.blockStatement.Accept(this);
@@ -488,7 +504,7 @@ namespace Graphite.Checkers
             if (!variableTable.IsVariableDeclared(identifier.lexeme))
             {
                 throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme +
-                                                            " At line: " + identifier.line);
+                                         " At line: " + identifier.line);
             }
 
             var graphTypes = new List<string>
@@ -694,7 +710,7 @@ namespace Graphite.Checkers
             {
                 throw new CheckException("The right side of the NOT expression must be of type boolean.");
             }
-            
+
             return new Type(new Token { type = TokenType.BOOL }, null);
         }
 
@@ -836,7 +852,13 @@ namespace Graphite.Checkers
                                          " At line: " + statement.identifier.line);
             }
 
-            variableTable.AddVariable(statement.identifier.lexeme, statement.type.Accept(this));
+            var newVariable = new Variable()
+            {
+                IsInitialized = statement.initializingExpression != null,
+                Name = statement.identifier.lexeme,
+                Type = statement.type
+            };
+            variableTable.AddVariable(statement.identifier.lexeme, newVariable);
 
             return null!;
         }
@@ -1022,19 +1044,41 @@ namespace Graphite.Checkers
             throw new BinaryOperationTypeException(TokenType.CHAR, @operator, otherType);
         }
 
-        private static TokenType CheckStringBinaryOperation(TokenType @operator, TokenType otherType)
+        private TokenType CheckStringBinaryOperation(TokenType @operator, TokenType otherType)
         {
             if (@operator == TokenType.EQUAL_EQUAL && otherType == TokenType.STR)
             {
                 return TokenType.BOOL;
             }
-
-            if (@operator == TokenType.PLUS)
+            else if (@operator == TokenType.PLUS)
             {
                 return TokenType.STR;
             }
+            else
+            {
+                throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType);
+            }
+        }
 
-            throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType);
+
+        public OtherNonTerminals.Type VisitBreakStatement(Statement.BreakStatement statement)
+        {
+            ExitScope();
+            return null;
+        }
+
+        private void ExitScope()
+        {
+            variableTable.ExitScope();
+            functionTable.ExitScope();
+            typeTable.ExitScope();
+        }
+
+        private void EnterScope()
+        {
+            variableTable.EnterScope();
+            functionTable.EnterScope();
+            typeTable.EnterScope();
         }
     }
 }

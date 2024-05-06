@@ -60,7 +60,7 @@ namespace Graphite.Checkers
                 }
                 else
                 {
-                    throw new CheckException("", parameter.Item2); //REVIEW I do not understand this exception (also why is there no error message?)
+                    throw new CheckException("Variable with same name declared multiple times (" + parameter.Item2.lexeme + ")", expression);
                 }
             }
 
@@ -83,7 +83,7 @@ namespace Graphite.Checkers
         {
             if (!variableTable.IsVariableDeclared(expression.name.lexeme))
             {
-                throw new CheckException("Variable has not been declared. Name: " + expression.name.lexeme, expression.name);
+                throw new CheckException("Variable has not been declared. Name: " + expression.name.lexeme, expression);
             }
 
             var valueType = expression.value.Accept(this);
@@ -92,7 +92,7 @@ namespace Graphite.Checkers
             if (!CompareTypes(variableType, valueType))
             {
                 throw new CheckException(
-                    $"Cannot convert {valueType} to {variableType}", expression.name);
+                    $"Cannot convert {valueType} to {variableType}", expression);
             }
 
             return null!;
@@ -124,7 +124,7 @@ namespace Graphite.Checkers
                     tokenType = CheckBoolBinaryOperation(operatorType, rightType);
                     break;
                 default:
-                    throw new CheckException("Trying to perform binary operation on non-eligible type", expression.@operator);
+                    throw new CheckException("Trying to perform binary operation on non-eligible type", expression);
             }
 
 
@@ -154,9 +154,9 @@ namespace Graphite.Checkers
 
             foreach (var classDecl in statements.OfType<Statement.ClassDeclarationStatement>())
             {
-                if (inFunction.Count > 0) throw new CheckException("Cannot declare a class inside a function", classDecl.identifier);
+                if (inFunction.Count > 0) throw new CheckException("Cannot declare a class inside a function", classDecl);
                 if (typeTable.IsTypeDeclared(classDecl.identifier.lexeme))
-                    throw new CheckException("Class already declared. Name: " + classDecl.identifier.lexeme, classDecl.identifier);
+                    throw new CheckException("Class already declared. Name: " + classDecl.identifier.lexeme, classDecl);
                 typeTable.AddType(classDecl.identifier.lexeme, classDecl.Accept(this));
             }
 
@@ -164,7 +164,7 @@ namespace Graphite.Checkers
             {
                 if (functionTable.IsFunctionDeclared(functionDecl.identifier.lexeme) ||
                     variableTable.IsVariableDeclared(functionDecl.identifier.lexeme))
-                    throw new CheckException("Function already declared. Name: " + functionDecl.identifier.lexeme, functionDecl.identifier);
+                    throw new CheckException("Function or variable with name: " + functionDecl.identifier.lexeme + " has already been declared", functionDecl);
                 var newFunction = new Function()
                 {
                     Name = functionDecl.identifier.lexeme,
@@ -198,19 +198,18 @@ namespace Graphite.Checkers
 
         public Type VisitCallExpression(Expression.CallExpression expression)
         {
-            // REVIEW. Yes i think it should return a Function, instead of a Type
             //Callee should return a function type
             var functionType = expression.callee.Accept(this);
             var argumentTypes = expression.arguments.Select(argument => argument.Accept(this)).ToList();
 
             if (functionType.type.type != TokenType.FUNC_TYPE)
             {
-                throw new CheckException("Cannot call a non-function.", functionType.type);
+                throw new CheckException("Cannot call a non-function.", expression);
             }
 
             if (functionType.typeArguments!.Count - 1 != argumentTypes.Count)
             {
-                throw new CheckException("Number of arguments does not match the number of parameters.", functionType.type);
+                throw new CheckException("Number of arguments does not match the number of formal parameters.", expression);
             }
 
             for (var i = 0; i < argumentTypes.Count; i++)
@@ -219,7 +218,7 @@ namespace Graphite.Checkers
                 {
                     throw new CheckException("Argument type does not match parameter type. Expected: " +
                                              functionType.typeArguments[i + 1].type.type + " Got: " +
-                                             argumentTypes[i].type.type, argumentTypes[i].type);
+                                             argumentTypes[i].type.type, expression); //TODO proper stringify the types
                 }
             }
 
@@ -245,7 +244,7 @@ namespace Graphite.Checkers
                     if (type.HasMember(variableDeclaration.identifier.lexeme))
                     {
                         throw new CheckException("Field or Method already declared. Name: " +
-                                                 variableDeclaration.identifier.lexeme, variableDeclaration.identifier);
+                                                 variableDeclaration.identifier.lexeme, variableDeclaration);
                     }
 
                     type.AddField((variableDeclaration.identifier.lexeme, variableDeclaration.type.Accept(this)));
@@ -258,7 +257,7 @@ namespace Graphite.Checkers
                     if (type.HasMember(functionDeclaration.identifier.lexeme))
                     {
                         throw new CheckException("Field or Method already declared. Name: " +
-                                                 functionDeclaration.identifier.lexeme, statement.identifier);
+                                                 functionDeclaration.identifier.lexeme, functionDeclaration);
                     }
 
                     type.AddMethod((functionDeclaration.identifier.lexeme, functionDeclaration.Accept(this)));
@@ -272,7 +271,7 @@ namespace Graphite.Checkers
                 if (!typeTable.IsTypeDeclared(statement.extendsIdentifier.Value.lexeme))
                 {
                     throw new CheckException("Super class not declared. Name: " +
-                                             statement.extendsIdentifier.Value.lexeme, statement.extendsIdentifier.Value);
+                                             statement.extendsIdentifier.Value.lexeme, statement);
                 }
             }
 
@@ -309,12 +308,12 @@ namespace Graphite.Checkers
 
             if (indexType.type.type != TokenType.INT)
             {
-                throw new CheckException("Index must be of type int", indexType.type);
+                throw new CheckException("Index must be of type int", expression);
             }
 
             if (collectionType.type.type != TokenType.SET && collectionType.type.type != TokenType.LIST)
             {
-                throw new CheckException("Element access can only be used on a set or list", collectionType.type);
+                throw new CheckException("Element access can only be used on a set or list", expression);
             }
 
             return collectionType.typeArguments![0].Accept(this);
@@ -380,7 +379,7 @@ namespace Graphite.Checkers
 
             if (!typeTable.IsTypeDeclared(objectType.type.lexeme))
             {
-                throw new CheckException("Object is not of class type", objectType.type);
+                throw new CheckException("Attempt to get field on value that is not a class", expression);
             }
 
             currentObjectType.Pop();
@@ -393,13 +392,13 @@ namespace Graphite.Checkers
             var tags = expression.tags.Accept(this);
             if (tags.type.type != TokenType.SET || tags.typeArguments![0].type.type != TokenType.STR)
             {
-                throw new CheckException("Tags argument must be of type string set", tags.type);
+                throw new CheckException("Tags argument must be of type string set", expression);
             }
 
             var times = expression.times.Accept(this).type;
             if (times.type != TokenType.INT)
             {
-                throw new CheckException("Times argument must be of type int", times);
+                throw new CheckException("Times argument must be of type int", expression);
             }
 
             return null!;
@@ -417,7 +416,7 @@ namespace Graphite.Checkers
 
             if (!variableTable.IsVariableDeclared(identifier.lexeme))
             {
-                throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme, identifier);
+                throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme, expression);
             }
 
             var graphTypes = new List<string>
@@ -429,7 +428,7 @@ namespace Graphite.Checkers
 
             if (!graphTypes.Contains(variableType))
             {
-                throw new CheckException("Graph expressions are only allowed on objects of type DGraph or UGraph", identifier);
+                throw new CheckException("Graph expressions are only allowed on objects of type DGraph or UGraph", expression);
             }
             
             return null!;
@@ -443,7 +442,7 @@ namespace Graphite.Checkers
 
             if (weight.type.type != TokenType.INT && weight.type.type != TokenType.DEC)
             {
-                throw new CheckException("Weight must be of type int or dec", weight.type);
+                throw new CheckException("Weight must be of type int or dec", expression);
             }
 
             return null!;
@@ -462,7 +461,7 @@ namespace Graphite.Checkers
 
             if (conditionType != TokenType.BOOL)
             {
-                throw new CheckException("Condition expression in if statement must be of type boolean", conditionToken);
+                throw new CheckException("Condition expression in if statement must be of type boolean", expression);
             }
 
             expression.thenBranch.Accept(this);
@@ -485,7 +484,7 @@ namespace Graphite.Checkers
 
             if (oldTag != TokenType.STR || (newTag != TokenType.STR && newTag != TokenType.NULL))
             {
-                throw new CheckException("Tags must be of type string", expression.Accept(this).type);
+                throw new CheckException("Tags must be of type string", expression);
             }
 
             return null!;
@@ -497,8 +496,7 @@ namespace Graphite.Checkers
 
             if (!variableTable.IsVariableDeclared(identifier.lexeme))
             {
-                throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme +
-                                         " At line: " + identifier.line);
+                throw new CheckException("Variable has not been declared. Name: " + identifier.lexeme, statement);
             }
 
             var graphTypes = new List<string>
@@ -510,7 +508,7 @@ namespace Graphite.Checkers
 
             if (!graphTypes.Contains(variableType))
             {
-                throw new CheckException("Graph expressions are only allowed on objects of type DGraph or UGraph.");
+                throw new CheckException("Graph expressions are only allowed on objects of type DGraph or UGraph", statement);
             }
 
             statement.expressions.ForEach(expression => expression.Accept(this));
@@ -524,7 +522,7 @@ namespace Graphite.Checkers
 
             if (tags.type.type != TokenType.SET || tags.typeArguments![0].type.type != TokenType.STR)
             {
-                throw new CheckException("Tags argument must be of type string set.");
+                throw new CheckException("Tags argument must be of type string set", expression);
             }
 
             expression.predicate.Accept(this);
@@ -538,7 +536,7 @@ namespace Graphite.Checkers
 
             if (condition.type != TokenType.BOOL)
             {
-                throw new CheckException("Condition must be of type boolean.");
+                throw new CheckException("Condition must be of type boolean", expression);
             }
 
             expression.body.Accept(this);
@@ -557,7 +555,7 @@ namespace Graphite.Checkers
             var conditionType = statement.condition.Accept(this).type.type;
             if (conditionType != TokenType.BOOL)
             {
-                throw new CheckException("Condition expression in if statement must be of type boolean.");
+                throw new CheckException("Condition expression in if statement must be of type boolean", statement);
             }
 
             // Type-check the then branch of the if statement
@@ -573,8 +571,7 @@ namespace Graphite.Checkers
         {
             if (!typeTable.IsTypeDeclared(expression.className.lexeme))
             {
-                throw new CheckException("Type has not been declared. Name: " + expression.className.lexeme +
-                                         " At line: " + expression.className.line);
+                throw new CheckException("Type has not been declared. Name: " + expression.className.lexeme, expression);
             }
 
             return typeTable.GetType(expression.className.lexeme);
@@ -587,7 +584,7 @@ namespace Graphite.Checkers
             var firstType = types[0];
             if (types.Any(type => type.type.type != firstType.type.type))
             {
-                throw new CheckException("List elements must be of the same type.");
+                throw new CheckException("List elements must be of the same type", expression);
             }
 
             return new Type(new Token
@@ -607,7 +604,7 @@ namespace Graphite.Checkers
                 TokenType.TRUE => TokenType.BOOL,
                 TokenType.FALSE => TokenType.BOOL,
                 TokenType.NULL => TokenType.NULL,
-                _ => throw new CheckException("Invalid literal type. At line: " + expression.token.line)
+                _ => throw new CheckException("Invalid literal type", expression)
             };
 
             return new Type(new Token
@@ -623,8 +620,7 @@ namespace Graphite.Checkers
 
             if (leftType != TokenType.BOOL || rightType != TokenType.BOOL)
             {
-                throw new CheckException("Logical operators can only be used on boolean types. At line: " +
-                                         expression.@operator.line);
+                throw new CheckException("Logical operators can only be used on boolean types", expression);
             }
 
             return new Type(new Token
@@ -650,7 +646,7 @@ namespace Graphite.Checkers
             }
             else
             {
-                throw new CheckException("Both sides of the AND expression must be of type boolean.");
+                throw new CheckException("Both sides of the AND expression must be of type boolean", expression);
             }
         }
 
@@ -670,7 +666,7 @@ namespace Graphite.Checkers
 
             if (!predicateTypes.Contains(tokenType))
             {
-                throw new CheckException("Predicate must be of type string.");
+                throw new CheckException("Predicate must be of type string", expression);
             }
 
             return new Type(new Token { type = TokenType.BOOL }, null);
@@ -683,7 +679,7 @@ namespace Graphite.Checkers
 
             if (leftType != TokenType.BOOL || rightType != TokenType.BOOL)
             {
-                throw new CheckException("Both sides of the OR expression must be of type boolean.");
+                throw new CheckException("Both sides of the OR expression must be of type boolean", expression);
             }
 
             return new Type(new Token { type = TokenType.BOOL }, null);
@@ -697,12 +693,12 @@ namespace Graphite.Checkers
             // No Reason to check for - operator, as we can only have ! operators in predicates
             if (operatorType != TokenType.BANG)
             {
-                throw new CheckException("Trying to perform unary operation on non-eligible type");
+                throw new CheckException("Trying to perform unary operation on non-eligible type", expression);
             }
 
             if (rightType != TokenType.BOOL)
             {
-                throw new CheckException("The right side of the NOT expression must be of type boolean.");
+                throw new CheckException("The right side of the NOT expression must be of type boolean", expression);
             }
 
             return new Type(new Token { type = TokenType.BOOL }, null);
@@ -726,7 +722,7 @@ namespace Graphite.Checkers
                 if (!CompareTypes(functionType.typeArguments![0], returnType))
                 {
                     throw new CheckException("Return type does not match the declared return type. Expected: " +
-                                             functionType.type.type + " Got: " + returnType.type.type);
+                                             functionType.type.type + " Got: " + returnType.type.type, statement);
                 }
             }
             
@@ -740,7 +736,7 @@ namespace Graphite.Checkers
             var firstType = types[0];
             if (types.Any(type => !CompareTypes(type, firstType)))
             {
-                throw new CheckException("Set elements must be of the same type.");
+                throw new CheckException("Set elements must be of the same type", expression);
             }
 
             return new Type(new Token
@@ -757,7 +753,7 @@ namespace Graphite.Checkers
 
             if (!typeTable.IsTypeDeclared(objectType.type.lexeme))
             {
-                throw new CheckException("Object is not of class type.");
+                throw new CheckException("Object is not of class type");
             }
 
             currentObjectType.Pop();

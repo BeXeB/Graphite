@@ -1,6 +1,8 @@
-﻿namespace Graphite;
+﻿using Graphite.Lexer;
 
-public class TranspileException(string message) : Exception(message)
+namespace Graphite;
+
+public class TranspileException(string message, Token token) : GraphiteLanguageException(message, token)
 {
     
 }

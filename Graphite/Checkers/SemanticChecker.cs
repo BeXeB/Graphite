@@ -109,19 +109,19 @@ namespace Graphite.Checkers
             switch (leftType)
             {
                 case TokenType.STR:
-                    tokenType = CheckStringBinaryOperation(operatorType, rightType);
+                    tokenType = CheckStringBinaryOperation(operatorType, rightType, expression);
                     break;
                 case TokenType.CHAR:
-                    tokenType = CheckCharBinaryOperation(operatorType, rightType);
+                    tokenType = CheckCharBinaryOperation(operatorType, rightType, expression);
                     break;
                 case TokenType.INT:
-                    tokenType = CheckIntegerBinaryOperation(operatorType, rightType);
+                    tokenType = CheckIntegerBinaryOperation(operatorType, rightType, expression);
                     break;
                 case TokenType.DEC:
-                    tokenType = CheckDecimalBinaryOperation(operatorType, rightType);
+                    tokenType = CheckDecimalBinaryOperation(operatorType, rightType, expression);
                     break;
                 case TokenType.BOOL:
-                    tokenType = CheckBoolBinaryOperation(operatorType, rightType);
+                    tokenType = CheckBoolBinaryOperation(operatorType, rightType, expression);
                     break;
                 default:
                     throw new CheckException("Trying to perform binary operation on non-eligible type", expression);
@@ -165,10 +165,21 @@ namespace Graphite.Checkers
                 if (functionTable.IsFunctionDeclared(functionDecl.identifier.lexeme) ||
                     variableTable.IsVariableDeclared(functionDecl.identifier.lexeme))
                     throw new CheckException("Function or variable with name: " + functionDecl.identifier.lexeme + " has already been declared", functionDecl);
+                var parameters = new List<Variable>();
+                foreach (var (parameterType, parameterToken) in functionDecl.parameters.parameters)
+                {
+                    var newVariable = new Variable()
+                    {
+                        IsInitialized = true,
+                        Name = parameterToken.lexeme,
+                        Type = parameterType
+                    };
+                    parameters.Add(newVariable);
+                }
                 var newFunction = new Function()
                 {
                     Name = functionDecl.identifier.lexeme,
-                    Parameters = null, // TODO FIX THIS!!!!!
+                    Parameters = parameters, // TODO FIX THIS!!!!!
                     ReturnType = functionDecl.returnType
                 };
                 functionTable.AddFunction(functionDecl.identifier.lexeme, newFunction);
@@ -328,18 +339,6 @@ namespace Graphite.Checkers
         public Type VisitFunctionDeclarationStatement(Statement.FunctionDeclarationStatement statement)
         {
             inFunction.Push(statement.identifier.lexeme);
-            var expectedReturnType = statement.returnType.Accept(this);
-            var parameters = statement.parameters.Accept(this);
-
-            if (firstPass)
-            {
-                var parameterTypes = parameters.typeArguments!.Select(type => type.Accept(this));
-                var typeArguments = new List<Type> { expectedReturnType };
-                typeArguments.AddRange(parameterTypes);
-                var funcType = new Type(new Token { type = TokenType.FUNC_TYPE }, typeArguments);
-                inFunction.Pop();
-                return funcType;
-            }
 
             variableTable.EnterScope();
             functionTable.EnterScope();
@@ -357,12 +356,6 @@ namespace Graphite.Checkers
             }
 
             statement.blockStatement.Accept(this);
-
-            // if (!CompareTypes(expectedReturnType, actualReturnType))
-            // {
-            //     throw new CheckException("Return type does not match the declared return type. Expected: " +
-            //                              expectedReturnType.type.type + " Got: " + actualReturnType.type.type);
-            // }
 
             variableTable.ExitScope();
             functionTable.ExitScope();

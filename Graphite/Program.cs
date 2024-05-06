@@ -28,7 +28,7 @@ internal class Program
 
         var outputPath = basePath.Remove(basePath.IndexOf("Graphite", StringComparison.Ordinal)) +
                          @"Graphite\Graphite\output.cs";
-        File.WriteAllText(outputPath, cscode);
+        // File.WriteAllText(outputPath, cscode);
     }
 }
 

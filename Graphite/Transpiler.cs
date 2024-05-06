@@ -380,7 +380,7 @@ public class Transpiler :
                 return returnType.Equals("void") ? $"Action<{parameters}>" :
                     parameters.Length > 0 ? $"Func<{parameters}, {returnType}>" : $"Func<{returnType}>";
             default:
-                throw new TranspileException("Invalid type in transpiler.", type);
+                throw new TranspileException("Invalid type in transpiler", type);
         }
     }
 
@@ -407,7 +407,7 @@ public class Transpiler :
             case TokenType.SLASHED_EQUAL:
                 return $"{graphIdentifier}.Disconnect({leftPredicate}, {rightPredicate});";
             default:
-                throw new TranspileException("Invalid operator in graph edge expression.", expression);
+                throw new TranspileException("Invalid operator in graph edge expression", expression);
         }
     }
 
@@ -435,7 +435,7 @@ public class Transpiler :
             case TokenType.MINUS_MINUS:
                 return $"{graphIdentifier}.RemoveTags({predicate}, {tags});";
             default:
-                throw new TranspileException("Invalid operator in graph tag expression.", expression);
+                throw new TranspileException("Invalid operator in graph tag expression", expression);
         }
     }
 

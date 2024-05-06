@@ -215,12 +215,12 @@ namespace Graphite.Checkers
 
             if (functionType.type.type != TokenType.FUNC_TYPE)
             {
-                throw new CheckException("Cannot call a non-function.", expression);
+                throw new CheckException("Cannot call a non-function", expression);
             }
 
             if (functionType.typeArguments!.Count - 1 != argumentTypes.Count)
             {
-                throw new CheckException("Number of arguments does not match the number of formal parameters.", expression);
+                throw new CheckException("Number of arguments does not match the number of formal parameters", expression);
             }
 
             for (var i = 0; i < argumentTypes.Count; i++)
@@ -746,7 +746,7 @@ namespace Graphite.Checkers
 
             if (!typeTable.IsTypeDeclared(objectType.type.lexeme))
             {
-                throw new CheckException("Object is not of class type.",expression);
+                throw new CheckException("Object is not of class type",expression);
             }
 
             currentObjectType.Pop();
@@ -755,7 +755,7 @@ namespace Graphite.Checkers
 
             if (!CompareTypes(fieldType, valueType))
             {
-                throw new CheckException("Type mismatch.", expression);
+                throw new CheckException("Type mismatch", expression);
             }
 
             return fieldType;
@@ -765,12 +765,12 @@ namespace Graphite.Checkers
         {
             if (currentObjectType.Count == 0)
             {
-                throw new CheckException("Cannot use super expression outside of a class.", expression);
+                throw new CheckException("Cannot use super expression outside of a class", expression);
             }
 
             if (currentObjectType.Peek().SuperClass == null)
             {
-                throw new CheckException("Class does not have a super class.", expression);
+                throw new CheckException("Class does not have a super class", expression);
             }
 
             return typeTable.GetType(currentObjectType.Peek().SuperClass!.Value.lexeme);
@@ -780,7 +780,7 @@ namespace Graphite.Checkers
         {
             if (currentObjectType.Count == 0)
             {
-                throw new CheckException("Cannot use this expression outside of a class.", expression);
+                throw new CheckException("Cannot use this expression outside of a class", expression);
             }
 
             return currentObjectType.Peek();
@@ -798,7 +798,7 @@ namespace Graphite.Checkers
             }
 
             throw new CheckException("Type with name: " + type.type.lexeme +
-                                     " has not been declared. ", type);
+                                     " has not been declared", type);
         }
 
         public Type VisitUnaryExpression(Expression.UnaryExpression expression)
@@ -814,7 +814,7 @@ namespace Graphite.Checkers
                 {
                     resultToken.type = rightType;
                 }
-                else throw new CheckException("- Operator can only be used on numbers.", expression);
+                else throw new CheckException("- Operator can only be used on numbers", expression);
             }
             else if (operatorType == TokenType.BANG)
             {
@@ -838,7 +838,7 @@ namespace Graphite.Checkers
                 //Do a type checking whether the initialization matches the declared type
                 if (!CompareTypes(type, initializing))
                 {
-                    throw new CheckException("Type mismatch. ", statement);
+                    throw new CheckException("Type mismatch", statement);
                 }
             }
 
@@ -851,7 +851,7 @@ namespace Graphite.Checkers
                 functionTable.IsFunctionDeclared(statement.identifier.lexeme, inFunction.Count > 0))
             {
                 throw new CheckException("Member with same name " +
-                                         statement.identifier.lexeme + "already declared.", statement);
+                                         statement.identifier.lexeme + "already declared", statement);
             }
 
             var newVariable = new Variable()
@@ -883,7 +883,7 @@ namespace Graphite.Checkers
 
                 if (currentObjectType.Peek().SuperClass == null)
                 {
-                    throw new CheckException("Field or method does not exist with name: " + expression.name.lexeme + ".", expression);
+                    throw new CheckException("Field or method does not exist with name: " + expression.name.lexeme, expression);
                 }
 
                 currentObjectType.Push(typeTable.GetType(currentObjectType.Peek().SuperClass!.Value.lexeme));
@@ -902,7 +902,7 @@ namespace Graphite.Checkers
                 return functionTable.GetFunctionType(expression.name.lexeme);
             }
 
-            throw new CheckException("Variable or Function has not been declared with name: " + expression.name.lexeme + ".",
+            throw new CheckException("Variable or Function has not been declared with name: " + expression.name.lexeme,
                                      expression);
         }
 
@@ -910,7 +910,7 @@ namespace Graphite.Checkers
         {
             if (statement.condition.Accept(this).type.type != TokenType.BOOL)
             {
-                throw new CheckException("Condition expression in if statement must be of type boolean.", statement);
+                throw new CheckException("Condition expression in if statement must be of type boolean", statement);
             }
 
             statement.body.Accept(this);

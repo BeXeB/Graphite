@@ -753,7 +753,7 @@ namespace Graphite.Checkers
 
             if (!typeTable.IsTypeDeclared(objectType.type.lexeme))
             {
-                throw new CheckException("Object is not of class type");
+                throw new CheckException("Object is not of class type.",expression);
             }
 
             currentObjectType.Pop();
@@ -762,7 +762,7 @@ namespace Graphite.Checkers
 
             if (!CompareTypes(fieldType, valueType))
             {
-                throw new CheckException("Type mismatch.");
+                throw new CheckException("Type mismatch.", expression);
             }
 
             return fieldType;
@@ -772,12 +772,12 @@ namespace Graphite.Checkers
         {
             if (currentObjectType.Count == 0)
             {
-                throw new CheckException("Cannot use super outside of a class.");
+                throw new CheckException("Cannot use super expression outside of a class.", expression);
             }
 
             if (currentObjectType.Peek().SuperClass == null)
             {
-                throw new CheckException("Class does not have a super class.");
+                throw new CheckException("Class does not have a super class.", expression);
             }
 
             return typeTable.GetType(currentObjectType.Peek().SuperClass!.Value.lexeme);
@@ -787,7 +787,7 @@ namespace Graphite.Checkers
         {
             if (currentObjectType.Count == 0)
             {
-                throw new CheckException("Cannot use this outside of a class.");
+                throw new CheckException("Cannot use this expression outside of a class.", expression);
             }
 
             return currentObjectType.Peek();
@@ -804,8 +804,8 @@ namespace Graphite.Checkers
                 return type;
             }
 
-            throw new CheckException("Type has not been declared. Name: " + type.type.lexeme +
-                                     " At line: " + type.type.line);
+            throw new CheckException("Type with name: " + type.type.lexeme +
+                                     " has not been declared. ", type);
         }
 
         public Type VisitUnaryExpression(Expression.UnaryExpression expression)
@@ -821,7 +821,7 @@ namespace Graphite.Checkers
                 {
                     resultToken.type = rightType;
                 }
-                else throw new CheckException("");
+                else throw new CheckException("- Operator can only be used on numbers.", expression);
             }
             else if (operatorType == TokenType.BANG)
             {
@@ -829,7 +829,7 @@ namespace Graphite.Checkers
                 {
                     resultToken.type = rightType;
                 }
-                else throw new CheckException("");
+                else throw new CheckException("! Operator can only be used on boolean values", expression);
             }
 
             return new Type(resultToken, null);
@@ -845,7 +845,7 @@ namespace Graphite.Checkers
                 //Do a type checking whether the initialization matches the declared type
                 if (!CompareTypes(type, initializing))
                 {
-                    throw new CheckException("Type mismatch. At line: " + statement.identifier.line);
+                    throw new CheckException("Type mismatch. ", statement);
                 }
             }
 
@@ -857,9 +857,8 @@ namespace Graphite.Checkers
             if (variableTable.IsVariableDeclared(statement.identifier.lexeme, inFunction.Count > 0) ||
                 functionTable.IsFunctionDeclared(statement.identifier.lexeme, inFunction.Count > 0))
             {
-                throw new CheckException("Member with same name already declared. Name: " +
-                                         statement.identifier.lexeme +
-                                         " At line: " + statement.identifier.line);
+                throw new CheckException("Member with same name " +
+                                         statement.identifier.lexeme + "already declared.", statement);
             }
 
             var newVariable = new Variable()
@@ -891,8 +890,7 @@ namespace Graphite.Checkers
 
                 if (currentObjectType.Peek().SuperClass == null)
                 {
-                    throw new CheckException("Field or method does not exist. Name: " + expression.name.lexeme +
-                                             " At line: " + expression.name.line);
+                    throw new CheckException("Field or method does not exist with name: " + expression.name.lexeme + ".", expression);
                 }
 
                 currentObjectType.Push(typeTable.GetType(currentObjectType.Peek().SuperClass!.Value.lexeme));
@@ -911,15 +909,15 @@ namespace Graphite.Checkers
                 return functionTable.GetFunctionType(expression.name.lexeme);
             }
 
-            throw new CheckException("Variable has not been declared. Name: " + expression.name.lexeme + " At line: " +
-                                     expression.name.line);
+            throw new CheckException("Variable or Function has not been declared with name: " + expression.name.lexeme + ".",
+                                     expression);
         }
 
         public Type VisitWhileStatement(Statement.WhileStatement statement)
         {
             if (statement.condition.Accept(this).type.type != TokenType.BOOL)
             {
-                throw new CheckException("Condition expression in if statement must be of type boolean.");
+                throw new CheckException("Condition expression in if statement must be of type boolean.", statement);
             }
 
             statement.body.Accept(this);
@@ -950,7 +948,7 @@ namespace Graphite.Checkers
             return type1.type.type == type2.type.type;
         }
 
-        private static TokenType CheckBoolBinaryOperation(TokenType @operator, TokenType otherType)
+        private static TokenType CheckBoolBinaryOperation(TokenType @operator, TokenType otherType, ILanguageConstruct construct)
         {
             if (@operator == TokenType.PLUS && otherType == TokenType.STR)
             {
@@ -959,7 +957,7 @@ namespace Graphite.Checkers
 
             if (otherType != TokenType.BOOL)
             {
-                throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType);
+                throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType, construct);
             }
 
             List<TokenType> allowedOperators =
@@ -970,10 +968,10 @@ namespace Graphite.Checkers
                 return TokenType.BOOL;
             }
 
-            throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType);
+            throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType, construct);
         }
 
-        private static TokenType CheckDecimalBinaryOperation(TokenType @operator, TokenType otherType)
+        private static TokenType CheckDecimalBinaryOperation(TokenType @operator, TokenType otherType, ILanguageConstruct construct)
         {
             if (@operator == TokenType.PLUS && otherType == TokenType.STR)
             {
@@ -982,7 +980,7 @@ namespace Graphite.Checkers
 
             if (otherType != TokenType.INT && otherType != TokenType.DEC)
             {
-                throw new BinaryOperationTypeException(TokenType.DEC, @operator, otherType);
+                throw new BinaryOperationTypeException(TokenType.DEC, @operator, otherType, construct);
             }
 
             List<TokenType> decimalOperators = new List<TokenType>
@@ -1003,10 +1001,10 @@ namespace Graphite.Checkers
                 return TokenType.BOOL;
             }
 
-            throw new BinaryOperationTypeException(TokenType.DEC, @operator, otherType);
+            throw new BinaryOperationTypeException(TokenType.DEC, @operator, otherType, construct);
         }
 
-        private static TokenType CheckIntegerBinaryOperation(TokenType @operator, TokenType otherType)
+        private static TokenType CheckIntegerBinaryOperation(TokenType @operator, TokenType otherType, ILanguageConstruct construct)
         {
             if (@operator == TokenType.PLUS && otherType == TokenType.STR)
             {
@@ -1015,7 +1013,7 @@ namespace Graphite.Checkers
 
             if (otherType != TokenType.INT && otherType != TokenType.DEC)
             {
-                throw new BinaryOperationTypeException(TokenType.INT, @operator, otherType);
+                throw new BinaryOperationTypeException(TokenType.INT, @operator, otherType, construct);
             }
 
             List<TokenType> numberOperators = new List<TokenType>
@@ -1036,10 +1034,10 @@ namespace Graphite.Checkers
                 return TokenType.BOOL;
             }
 
-            throw new BinaryOperationTypeException(TokenType.INT, @operator, otherType);
+            throw new BinaryOperationTypeException(TokenType.INT, @operator, otherType, construct);
         }
 
-        private static TokenType CheckCharBinaryOperation(TokenType @operator, TokenType otherType)
+        private static TokenType CheckCharBinaryOperation(TokenType @operator, TokenType otherType, ILanguageConstruct construct)
         {
             if (@operator == TokenType.PLUS && otherType == TokenType.STR)
             {
@@ -1051,10 +1049,10 @@ namespace Graphite.Checkers
                 return TokenType.BOOL;
             }
 
-            throw new BinaryOperationTypeException(TokenType.CHAR, @operator, otherType);
+            throw new BinaryOperationTypeException(TokenType.CHAR, @operator, otherType, construct);
         }
 
-        private TokenType CheckStringBinaryOperation(TokenType @operator, TokenType otherType)
+        private TokenType CheckStringBinaryOperation(TokenType @operator, TokenType otherType, ILanguageConstruct construct)
         {
             if (@operator == TokenType.EQUAL_EQUAL && otherType == TokenType.STR)
             {
@@ -1066,7 +1064,7 @@ namespace Graphite.Checkers
             }
             else
             {
-                throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType);
+                throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType, construct);
             }
         }
 

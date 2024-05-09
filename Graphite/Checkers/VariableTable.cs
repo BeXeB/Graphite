@@ -1,16 +1,24 @@
 ﻿using Graphite.Lexer;
+using Graphite.Parser;
 using Type = Graphite.Parser.OtherNonTerminals.Type;
 
 namespace Graphite.Checkers
 {
     internal class VariableTable
     {
-        private Dictionary<string, Type> globalScope = new Dictionary<string, Type>();
-        private Stack<Dictionary<string, Type>> scopes = new Stack<Dictionary<string, Type>>();
+        private Dictionary<string, Variable> globalScope = new Dictionary<string, Variable>();
+        private Stack<Dictionary<string, Variable>> scopes = new Stack<Dictionary<string, Variable>>();
+
+        public record Variable
+        {
+            public string Name;
+            public OtherNonTerminals.Type Type;
+            public bool IsInitialized;
+        }
 
         public void EnterScope()
         {
-            scopes.Push(new Dictionary<string, Type>());
+            scopes.Push(new Dictionary<string, Variable>());
         }
 
         public void ExitScope()
@@ -18,9 +26,9 @@ namespace Graphite.Checkers
             scopes.Pop();
         }
 
-        public void AddVariable(string name, Type type)
+        public void AddVariable(string name, Variable variable)
         {
-            scopes.Peek().Add(name, type);
+            scopes.Peek().Add(name, variable);
         }
 
         public bool IsVariableDeclared(string name, bool inCurrentScope = false)
@@ -40,9 +48,9 @@ namespace Graphite.Checkers
             foreach (var scope in scopes)
             {
                 if (scope.ContainsKey(name))
-                    return scope[name];
+                    return scope[name].Type;
             }
-            return globalScope[name];
+            return globalScope[name].Type;
         }
     }
 }

@@ -4,7 +4,6 @@ namespace Domain
     {
         public override void AddVertex(string[] vertexTags)
         {
-            NoOfVertices++;
             Tags.Add([.. vertexTags]);
 
             foreach (var vertex in AdjMatrix)
@@ -25,6 +24,22 @@ namespace Domain
                 foreach (var to in toIndexes)
                 {
                     AdjMatrix[from][to] = true;
+                }
+            }
+        }
+        
+        public override void Connect(Predicate<List<string>> fromPred, Predicate<List<string>> toPred, object weight)
+        {
+            var fromIndexes = GetVertices(fromPred);
+            var toIndexes = GetVertices(toPred);
+            
+            var weightBool = Convert.ToBoolean(weight);
+            
+            foreach (var from in fromIndexes)
+            {
+                foreach (var to in toIndexes)
+                {
+                    AdjMatrix[from][to] = weightBool;
                 }
             }
         }

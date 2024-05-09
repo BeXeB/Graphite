@@ -51,7 +51,7 @@ namespace QuikGraphVisualizer
             // Add vertices
             for (int i = 0; i < graph.NoOfVertices; i++)
             {
-                quikGraph.AddVertex(string.Join(", ", graph.Tags[i]));
+                quikGraph.AddVertex(string.Join(", ", graph.Tags[i]) + $"({i})");
             }
 
             // Add edges
@@ -61,7 +61,7 @@ namespace QuikGraphVisualizer
                 {
                     if (!graph.AdjMatrix[i][j].Equals(default(T))) // Assuming default(T) means no edge
                     {
-                        quikGraph.AddEdge(new Edge<string>(string.Join(", ", graph.Tags[i]), string.Join(", ", graph.Tags[j])));
+                        quikGraph.AddEdge(new Edge<string>(string.Join(", ", graph.Tags[i]) + $"({i})", string.Join(", ", graph.Tags[j]) + $"({j})"));
                     }
                 }
             }
@@ -76,7 +76,7 @@ namespace QuikGraphVisualizer
             // Add vertices
             for (int i = 0; i < graph.NoOfVertices; i++)
             {
-                quikGraph.AddVertex(string.Join(", ", graph.Tags[i]));
+                quikGraph.AddVertex(string.Join(", ", graph.Tags[i]) + $"({i})");
             }
 
             // Add edges
@@ -88,7 +88,7 @@ namespace QuikGraphVisualizer
                     {
                         if (quikGraph.TryGetEdge(string.Join(", ", graph.Tags[j]), string.Join(", ", graph.Tags[i]), out _))
                             continue;
-                        quikGraph.AddEdge(new Edge<string>(string.Join(", ", graph.Tags[i]), string.Join(", ", graph.Tags[j])));
+                        quikGraph.AddEdge(new Edge<string>(string.Join(", ", graph.Tags[i]) + $"({i})", string.Join(", ", graph.Tags[j]) + $"({j})"));
                     }
                 }
             }

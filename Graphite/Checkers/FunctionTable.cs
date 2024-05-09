@@ -1,4 +1,5 @@
-﻿using Graphite.Parser;
+﻿using Graphite.Lexer;
+using Graphite.Parser;
 using static Graphite.Checkers.VariableTable;
 using Type = Graphite.Parser.OtherNonTerminals.Type;
 
@@ -40,18 +41,29 @@ namespace Graphite.Checkers
                 if (scope.ContainsKey(name))
                     return true;
             }
+
             return globalScope.ContainsKey(name);
         }
 
         public Type GetFunctionType(string name)
         {
-            //TODO return Function type instead of return type
             foreach (var scope in scopes)
             {
-                if (scope.ContainsKey(name))
-                    return scope[name].ReturnType;
+                if (scope.TryGetValue(name, out var value))
+                    return CreateFunctionType(value);
             }
-            return globalScope[name].ReturnType;
+
+            return CreateFunctionType(globalScope[name]);
+        }
+
+        private Type CreateFunctionType(Function func)
+        {
+            List<Type> typeArguments = [func.ReturnType];
+            typeArguments.AddRange(func.Parameters.Select(parameter => parameter.Type).ToList());
+            return new Type(
+                new Token { type = TokenType.FUNC_TYPE, lexeme = "Func" },
+                typeArguments
+            );
         }
     }
 }

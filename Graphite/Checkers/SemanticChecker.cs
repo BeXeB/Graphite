@@ -179,7 +179,7 @@ namespace Graphite.Checkers
                 var newFunction = new Function()
                 {
                     Name = functionDecl.identifier.lexeme,
-                    Parameters = parameters, // TODO FIX THIS!!!!!
+                    Parameters = parameters,
                     ReturnType = functionDecl.returnType
                 };
                 functionTable.AddFunction(functionDecl.identifier.lexeme, newFunction);
@@ -206,6 +206,12 @@ namespace Graphite.Checkers
 
             return null!;
         }
+        
+        public Type VisitBreakStatement(Statement.BreakStatement statement)
+        {
+            //Removed the ExitScope() call, as it is not needed in the break statement
+            return null!;
+        }
 
         public Type VisitCallExpression(Expression.CallExpression expression)
         {
@@ -228,8 +234,8 @@ namespace Graphite.Checkers
                 if (!CompareTypes(functionType.typeArguments[i + 1], argumentTypes[i]))
                 {
                     throw new CheckException("Argument type does not match parameter type. Expected: " +
-                                             functionType.typeArguments[i + 1].type.type + " Got: " +
-                                             argumentTypes[i].type.type, expression); //TODO proper stringify the types
+                                             functionType.typeArguments[i + 1] + " Got: " +
+                                             argumentTypes[i], expression); 
                 }
             }
 
@@ -1059,13 +1065,6 @@ namespace Graphite.Checkers
             {
                 throw new BinaryOperationTypeException(TokenType.STR, @operator, otherType, construct);
             }
-        }
-
-
-        public OtherNonTerminals.Type VisitBreakStatement(Statement.BreakStatement statement)
-        {
-            ExitScope();
-            return null;
         }
 
         private void ExitScope()

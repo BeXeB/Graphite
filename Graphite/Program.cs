@@ -6,6 +6,7 @@ using Graphite.Lexer;
 using Graphite.Parser;
 using Graphite;
 using Graphite.Checkers;
+using Type = Graphite.Parser.OtherNonTerminals.Type;
 
 internal class Program
 {

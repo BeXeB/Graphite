@@ -47,6 +47,7 @@ testFunction(DGraph g, str rootTag, int currentDepth) returns void
 {
     if (currentDepth > depth)
     {
+        #break;
         return;
     }
     str leaf1tag = "Leaf" + currentDepth + "1";

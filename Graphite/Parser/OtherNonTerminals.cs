@@ -5,18 +5,20 @@ namespace Graphite.Parser
     public abstract class OtherNonTerminals : ILanguageConstruct
     {
         public int Line { get; set; }
+
         public interface IOtherNonTerminalsVisitor<T>
         {
             T VisitType(Type type);
             T VisitParameters(Parameters parameters);
         }
+
         public abstract T Accept<T>(IOtherNonTerminalsVisitor<T> visitor);
 
         public class Type : OtherNonTerminals
         {
             public readonly Token type;
             public readonly List<Type>? typeArguments;
-            
+
             //for class types
             public Token? SuperClass { get; private set; } //TODO Change to Type
             public readonly Dictionary<string, Type> fields; //TODO use variable type here
@@ -33,22 +35,22 @@ namespace Graphite.Parser
                 IsDummyType = isDummyType;
                 Line = line;
             }
-            
+
             public void AddField((string name, Type type) field)
             {
                 fields.Add(field.name, field.type);
             }
-            
+
             public void AddMethod((string name, Type type) method)
             {
                 methods.Add(method.name, method.type);
             }
-            
+
             public bool HasMember(string memberName)
             {
                 return fields.ContainsKey(memberName) || methods.ContainsKey(memberName);
             }
-            
+
             public void SetSuperClass(Token superClass)
             {
                 SuperClass = superClass;
@@ -57,6 +59,11 @@ namespace Graphite.Parser
             public override T Accept<T>(IOtherNonTerminalsVisitor<T> visitor)
             {
                 return visitor.VisitType(this);
+            }
+
+            public override string ToString()
+            {
+                return type.lexeme + (typeArguments != null ? "<" + string.Join(", ", typeArguments) + ">" : "");
             }
         }
 

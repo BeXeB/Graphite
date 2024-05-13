@@ -6,7 +6,6 @@ namespace Graphite.Checkers
 {
     internal class VariableTable
     {
-        private Dictionary<string, Variable> globalScope = new Dictionary<string, Variable>();
         private Stack<Dictionary<string, Variable>> scopes = new Stack<Dictionary<string, Variable>>();
 
         public record Variable
@@ -40,17 +39,19 @@ namespace Graphite.Checkers
                 if (scope.ContainsKey(name))
                     return true;
             }
-            return globalScope.ContainsKey(name);
+
+            return false;
         }
 
-        public Type GetVariableType(string name)
+        public Type? GetVariableType(string name)
         {
             foreach (var scope in scopes)
             {
                 if (scope.ContainsKey(name))
                     return scope[name].Type;
             }
-            return globalScope[name].Type;
+
+            return null;
         }
     }
 }

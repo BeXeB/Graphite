@@ -89,6 +89,8 @@ namespace Graphite.Checkers
             var valueType = expression.value.Accept(this);
             var variableType = variableTable.GetVariableType(expression.name.lexeme);
 
+            if (variableType is null) throw new CheckException($"Variable with name: {inFunction.Peek()} does not exist", expression);
+            
             if (!CompareTypes(variableType, valueType))
             {
                 throw new CheckException(
@@ -423,9 +425,11 @@ namespace Graphite.Checkers
                 "DGraph", "UGraph"
             };
 
-            var variableType = variableTable.GetVariableType(identifier.lexeme).type.lexeme;
+            var variableType = variableTable.GetVariableType(identifier.lexeme);
+            
+            if (variableType is null) throw new CheckException($"Variable with name: {inFunction.Peek()} does not exist", expression);
 
-            if (!graphTypes.Contains(variableType))
+            if (!graphTypes.Contains(variableType.type.lexeme))
             {
                 throw new CheckException("Graph expressions are only allowed on objects of type DGraph or UGraph", expression);
             }
@@ -503,9 +507,11 @@ namespace Graphite.Checkers
                 "DGraph", "UGraph"
             };
 
-            var variableType = variableTable.GetVariableType(identifier.lexeme).type.lexeme;
+            var variableType = variableTable.GetVariableType(identifier.lexeme);
+            
+            if (variableType is null) throw new CheckException($"Variable with name: {inFunction.Peek()} does not exist", statement);
 
-            if (!graphTypes.Contains(variableType))
+            if (!graphTypes.Contains(variableType.type.lexeme))
             {
                 throw new CheckException("Graph expressions are only allowed on objects of type DGraph or UGraph", statement);
             }
@@ -718,6 +724,9 @@ namespace Graphite.Checkers
             if (inFunction.Count > 0)
             {
                 var functionType = functionTable.GetFunctionType(inFunction.Peek());
+
+                if (functionType is null) throw new CheckException($"Function with name: {inFunction.Peek()} does not exist", statement);
+                
                 if (!CompareTypes(functionType.typeArguments![0], returnType))
                 {
                     throw new CheckException("Return type does not match the declared return type. Expected: " +
@@ -900,12 +909,20 @@ namespace Graphite.Checkers
 
             if (variableTable.IsVariableDeclared(expression.name.lexeme))
             {
-                return variableTable.GetVariableType(expression.name.lexeme);
+                var variableType = variableTable.GetVariableType(expression.name.lexeme);
+
+                if (variableType is null) throw new CheckException($"Variable with name: {inFunction.Peek()} does not exist", expression);
+                
+                return variableType;
             }
 
             if (functionTable.IsFunctionDeclared(expression.name.lexeme))
             {
-                return functionTable.GetFunctionType(expression.name.lexeme);
+                var functionType = functionTable.GetFunctionType(expression.name.lexeme);
+                
+                if (functionType is null) throw new CheckException($"Function with name: {inFunction.Peek()} does not exist", expression);
+
+                return functionType;
             }
 
             throw new CheckException("Variable or Function has not been declared with name: " + expression.name.lexeme,
@@ -1071,14 +1088,12 @@ namespace Graphite.Checkers
         {
             variableTable.ExitScope();
             functionTable.ExitScope();
-            typeTable.ExitScope();
         }
 
         private void EnterScope()
         {
             variableTable.EnterScope();
             functionTable.EnterScope();
-            typeTable.EnterScope();
         }
     }
 }

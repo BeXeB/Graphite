@@ -72,3 +72,49 @@ g{
 testFunction(g, "Root", 1);
 
 g.PrintGraphInfo();
+
+
+#DGraph martin = new DGraph();
+#
+#int n = 5;
+#int m = 10;
+#int i = 0;
+#while(i < n){
+#martin{
+#V + {"left"+i};
+#};
+#i = i +1;
+#}
+#
+#i = 0;
+#while(i < m){
+#martin{
+#V + {"right"+i};
+#};
+#i = i +1;
+#}
+#
+#i = 0;
+#int j = 0;
+#while(i < n){
+#    while(j<m){
+#        martin{
+#            ["left"+i] <=> ["right"+j];
+#        };
+#        j = j +1;
+#    }
+#    j=0;
+#    i = i + 1;
+#}
+#
+#martin.PrintGraphInfo();
+#
+#DGraph bence = new DGraph();
+#
+#bence{
+#    V + {"Left"} n;
+#    V + {"Right"} m;
+#    ["Left"] <=> ["Right"];
+#};
+#
+#bence.PrintGraphInfo();

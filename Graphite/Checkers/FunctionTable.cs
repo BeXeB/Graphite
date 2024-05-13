@@ -7,7 +7,6 @@ namespace Graphite.Checkers
 {
     internal class FunctionTable
     {
-        private Dictionary<string, Function> globalScope = new Dictionary<string, Function>();
         private Stack<Dictionary<string, Function>> scopes = new Stack<Dictionary<string, Function>>();
 
         public class Function
@@ -42,10 +41,10 @@ namespace Graphite.Checkers
                     return true;
             }
 
-            return globalScope.ContainsKey(name);
+            return false;
         }
 
-        public Type GetFunctionType(string name)
+        public Type? GetFunctionType(string name)
         {
             foreach (var scope in scopes)
             {
@@ -53,7 +52,7 @@ namespace Graphite.Checkers
                     return CreateFunctionType(value);
             }
 
-            return CreateFunctionType(globalScope[name]);
+            return null;
         }
 
         private Type CreateFunctionType(Function func)

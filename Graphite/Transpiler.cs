@@ -231,6 +231,9 @@ public class Transpiler :
             case char:
                 a = $"'{a}'";
                 break;
+            case decimal:
+                a = $"{a}m";
+                break;
             case bool:
                 a = a.ToLower();
                 break;

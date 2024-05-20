@@ -1,0 +1,82 @@
+
+
+
+
+#Varible declared multiple times
+#int x = 2;
+#int x = 4;
+
+#Variable has not been declared.
+#x = 2;
+
+#Type mismatch
+#int x = 'x';
+
+#Trying to perform binary operation on non-eligible type
+#private class TestClass { public int x; }
+#TestClass x = new TestClass();
+#TestClass y = new TestClass();
+#TestClass z = x + y;
+
+#Cannot declare a class inside a function
+#TestFunction() returns void
+#{
+#	private class TestClass { public int x; }
+#}
+
+
+#Class already declared
+#private class TestClass { public int x; }
+#private class TestClass { public int x; }
+
+
+#Function or variable with name has already been declared
+#TestFunction() returns void
+#{
+#	private class TestClass { public int x; }
+#}
+#
+#TestFunction() returns void
+#{
+#	private class TestClass { public int x; }
+#}
+
+
+#Cannot call a non-function
+#int x;
+#int y = x();
+
+
+#Number of arguments does not match the number of formal parameters
+#TestFunction(int parameter) returns void
+#{
+#}
+#TestFunction();
+
+#Argument type does not match parameter type.
+#TestFunction(int parameter) returns void
+#{
+#}
+#str argument = "test";
+#TestFunction(argument);
+
+
+
+
+#Field or Method already declared
+
+#Super class not declared
+
+#Index must be of type int
+
+#Element access can only be used on a set or list
+
+#Attempt to get field on value that is not a class
+
+#Tags argument must be of type string set
+
+#Times argument must be of type int
+
+#Graph expressions are only allowed on objects of type DGraph or UGraph
+
+#Weight must be of type int or dec

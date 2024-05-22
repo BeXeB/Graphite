@@ -73,6 +73,36 @@ testFunction(g, "Root", 1);
 
 g.PrintGraphInfo();
 
+# Example of creating a binary tree with recursion
+
+bTree(int n) returns DGraph 
+{
+    DGraph tree = new DGraph();
+    if (n == 1)
+    {
+        tree 
+        {
+            V + {"Root"};
+        };
+        return tree;
+    }
+    DGraph sub1 = bTree(n - 1);
+    DGraph sub2 = bTree(n - 1);
+    tree
+    {
+        V + {"NewRoot"};
+        ++ sub1;
+        ++ sub2;
+        ["NewRoot"] => ["Root"];
+        "Root" << null;
+        "NewRoot" << "Root";
+    };
+    return tree;
+}
+
+DGraph tree = bTree(4);
+tree.PrintGraphInfo();
+
 
 #DGraph martin = new DGraph();
 #

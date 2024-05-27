@@ -348,6 +348,18 @@ namespace Graphite.Checkers
         {
             inFunction.Push(statement.identifier.lexeme);
 
+            var expectedReturnType = statement.returnType.Accept(this);
+            var parameters = statement.parameters.Accept(this);
+            if (firstPass)
+            {
+                var parameterTypes = parameters.typeArguments!.Select(type => type.Accept(this));
+                var typeArguments = new List<Type> { expectedReturnType };
+                typeArguments.AddRange(parameterTypes);
+                var funcType = new Type(new Token { type = TokenType.FUNC_TYPE }, typeArguments);
+                inFunction.Pop();
+                return funcType;
+            }
+            
             variableTable.EnterScope();
             functionTable.EnterScope();
             isFunctionBlock = true;
@@ -725,9 +737,22 @@ namespace Graphite.Checkers
             {
                 var functionType = functionTable.GetFunctionType(inFunction.Peek());
 
-                if (functionType is null) throw new CheckException($"Function with name: {inFunction.Peek()} does not exist", statement);
+                if (functionType is null)
+                {
+                    if (currentObjectType.Count > 0)
+                    {
+                        if (currentObjectType.Peek().methods.TryGetValue(inFunction.Peek(), out var methodType))
+                        {
+                            functionType = methodType;
+                        }
+                    }
+                    else
+                    {
+                        throw new CheckException($"Function with name: {inFunction.Peek()} does not exist", statement);
+                    }
+                }
                 
-                if (!CompareTypes(functionType.typeArguments![0], returnType))
+                if (!CompareTypes(functionType!.typeArguments![0], returnType))
                 {
                     throw new CheckException("Return type does not match the declared return type. Expected: " +
                                              functionType.type.type + " Got: " + returnType.type.type, statement);
@@ -896,15 +921,13 @@ namespace Graphite.Checkers
                     return functionType;
                 }
 
-                if (currentObjectType.Peek().SuperClass == null)
+                if (currentObjectType.Peek().SuperClass != null)
                 {
-                    throw new CheckException("Field or method does not exist with name: " + expression.name.lexeme, expression);
+                    currentObjectType.Push(typeTable.GetType(currentObjectType.Peek().SuperClass!.Value.lexeme));
+                    var result = expression.Accept(this);
+                    currentObjectType.Pop();
+                    return result;
                 }
-
-                currentObjectType.Push(typeTable.GetType(currentObjectType.Peek().SuperClass!.Value.lexeme));
-                var result = expression.Accept(this);
-                currentObjectType.Pop();
-                return result;
             }
 
             if (variableTable.IsVariableDeclared(expression.name.lexeme))

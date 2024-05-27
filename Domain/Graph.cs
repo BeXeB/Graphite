@@ -1,6 +1,6 @@
 namespace Domain
 {
-    public abstract class Graph<T> : IGraph
+    public abstract class Graph<T> : IGraph<T>
     {
         public int NoOfVertices => Tags.Count;
         public List<List<string?>> Tags { get; protected set; } = []; //tags[n] is an array of the tags of the n-th vertex
@@ -142,8 +142,9 @@ namespace Domain
         }
     }
 
-    public interface IGraph
+    public interface IGraph<T>
     {
+        public void AddGraph(Graph<T> graphToAdd);
         public void AddVertex(string[] vertexTags);
         public void AddVertices(List<string[]> vertexTags);
         public int[] GetVertices(Predicate<List<string>> pred);
@@ -154,5 +155,6 @@ namespace Domain
         public void AddTags(Predicate<List<string>> pred, List<string?> tags);
         public void RemoveTags(Predicate<List<string>> pred, List<string> tags);
         public void Retag(string from, string? to);
+        public void PrintGraphInfo();
     }
 }

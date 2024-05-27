@@ -63,7 +63,7 @@ namespace Graphite.Parser
 
             public override string ToString()
             {
-                return type.lexeme + (typeArguments != null ? "<" + string.Join(", ", typeArguments) + ">" : "");
+                return type.lexeme + (typeArguments?.Count > 0 ?  "<" + string.Join(", ", typeArguments) + ">" : "");
             }
         }
 

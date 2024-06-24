@@ -258,8 +258,6 @@ namespace Graphite.Checkers
 
                 foreach (var (accessModifier, variableDeclaration) in statement.variableDeclarationStatements)
                 {
-                    if (accessModifier.type == TokenType.PRIVATE) continue;
-
                     if (type.HasMember(variableDeclaration.identifier.lexeme))
                     {
                         throw new CheckException("Field or Method already declared. Name: " +
@@ -271,8 +269,6 @@ namespace Graphite.Checkers
 
                 foreach (var (accessModifier, functionDeclaration) in statement.functionDeclarationStatements)
                 {
-                    if (accessModifier.type == TokenType.PRIVATE) continue;
-
                     if (type.HasMember(functionDeclaration.identifier.lexeme))
                     {
                         throw new CheckException("Field or Method already declared. Name: " +

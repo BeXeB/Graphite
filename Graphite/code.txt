@@ -178,14 +178,21 @@ d.age = 3;
 d.name = "Dog";
 d.Bark();
 
-functionA() returns int {
-    int x = 10;
-    return functionB();
+
+public class MyClass {
+
+    private someFunc() returns int {
+        return 5;
+    }
+
+    public publicFunc() returns int {
+        return someFunc() + 1;
+    }
 }
 
-functionB() returns int {
-    return x;    
-}
+MyClass newInstance = new MyClass();
+
+newInstance.someFunc();
 
 # This code will fail scope validation
 

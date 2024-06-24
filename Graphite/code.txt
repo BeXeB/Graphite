@@ -193,7 +193,5 @@ public class MyClass {
 MyClass newInstance = new MyClass();
 
 newInstance.someFunc();
-
-# This code will fail scope validation
-
+# this works but should not
 

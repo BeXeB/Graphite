@@ -179,15 +179,13 @@ d.name = "Dog";
 d.Bark();
 
 functionA() returns int {
-    x = 10;
-    return functionB()
+    int x = 10;
+    return functionB();
 }
 
 functionB() returns int {
     return x;    
 }
-
-int x = 5;
 
 # This code will fail scope validation
 

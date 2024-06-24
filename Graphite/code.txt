@@ -177,3 +177,8 @@ Dog d = new Dog();
 d.age = 3;
 d.name = "Dog";
 d.Bark();
+
+char someChar = 'c';
+int someInt = 1;
+
+int newInt = someChar - someInt;

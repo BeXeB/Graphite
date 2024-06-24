@@ -178,7 +178,17 @@ d.age = 3;
 d.name = "Dog";
 d.Bark();
 
-char someChar = 'c';
-int someInt = 1;
+functionA() returns int {
+    x = 10;
+    return functionB()
+}
 
-int newInt = someChar - someInt;
+functionB() returns int {
+    return x;    
+}
+
+int x = 5;
+
+# This code will fail scope validation
+
+

@@ -1,197 +1,26 @@
-## Example for creating graph:
-## o -> o -> o -> o -> o -> o
-## |    |    |    |    |    |
-## v    v    v    v    v    v
-## o -> o -> o -> o -> o -> o
-## |    |    |    |    |    |
-## v    v    v    v    v    v
-## o -> o -> o -> o -> o -> o
-#
-#DGraph g1 = new DGraph();
-#
-#int x = 5;
-#int y = 10;
-#int currentX = 1;
-#int currentY = 1;
-#
-#g1 {
-#    while (currentX <= x) {
-#        while (currentY <= y) {
-#            V + {"X" + currentX, "Y" + currentY};
-#            ["X" + currentX and "Y" + (currentY - 1)] => ["X" + currentX and "Y" + currentY];
-#            ["X" + (currentX - 1) and "Y" + currentY] => ["X" + currentX and "Y" + currentY];
-#            currentY = currentY + 1;
-#        }
-#        currentY = 1;
-#        currentX = currentX + 1;
-#    }
-#};
-#
-#g1.PrintGraphInfo();
-#
-## Example for creating graph:
-##             o
-##            / \
-##          /     \
-##         v       v
-##         o       o
-##        / \     / \
-##       v   v   v   v
-##       o   o   o   o
-#
-#DGraph g = new DGraph();
-#
-#int depth = 4;
-#
-#testFunction(DGraph g, str rootTag, int currentDepth) returns void 
-#{
-#    if (currentDepth > depth)
-#    {
-#        #break;
-#        return;
-#    }
-#    str leaf1tag = "Leaf" + currentDepth + "1";
-#    str leaf2tag = "Leaf" + currentDepth + "2";
-#    g {
-#        rootTag << "Root";
-#        V + {leaf1tag};
-#        V + {leaf2tag};
-#        ["Root"] => [leaf1tag or leaf2tag];
-#        "Root" << null;
-#        currentDepth = currentDepth + 1;    
-#        testFunction(g, leaf1tag, currentDepth);
-#        leaf1tag << null;
-#        testFunction(g, leaf2tag, currentDepth);
-#        leaf2tag << null;
-#    };
-#}
-#
-#g{
-#    V + {"Root"};
-#};
-#testFunction(g, "Root", 1);
-#
-#g.PrintGraphInfo();
+List<int> nums = [2,2,4,1,1];
+int length = 5;
 
-# Example of creating a binary tree with recursion
-
-bTree(int n) returns DGraph 
+tree(int currentDepth) returns UGraph
 {
-    DGraph tree = new DGraph();
-    if (n == 1)
+    UGraph g = new UGraph();
+    if (currentDepth >= length)
     {
-        tree 
-        {
-            V + {"Root"};
-        };
-        return tree;
+        g{V + {""+currentDepth};};
+        return g;
     }
-    DGraph sub1 = bTree(n - 1);
-    DGraph sub2 = bTree(n - 1);
-    tree
+    int i = 0;
+    while (i < nums[currentDepth])
     {
-        V + {"NewRoot"};
-        ++ sub1;
-        ++ sub2;
-        ["NewRoot"] => ["Root"];
-        "Root" << null;
-        "NewRoot" << "Root";
+        UGraph temp = tree(currentDepth + 1);
+        g{++ temp;};
+        i = i + 1;
+    }
+    g{
+        V + {""+currentDepth};
+        [""+currentDepth] => [""+(currentDepth+1)];
     };
-    return tree;
+    return g;
 }
 
-DGraph tree = bTree(4);
-tree.PrintGraphInfo();
-
-
-#DGraph martin = new DGraph();
-#
-#int n = 5;
-#int m = 10;
-#int i = 0;
-#while(i < n){
-#martin{
-#V + {"left"+i};
-#};
-#i = i +1;
-#}
-#
-#i = 0;
-#while(i < m){
-#martin{
-#V + {"right"+i};
-#};
-#i = i +1;
-#}
-#
-#i = 0;
-#int j = 0;
-#while(i < n){
-#    while(j<m){
-#        martin{
-#            ["left"+i] <=> ["right"+j];
-#        };
-#        j = j +1;
-#    }
-#    j=0;
-#    i = i + 1;
-#}
-#
-#martin.PrintGraphInfo();
-#
-#DGraph bence = new DGraph();
-#
-#bence{
-#    V + {"Left"} n;
-#    V + {"Right"} m;
-#    ["Left"] <=> ["Right"];
-#};
-#
-#bence.PrintGraphInfo();
-
-public class Animal
-{
-    public int age;
-    public str name;
-
-    public MakeSound(str sound) returns str
-    {
-        return sound;
-    }
-}
-
-public class Dog extends Animal
-{
-    public Bark() returns void
-    {
-        super.MakeSound("bark");
-    }
-}
-
-Animal a = new Animal();
-a.age = 5;
-a.name = "Dog";
-str sound = a.MakeSound("woof");
-
-Dog d = new Dog();
-d.age = 3;
-d.name = "Dog";
-d.Bark();
-
-
-public class MyClass {
-
-    private someFunc() returns int {
-        return 5;
-    }
-
-    public publicFunc() returns int {
-        return someFunc() + 1;
-    }
-}
-
-MyClass newInstance = new MyClass();
-
-newInstance.someFunc();
-# this works but should not
-
+tree(0).PrintGraphInfo();

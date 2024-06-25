@@ -1,3 +1,7 @@
+
+
+using QuikGraphVisualizer;
+
 namespace Domain
 {
     public abstract class Graph<T> : IGraph<T>
@@ -139,6 +143,7 @@ namespace Domain
             }
 
             Console.WriteLine("+-----------+-------------------------------+-----------------+");
+            GraphVisualizer<T>.VisualizeInBrowser(this);
         }
     }
 

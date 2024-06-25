@@ -6,7 +6,6 @@ using Graphite.Lexer;
 using Graphite.Parser;
 using Graphite;
 using Graphite.Checkers;
-using Type = Graphite.Parser.OtherNonTerminals.Type;
 
 internal class Program
 {
@@ -15,6 +14,7 @@ internal class Program
         var basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty;
         var path = basePath.Remove(basePath.IndexOf("Graphite", StringComparison.Ordinal)) +
                    @"Graphite\Graphite\code.txt";
+        //var path = args[0];
         var code = File.ReadAllText(path);
 
         var lexer = new Lexer();
@@ -28,8 +28,9 @@ internal class Program
         var cscode = transpiler.Transpile(statements);
 
         var outputPath = basePath.Remove(basePath.IndexOf("Graphite", StringComparison.Ordinal)) +
-                         @"Graphite\Graphite\output.cs";
-        // File.WriteAllText(outputPath, cscode);
+                          @"Graphite\Graphite\output.cs";
+        //var outputPath = args[1];
+        File.WriteAllText(outputPath, cscode);
     }
 }
 
